@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const typeEnum = z.enum(['call', 'follow_up', 'meeting', 'email', 'task']);
-const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call']);
+const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call', 'ready_to_shipment']);
 const priorityEnum = z.enum(['low', 'medium', 'high']);
 
 export const createTask = {
@@ -11,9 +11,17 @@ export const createTask = {
     type: typeEnum.optional(),
     lead: z.string().optional(),
     assignedTo: z.string().optional(),
-    dueDate: z.string(),
+    dueDate: z.string().optional(),
     priority: priorityEnum.optional(),
     reminderAt: z.string().optional(),
+    cityVillageType: z.enum(['city', 'village']).optional(),
+    cityVillage: z.string().optional(),
+    houseNo: z.string().optional(),
+    postOffice: z.string().optional(),
+    district: z.string().optional(),
+    landmark: z.string().optional(),
+    pincode: z.string().optional(),
+    state: z.string().optional(),
   }),
 };
 
@@ -27,6 +35,14 @@ export const updateTask = {
     dueDate: z.string().optional(),
     priority: priorityEnum.optional(),
     reminderAt: z.string().optional(),
+    cityVillageType: z.enum(['city', 'village']).optional(),
+    cityVillage: z.string().optional(),
+    houseNo: z.string().optional(),
+    postOffice: z.string().optional(),
+    district: z.string().optional(),
+    landmark: z.string().optional(),
+    pincode: z.string().optional(),
+    state: z.string().optional(),
   }),
 };
 
@@ -40,7 +56,7 @@ export const deleteTask = {
 
 export const getTasks = {
   query: z.object({
-    status: statusEnum.optional(),
+    status: z.string().optional(),
     type: typeEnum.optional(),
     assignedTo: z.string().optional(),
     lead: z.string().optional(),

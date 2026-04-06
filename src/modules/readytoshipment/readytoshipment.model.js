@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 
-const cnpSchema = new mongoose.Schema(
+const readyToShipmentSchema = new mongoose.Schema(
   {
     task: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true, unique: true },
     title: { type: String, required: true },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     lead: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
-    dueDate: { type: Date },
+    description: { type: String },
     cityVillageType: { type: String, enum: ['city', 'village'], default: 'city' },
     cityVillage: { type: String },
     houseNo: { type: String },
@@ -15,12 +15,10 @@ const cnpSchema = new mongoose.Schema(
     landmark: { type: String },
     pincode: { type: String },
     state: { type: String },
-    address: { type: String },
+    reminderAt: { type: Date },
     notes: [{ text: String, createdAt: { type: Date, default: Date.now } }],
-    cnpCount: { type: Number, default: 1 },
-    lastCnpAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('Cnp', cnpSchema);
+export default mongoose.model('ReadyToShipment', readyToShipmentSchema);

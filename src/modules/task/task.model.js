@@ -15,7 +15,7 @@ const taskSchema = new mongoose.Schema(
     dueDate: { type: Date, required: true },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call'],
+      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call', 'ready_to_shipment'],
       default: 'pending',
     },
     priority: {
@@ -24,6 +24,14 @@ const taskSchema = new mongoose.Schema(
       default: 'medium',
     },
     reminderAt: { type: Date },
+    cityVillageType: { type: String, enum: ['city', 'village'], default: 'city' },
+    cityVillage: { type: String },
+    houseNo: { type: String },
+    postOffice: { type: String },
+    district: { type: String },
+    landmark: { type: String },
+    pincode: { type: String },
+    state: { type: String },
     address: { type: String },
     notes: [{
       text: { type: String, required: true },

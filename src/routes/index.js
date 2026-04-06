@@ -7,6 +7,7 @@ import notificationRoute from '../modules/notification/notification.routes.js';
 import dashboardRoute from '../modules/dashboard/dashboard.routes.js';
 import cnpRoute from '../modules/cnp/cnp.routes.js';
 import verificationRoute from '../modules/verification/verification.routes.js';
+import readyToShipmentRoute from '../modules/readytoshipment/readytoshipment.routes.js';
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ const defaultRoutes = [
   { path: '/dashboard', route: dashboardRoute },
   { path: '/cnp', route: cnpRoute },
   { path: '/verification', route: verificationRoute },
+  { path: '/ready-to-shipment', route: readyToShipmentRoute },
 ];
 
 defaultRoutes.forEach((route) => {

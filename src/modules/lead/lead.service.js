@@ -101,6 +101,15 @@ export const getLeads = async (filter, options, userRole, userId) => {
       { email: { $regex: filter.search, $options: 'i' } },
     ];
   }
+  if (filter.dateFrom || filter.dateTo) {
+    query.createdAt = {};
+    if (filter.dateFrom) query.createdAt.$gte = new Date(filter.dateFrom);
+    if (filter.dateTo) {
+      const to = new Date(filter.dateTo);
+      to.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = to;
+    }
+  }
 
   const page = parseInt(options.page) || 1;
   const limit = parseInt(options.limit) || 20;

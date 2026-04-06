@@ -6,13 +6,14 @@ export const createNotification = async (data) => {
 
 export const getUserNotifications = async (userId, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
+  const filter = { user: userId, type: 'lead_assigned' };
   const [notifications, total, unreadCount] = await Promise.all([
-    Notification.find({ user: userId })
+    Notification.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Notification.countDocuments({ user: userId }),
-    Notification.countDocuments({ user: userId, isRead: false }),
+    Notification.countDocuments(filter),
+    Notification.countDocuments({ ...filter, isRead: false }),
   ]);
   return { notifications, total, unreadCount, page, limit };
 };

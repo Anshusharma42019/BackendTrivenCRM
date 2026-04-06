@@ -5,6 +5,7 @@ import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
 import Cnp from '../cnp/cnp.model.js';
 import Verification from '../verification/verification.model.js';
+import ReadyToShipment from '../readytoshipment/readytoshipment.model.js';
 import User from '../user/user.model.js';
 
 const notifyAdmins = async (data) => {
@@ -40,6 +41,7 @@ export const getTasks = async (filter, userRole, userId) => {
   const query = { isDeleted: false };
   if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
   if (filter.status) query.status = filter.status;
+  else query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment'] };
   if (filter.type) query.type = filter.type;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
   if (filter.lead) query.lead = filter.lead;
@@ -53,7 +55,7 @@ export const getTasks = async (filter, userRole, userId) => {
     query.dueDate = { $gte: start, $lte: end };
   }
 
-  // Auto-mark overdue
+  // Auto-mark overdue (only pending tasks)
   await Task.updateMany(
     { status: 'pending', dueDate: { $lt: new Date() }, isDeleted: false },
     { status: 'overdue' }
@@ -82,20 +84,23 @@ export const updateTask = async (id, data, userRole, userId) => {
   await task.save();
 
   // Sync to dedicated collections on status change
-  const record = { task: task._id, title: task.title, assignedTo: task.assignedTo, lead: task.lead, dueDate: task.dueDate, address: task.address, notes: task.notes };
+  const record = { task: task._id, title: task.title, assignedTo: task.assignedTo, lead: task.lead, dueDate: task.dueDate, description: task.description, cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, landmark: task.landmark, pincode: task.pincode, state: task.state, reminderAt: task.reminderAt, notes: task.notes };
   if (data.status === 'cnp') {
-    await Cnp.findOneAndUpdate(
-      { task: task._id },
-      { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 } },
-      { upsert: true, new: true }
-    );
+    await Cnp.findOneAndUpdate({ task: task._id }, { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 } }, { upsert: true, new: true });
     await Verification.deleteOne({ task: task._id });
+    await ReadyToShipment.deleteOne({ task: task._id });
   } else if (data.status === 'verification') {
     await Verification.findOneAndUpdate({ task: task._id }, record, { upsert: true, new: true });
+    await Cnp.deleteOne({ task: task._id });
+    await ReadyToShipment.deleteOne({ task: task._id });
+  } else if (data.status === 'ready_to_shipment') {
+    await ReadyToShipment.findOneAndUpdate({ task: task._id }, record, { upsert: true, new: true });
+    await Verification.deleteOne({ task: task._id });
     await Cnp.deleteOne({ task: task._id });
   } else {
     await Cnp.deleteOne({ task: task._id });
     await Verification.deleteOne({ task: task._id });
+    await ReadyToShipment.deleteOne({ task: task._id });
   }
 
   return task;
