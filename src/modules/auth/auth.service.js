@@ -1,0 +1,91 @@
+import jwt from 'jsonwebtoken';
+import { config } from '../../config/config.js';
+import { User } from '../user/user.model.js';
+import ApiError from '../../utils/ApiError.js';
+
+/**
+ * Generate a JWT token.
+ */
+const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
+  const payload = {
+    sub: userId,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(expires.getTime() / 1000),
+    type,
+  };
+  return jwt.sign(payload, secret);
+};
+
+/**
+ * Generate access and refresh tokens.
+ */
+const generateAuthTokens = async (user) => {
+  const accessTokenExpires = new Date();
+  accessTokenExpires.setMinutes(accessTokenExpires.getMinutes() + config.jwt.accessExpirationMinutes);
+  const accessToken = generateToken(user.id, accessTokenExpires, 'access');
+
+  const refreshTokenExpires = new Date();
+  refreshTokenExpires.setDate(refreshTokenExpires.getDate() + config.jwt.refreshExpirationDays);
+  const refreshToken = generateToken(user.id, refreshTokenExpires, 'refresh');
+
+  // Recommendation: Store refresh tokens in the DB for rotation/revocation
+  // For now, I'll return them directly to simplify
+
+  return {
+    access: {
+      token: accessToken,
+      expires: accessTokenExpires,
+    },
+    refresh: {
+      token: refreshToken,
+      expires: refreshTokenExpires,
+    },
+  };
+};
+
+/**
+ * Create a new user.
+ */
+const register = async (userBody) => {
+  if (await User.isEmailTaken(userBody.email)) {
+    throw new ApiError(400, 'Email already taken');
+  }
+  return User.create(userBody);
+};
+
+/**
+ * Login with username and password.
+ */
+const loginUserWithEmailAndPassword = async (email, password) => {
+  const user = await User.findOne({ email });
+  if (!user || !(await user.isPasswordMatch(password))) {
+    throw new ApiError(401, 'Incorrect email or password');
+  }
+  return user;
+};
+
+/**
+ * Refresh authentication tokens.
+ */
+const refreshAuth = async (refreshToken) => {
+  try {
+    const payload = jwt.verify(refreshToken, config.jwt.secret);
+    if (payload.type !== 'refresh') {
+      throw new Error();
+    }
+    const user = await User.findById(payload.sub);
+    if (!user) {
+      throw new Error();
+    }
+    return generateAuthTokens(user);
+  } catch (error) {
+    throw new ApiError(401, 'Invalid or expired refresh token');
+  }
+};
+
+export default {
+  generateAuthTokens,
+  register,
+  loginUserWithEmailAndPassword,
+  refreshAuth,
+};

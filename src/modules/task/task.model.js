@@ -1,0 +1,44 @@
+import mongoose from 'mongoose';
+
+const taskSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String },
+    type: {
+      type: String,
+      enum: ['call', 'follow_up', 'meeting', 'email', 'task'],
+      default: 'task',
+    },
+    lead: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    dueDate: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call'],
+      default: 'pending',
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'medium',
+    },
+    reminderAt: { type: Date },
+    address: { type: String },
+    notes: [{
+      text: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    }],
+    isDeleted: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+taskSchema.index({ assignedTo: 1, dueDate: 1, status: 1 });
+
+taskSchema.set('toJSON', {
+  transform: (doc, ret) => { delete ret.__v; return ret; },
+});
+
+export const Task = mongoose.model('Task', taskSchema);
+export default Task;
