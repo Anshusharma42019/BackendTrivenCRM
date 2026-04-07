@@ -19,6 +19,7 @@ export const getDashboardStats = async (userRole, userId) => {
     totalLeads,
     newLeadsToday,
     convertedLeads,
+    readyToShipmentCount,
     revenueResult,
     funnelData,
     sourceData,
@@ -31,10 +32,13 @@ export const getDashboardStats = async (userRole, userId) => {
 
     Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
 
+    Task.countDocuments({ status: 'ready_to_shipment', isDeleted: false }),
+
     Lead.aggregate([
       { $match: { ...aggMatch, status: 'closed_won' } },
       { $group: { _id: null, total: { $sum: '$revenue' } } },
     ]),
+
 
     Lead.aggregate([
       { $match: aggMatch },
@@ -73,6 +77,7 @@ export const getDashboardStats = async (userRole, userId) => {
     totalLeads,
     newLeadsToday,
     convertedLeads,
+    readyToShipmentCount,
     revenue: revenueResult[0]?.total || 0,
     conversionRate: totalLeads ? Math.round((convertedLeads / totalLeads) * 100) : 0,
     salesFunnel,

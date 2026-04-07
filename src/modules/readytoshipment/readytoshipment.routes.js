@@ -41,4 +41,20 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+router.get('/by-user/:userId', auth('admin', 'manager'), async (req, res) => {
+  try {
+    const records = await Task.find({
+      status: 'ready_to_shipment',
+      isDeleted: false,
+      assignedTo: req.params.userId,
+    })
+      .populate('assignedTo', 'name email')
+      .populate('lead', 'name phone')
+      .sort({ createdAt: -1 });
+    res.json({ status: 200, data: records });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 export default router;

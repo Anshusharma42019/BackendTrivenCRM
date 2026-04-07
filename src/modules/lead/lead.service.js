@@ -89,10 +89,25 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (userRole === 'sales') query.assignedTo = userId;
 
-  if (filter.status) query.status = filter.status;
+  if (filter.status) {
+    query.status = filter.status;
+  } else {
+    // Hide converted (closed_won) leads unless explicitly requested
+    query.status = { $ne: 'closed_won' };
+  }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
+
+  // Exclude leads that have been moved to verification, ready_to_shipment, or cnp
+  const advancedLeadIds = await Task.distinct('lead', {
+    status: { $in: ['verification', 'ready_to_shipment', 'cnp'] },
+    lead: { $ne: null },
+    isDeleted: false,
+  });
+  if (advancedLeadIds.length) {
+    query._id = { $nin: advancedLeadIds };
+  }
 
   if (filter.search) {
     query.$or = [

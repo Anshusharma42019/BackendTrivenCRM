@@ -5,6 +5,7 @@ const readyToShipmentSchema = new mongoose.Schema(
     task: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true, unique: true },
     title: { type: String, required: true },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     lead: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
     description: { type: String },
     cityVillageType: { type: String, enum: ['city', 'village'], default: 'city' },

@@ -1,6 +1,7 @@
 import { User } from './user.model.js';
 import ApiError from '../../utils/ApiError.js';
 import QueryHelper from '../../utils/queryHelper.js';
+import Task from '../task/task.model.js';
 
 /**
  * Handle user creation.
@@ -55,10 +56,19 @@ const deleteUserById = async (userId) => {
   return user;
 };
 
+const getStaffShipmentCounts = async () => {
+  const counts = await Task.aggregate([
+    { $match: { status: 'ready_to_shipment', isDeleted: false } },
+    { $group: { _id: '$assignedTo', count: { $sum: 1 } } },
+  ]);
+  return counts.reduce((acc, { _id, count }) => { acc[String(_id)] = count; return acc; }, {});
+};
+
 export default {
   createUser,
   queryUsers,
   getUserById,
   updateUserById,
   deleteUserById,
+  getStaffShipmentCounts,
 };

@@ -15,7 +15,7 @@ class QueryHelper {
    */
   filter() {
     const queryObj = { ...this.queryParams };
-    const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
+    const excludedFields = ['page', 'sort', 'sortBy', 'limit', 'fields', 'search'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     // Advanced filtering (gt, gte, lt, lte, in, regex)
@@ -42,9 +42,9 @@ class QueryHelper {
    * Default is '-createdAt'.
    */
   sort() {
-    if (this.queryParams.sort) {
-      const sortBy = this.queryParams.sort.split(',').join(' ');
-      this.query = this.query.sort(sortBy);
+    const sortParam = this.queryParams.sortBy || this.queryParams.sort;
+    if (sortParam) {
+      this.query = this.query.sort(sortParam.split(',').join(' '));
     } else {
       this.query = this.query.sort('-createdAt');
     }

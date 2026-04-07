@@ -56,10 +56,16 @@ const deleteUser = catchAsync(async (req, res) => {
   res.send(new ApiResponse(200, null, 'User deleted successfully'));
 });
 
+const getStaffShipmentCounts = catchAsync(async (req, res) => {
+  const counts = await userService.getStaffShipmentCounts();
+  res.send(new ApiResponse(200, counts, 'Shipment counts fetched'));
+});
+
 export default {
   createUser,
   getUsers,
   getUser,
   updateUser,
   deleteUser,
+  getStaffShipmentCounts,
 };
