@@ -40,7 +40,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const record = await Verification.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      { status: req.body.status, ...(req.body.onHoldUntil && { onHoldUntil: req.body.onHoldUntil }) },
       { new: true }
     ).populate('assignedTo', 'name email').populate('lead', 'name phone');
     if (!record) return res.status(404).json({ message: 'Not found' });

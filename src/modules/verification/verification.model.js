@@ -20,6 +20,7 @@ const verificationSchema = new mongoose.Schema(
     description: { type: String },
     reminderAt: { type: Date },
     status: { type: String, enum: ['pending', 'verified', 'rejected', 'on_hold'], default: 'pending' },
+    onHoldUntil: { type: Date },
   },
   { timestamps: true }
 );

@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema(
       enum: ['admin', 'manager', 'sales'],
       default: 'admin',
     },
+    avatar: {
+      type: String,
+      default: null,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,

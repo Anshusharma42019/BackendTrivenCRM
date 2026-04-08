@@ -93,20 +93,32 @@ export const getLeads = async (filter, options, userRole, userId) => {
     query.status = filter.status;
   } else {
     // Hide converted (closed_won) leads unless explicitly requested
-    query.status = { $ne: 'closed_won' };
+    query.status = { $nin: ['closed_won'] };
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
   // Exclude leads that have been moved to verification, ready_to_shipment, or cnp
+  // but always show on_hold and closed_lost leads in pipeline
   const advancedLeadIds = await Task.distinct('lead', {
     status: { $in: ['verification', 'ready_to_shipment', 'cnp'] },
     lead: { $ne: null },
     isDeleted: false,
   });
-  if (advancedLeadIds.length) {
-    query._id = { $nin: advancedLeadIds };
+
+  // Get on_hold and closed_lost lead IDs to always include them
+  const alwaysShowIds = await Lead.distinct('_id', {
+    isDeleted: false,
+    status: { $in: ['on_hold', 'closed_lost'] },
+  });
+
+  const excludeIds = advancedLeadIds.filter(
+    id => !alwaysShowIds.some(aid => String(aid) === String(id))
+  );
+
+  if (excludeIds.length) {
+    query._id = { $nin: excludeIds };
   }
 
   if (filter.search) {

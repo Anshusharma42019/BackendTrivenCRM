@@ -4,6 +4,7 @@ const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String },
+    problem: { type: String },
     type: {
       type: String,
       enum: ['call', 'follow_up', 'meeting', 'email', 'task'],

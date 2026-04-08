@@ -16,20 +16,29 @@ if (config.env !== 'test') {
 // set security HTTP headers
 app.use(helmet());
 
-// parse json request body
-app.use(express.json());
+// parse json request body (limit raised to support base64 image uploads)
+app.use(express.json({ limit: '10mb' }));
 
 // parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // enable cors
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173','https://backend-triven-crm.vercel.app','https://frontendtriven-crm.vercel.app'];
+const allowedOrigins = [
+  'http://localhost:3000', 
+  'http://localhost:5173', 
+  'http://localhost:5174',
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'https://backend-triven-crm.vercel.app',
+  'https://frontendtriven-crm.vercel.app'
+];
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // Pass 'false' instead of throwing an Error to prevent 500 Internal Server errors
+      callback(null, false);
     }
   },
   credentials: true

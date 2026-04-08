@@ -1,6 +1,7 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
 import validate from '../../middleware/validate.js';
+import upload from '../../middleware/upload.js';
 import * as userValidation from './user.validation.js';
 import userController from './user.controller.js';
 
@@ -12,6 +13,9 @@ router
   .get(auth('admin', 'manager'), validate(userValidation.getUsers), userController.getUsers);
 
 router.get('/stats/shipment-counts', auth('admin', 'manager'), userController.getStaffShipmentCounts);
+
+// Any logged-in user can update their own avatar
+router.patch('/me/avatar', auth('admin', 'manager', 'sales'), upload.single('avatar'), userController.uploadAvatar);
 
 router
   .route('/:userId')

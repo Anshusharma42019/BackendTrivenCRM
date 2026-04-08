@@ -2,6 +2,8 @@ import catchAsync from '../../utils/catchAsync.js';
 import userService from './user.service.js';
 import ApiResponse from '../../utils/ApiResponse.js';
 import ApiError from '../../utils/ApiError.js';
+import cloudinary from '../../config/cloudinary.js';
+import streamifier from 'streamifier';
 
 /**
  * Handle user registration for admins.
@@ -61,6 +63,33 @@ const getStaffShipmentCounts = catchAsync(async (req, res) => {
   res.send(new ApiResponse(200, counts, 'Shipment counts fetched'));
 });
 
+/**
+ * Handle avatar upload for the logged-in user.
+ * File is received via multer (memory storage) and streamed to Cloudinary.
+ */
+const uploadAvatar = catchAsync(async (req, res) => {
+  if (!req.file) throw new ApiError(400, 'Avatar image file is required');
+
+  // Stream the in-memory buffer to Cloudinary
+  const uploadResult = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'crm-triven/avatars',
+        transformation: [{ width: 256, height: 256, crop: 'fill', gravity: 'face' }],
+        resource_type: 'image',
+      },
+      (error, result) => {
+        if (error) return reject(new ApiError(500, 'Cloudinary upload failed'));
+        resolve(result);
+      }
+    );
+    streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+  });
+
+  const user = await userService.updateAvatar(req.user._id, uploadResult.secure_url);
+  res.send(new ApiResponse(200, user, 'Avatar updated successfully'));
+});
+
 export default {
   createUser,
   getUsers,
@@ -68,4 +97,5 @@ export default {
   updateUser,
   deleteUser,
   getStaffShipmentCounts,
+  uploadAvatar,
 };

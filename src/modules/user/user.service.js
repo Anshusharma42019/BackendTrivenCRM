@@ -64,6 +64,17 @@ const getStaffShipmentCounts = async () => {
   return counts.reduce((acc, { _id, count }) => { acc[String(_id)] = count; return acc; }, {});
 };
 
+/**
+ * Update user avatar by ID.
+ */
+const updateAvatar = async (userId, avatar) => {
+  const user = await getUserById(userId);
+  if (!user) throw new ApiError(404, 'User not found');
+  user.avatar = avatar;
+  await user.save();
+  return user;
+};
+
 export default {
   createUser,
   queryUsers,
@@ -71,4 +82,5 @@ export default {
   updateUserById,
   deleteUserById,
   getStaffShipmentCounts,
+  updateAvatar,
 };

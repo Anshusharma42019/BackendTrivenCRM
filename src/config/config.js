@@ -16,6 +16,9 @@ const envVarsSchema = z.object({
   JWT_ACCESS_EXPIRATION_MINUTES: z.string().transform(Number).default('30'),
   JWT_REFRESH_EXPIRATION_DAYS: z.string().transform(Number).default('30'),
   CORS_ORIGIN: z.string().default('*'),
+  CLOUDINARY_CLOUD_NAME: z.string().describe('Cloudinary cloud name'),
+  CLOUDINARY_API_KEY: z.string().describe('Cloudinary API key'),
+  CLOUDINARY_API_SECRET: z.string().describe('Cloudinary API secret'),
 });
 
 const envVars = envVarsSchema.safeParse(process.env);
@@ -40,5 +43,10 @@ export const config = {
   },
   cors: {
     origin: envVars.data.CORS_ORIGIN,
+  },
+  cloudinary: {
+    cloudName: envVars.data.CLOUDINARY_CLOUD_NAME,
+    apiKey: envVars.data.CLOUDINARY_API_KEY,
+    apiSecret: envVars.data.CLOUDINARY_API_SECRET,
   },
 };

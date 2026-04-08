@@ -8,6 +8,7 @@ export const createTask = {
   body: z.object({
     title: z.string().min(1),
     description: z.string().optional(),
+    problem: z.string().optional(),
     type: typeEnum.optional(),
     lead: z.string().optional(),
     assignedTo: z.string().optional(),
@@ -30,6 +31,7 @@ export const updateTask = {
   body: z.object({
     title: z.string().min(1).optional(),
     description: z.string().optional(),
+    problem: z.string().optional(),
     type: typeEnum.optional(),
     status: statusEnum.optional(),
     dueDate: z.string().optional(),
