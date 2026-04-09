@@ -30,8 +30,11 @@ const allowedOrigins = [
   'http://localhost:5500',
   'https://backend-triven-crm.vercel.app',
   'https://frontendtriven-crm.vercel.app',
-  'https://triven-website.vercel.app'
+  'https://triven-website.vercel.app',
+  'https://trivenayurveda.com',
+  'https://www.trivenayurveda.com'
 ];
+app.options('*', cors());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
