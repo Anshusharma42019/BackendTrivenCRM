@@ -34,7 +34,7 @@ const allowedOrigins = [
   'https://trivenayurveda.com',
   'https://www.trivenayurveda.com'
 ];
-app.options('*', cors());
+app.options('/{*path}', cors());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
