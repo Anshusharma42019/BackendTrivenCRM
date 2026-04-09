@@ -30,7 +30,8 @@ const allowedOrigins = [
   'http://127.0.0.1:5500',
   'http://localhost:5500',
   'https://backend-triven-crm.vercel.app',
-  'https://frontendtriven-crm.vercel.app'
+  'https://frontendtriven-crm.vercel.app',
+  'https://triven-website.vercel.app'
 ];
 app.use(cors({
   origin: (origin, callback) => {
