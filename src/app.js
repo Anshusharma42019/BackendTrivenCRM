@@ -22,7 +22,6 @@ app.use(express.json({ limit: '10mb' }));
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// enable cors
 const allowedOrigins = [
   'http://localhost:3000', 
   'http://localhost:5173', 
