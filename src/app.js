@@ -32,7 +32,9 @@ const allowedOrigins = [
   'https://frontendtriven-crm.vercel.app',
   'https://triven-website.vercel.app',
   'https://trivenayurveda.com',
-  'https://www.trivenayurveda.com'
+  'https://www.trivenayurveda.com',
+  'https://www.trivenayurveda.in',
+  'https://www.triven.in'
 ];
 app.options('/{*path}', cors());
 app.use(cors({
