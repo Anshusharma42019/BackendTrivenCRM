@@ -43,8 +43,11 @@ export const getTasks = async (filter, userRole, userId) => {
   } else {
     if (filter.assignedTo) query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
   }
-  if (filter.status) query.status = filter.status;
-  else query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
+  if (filter.status) {
+    query.status = filter.status;
+  } else if (userRole !== 'admin') {
+    query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
+  }
   if (filter.type) query.type = filter.type;
   if (filter.lead) query.lead = filter.lead;
 

@@ -59,26 +59,28 @@ export const createLead = async (data, createdBy) => {
     await notifyAdmins({ title: 'New Lead Created', message: `Lead "${lead.name}" was created and assigned.`, type: 'lead_assigned', relatedLead: lead._id });
 
     // Auto-create a CALL task due in 2 hours for the assigned sales person
-    const dueDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    const assignedToId = lead.assignedTo._id
-      ? lead.assignedTo._id
-      : lead.assignedTo;
-    const taskCreatedBy = createdBy
-      ? new mongoose.Types.ObjectId(String(createdBy))
-      : assignedToId;
-    const task = await Task.create({
-      title: `Call ${lead.name}`,
-      description: `Phone: ${lead.phone}${lead.problem ? ' | ' + lead.problem : ''}`,
-      type: 'call',
-      lead: lead._id,
-      assignedTo: assignedToId,
-      createdBy: taskCreatedBy,
-      dueDate,
-      priority: 'high',
-      status: 'pending',
-      isDeleted: false,
-    });
-    console.log('[AUTO-TASK] Created call task:', task._id, 'for user:', assignedToId);
+    const assignedToId = lead.assignedTo._id ?? lead.assignedTo;
+    if (assignedToId) {
+      const dueDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const taskCreatedBy = createdBy
+        ? new mongoose.Types.ObjectId(String(createdBy))
+        : assignedToId;
+      const task = await Task.create({
+        title: `Call ${lead.name}`,
+        description: `Phone: ${lead.phone}${lead.problem ? ' | ' + lead.problem : ''}`,
+        type: 'call',
+        lead: lead._id,
+        assignedTo: assignedToId,
+        createdBy: taskCreatedBy,
+        dueDate,
+        priority: 'high',
+        status: 'pending',
+        isDeleted: false,
+      });
+      console.log('[AUTO-TASK] Created call task:', task._id, 'for user:', assignedToId);
+    } else {
+      console.warn('[AUTO-TASK] Skipped — no sales user available for lead:', lead._id);
+    }
   }
 
   return lead;
