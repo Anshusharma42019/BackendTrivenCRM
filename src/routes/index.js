@@ -6,6 +6,7 @@ import taskRoute from '../modules/task/task.routes.js';
 import notificationRoute from '../modules/notification/notification.routes.js';
 import dashboardRoute from '../modules/dashboard/dashboard.routes.js';
 import cnpRoute from '../modules/cnp/cnp.routes.js';
+import callAgainRoute from '../modules/callagain/callagain.routes.js';
 import verificationRoute from '../modules/verification/verification.routes.js';
 import readyToShipmentRoute from '../modules/readytoshipment/readytoshipment.routes.js';
 import shiprocketRoute from '../modules/shiprocket/shiprocket.routes.js';
@@ -20,6 +21,7 @@ const defaultRoutes = [
   { path: '/notifications', route: notificationRoute },
   { path: '/dashboard', route: dashboardRoute },
   { path: '/cnp', route: cnpRoute },
+  { path: '/call-again', route: callAgainRoute },
   { path: '/verification', route: verificationRoute },
   { path: '/ready-to-shipment', route: readyToShipmentRoute },
   { path: '/shiprocket', route: shiprocketRoute },
