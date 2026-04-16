@@ -20,7 +20,9 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
           cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
           houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
           landmark: task.landmark, pincode: task.pincode, state: task.state,
-          reminderAt: task.reminderAt, notes: task.notes },
+          reminderAt: task.reminderAt, notes: task.notes,
+          problem: task.problem, age: task.age, weight: task.weight, height: task.height,
+          otherProblems: task.otherProblems, problemDuration: task.problemDuration },
         { upsert: true }
       );
     }

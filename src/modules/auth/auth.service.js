@@ -54,12 +54,19 @@ const register = async (userBody) => {
 };
 
 /**
- * Login with username and password.
+ * Login based on role.
  */
-const loginUserWithEmailAndPassword = async (email, password) => {
-  const user = await User.findOne({ email });
+const loginUser = async ({ role, email, phone, password }) => {
+  let user;
+  if (role === 'admin') {
+    if (!email) throw new ApiError(400, 'Email is required for admin login');
+    user = await User.findOne({ email, role: 'admin', isDeleted: false });
+  } else {
+    if (!phone) throw new ApiError(400, 'Phone is required');
+    user = await User.findOne({ phone, role, isDeleted: false });
+  }
   if (!user || !(await user.isPasswordMatch(password))) {
-    throw new ApiError(401, 'Incorrect email or password');
+    throw new ApiError(401, 'Incorrect credentials');
   }
   return user;
 };
@@ -86,6 +93,6 @@ const refreshAuth = async (refreshToken) => {
 export default {
   generateAuthTokens,
   register,
-  loginUserWithEmailAndPassword,
+  loginUser,
   refreshAuth,
 };

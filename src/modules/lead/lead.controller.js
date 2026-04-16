@@ -60,4 +60,48 @@ const unmarkCNP = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, lead, 'CNP removed'));
 });
 
-export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP };
+const addFollowUp = catchAsync(async (req, res) => {
+  const { note, next_date } = req.body;
+  const lead = await Lead.findByIdAndUpdate(
+    req.params.leadId,
+    {
+      $push: { follow_ups: { date: new Date(), note: note || '', next_date: next_date ? new Date(next_date) : undefined, createdBy: req.user._id } },
+      ...(next_date ? { next_follow_up: new Date(next_date) } : {}),
+    },
+    { new: true }
+  ).select('follow_ups next_follow_up').lean();
+  res.json(new ApiResponse(httpStatus.OK, lead, 'Follow up added'));
+});
+
+const setNextFollowUp = catchAsync(async (req, res) => {
+  const { next_follow_up } = req.body;
+  const lead = await Lead.findByIdAndUpdate(
+    req.params.leadId,
+    { next_follow_up: next_follow_up ? new Date(next_follow_up) : null },
+    { new: true }
+  ).select('follow_ups next_follow_up').lean();
+  res.json(new ApiResponse(httpStatus.OK, lead, 'Next follow up set'));
+});
+
+const getFollowUpLeads = catchAsync(async (req, res) => {
+  const { search, from, to, page = 1, per_page = 1000 } = req.query;
+  const match = { status: 'follow_up', isDeleted: { $ne: true } };
+  if (from || to) {
+    match.updatedAt = {};
+    if (from) match.updatedAt.$gte = new Date(from);
+    if (to) match.updatedAt.$lte = new Date(to + 'T23:59:59');
+  }
+  if (search) {
+    const q = new RegExp(search, 'i');
+    match.$or = [{ name: q }, { phone: q }, { email: q }];
+  }
+  const skip = (Number(page) - 1) * Number(per_page);
+  const [leads, total] = await Promise.all([
+    Lead.find(match).sort({ updatedAt: -1 }).skip(skip).limit(Number(per_page))
+      .populate('assignedTo', 'name').lean(),
+    Lead.countDocuments(match),
+  ]);
+  res.json(new ApiResponse(httpStatus.OK, { data: leads, total }, 'Follow-up leads fetched'));
+});
+
+export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads };

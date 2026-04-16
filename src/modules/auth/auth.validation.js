@@ -10,7 +10,9 @@ export const register = {
 
 export const login = {
   body: z.object({
-    email: z.string().email(),
+    role: z.enum(['admin', 'manager', 'sales']),
+    email: z.string().email().optional(),
+    phone: z.string().min(7).optional(),
     password: z.string(),
   }),
 };

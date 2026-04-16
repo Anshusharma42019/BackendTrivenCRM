@@ -13,10 +13,10 @@ const taskSchema = new mongoose.Schema(
     lead: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    dueDate: { type: Date, required: true },
+    dueDate: { type: Date, default: null },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'cancel_call', 'ready_to_shipment'],
+      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment'],
       default: 'pending',
     },
     priority: {
@@ -34,6 +34,11 @@ const taskSchema = new mongoose.Schema(
     pincode: { type: String },
     state: { type: String },
     address: { type: String },
+    age: { type: Number },
+    weight: { type: Number },
+    height: { type: Number },
+    otherProblems: { type: String },
+    problemDuration: { type: String },
     notes: [{
       text: { type: String, required: true },
       createdAt: { type: Date, default: Date.now },

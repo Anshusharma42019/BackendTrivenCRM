@@ -6,7 +6,7 @@ import ApiResponse from '../../utils/ApiResponse.js';
  * Handle user registration.
  */
 const register = catchAsync(async (req, res) => {
-  const user = await authService.register(req.body);
+  const user = await authService.register(req.validated?.body ?? req.body);
   const tokens = await authService.generateAuthTokens(user);
   res.status(201).send(new ApiResponse(201, { user, tokens }, 'User registered successfully'));
 });
@@ -15,8 +15,8 @@ const register = catchAsync(async (req, res) => {
  * Handle user login.
  */
 const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
+  const { role, email, phone, password } = req.body;
+  const user = await authService.loginUser({ role, email, phone, password });
   const tokens = await authService.generateAuthTokens(user);
   res.send(new ApiResponse(200, { user, tokens }, 'Logged in successfully'));
 });

@@ -20,19 +20,20 @@ export const getUser = {
 
 export const createUser = {
   body: z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
     name: z.string(),
-    role: z.enum(['admin', 'manager', 'sales']).optional(),
+    phone: z.string().min(7),
+    password: z.string().min(8),
+    role: z.enum(['manager', 'sales']).optional(),
   }),
 };
 
 export const updateUser = {
   params: paramsIdSchema,
   body: z.object({
+    name: z.string().optional(),
+    phone: z.string().min(7).optional(),
     email: z.string().email().optional(),
     password: z.string().min(8).optional(),
-    name: z.string().optional(),
     role: z.enum(['admin', 'manager', 'sales']).optional(),
   }).refine((data) => Object.keys(data).length > 0, {
     message: 'Must provide at least one field to update',

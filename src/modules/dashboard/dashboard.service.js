@@ -1,5 +1,6 @@
 import Lead from '../lead/lead.model.js';
 import Task from '../task/task.model.js';
+import { Order } from '../shiprocket/models/order.model.js';
 
 export const getDashboardStats = async (userRole, userId) => {
   // For countDocuments — plugin auto-adds isDeleted:false
@@ -73,6 +74,8 @@ export const getDashboardStats = async (userRole, userId) => {
     percentage: totalLeads ? Math.round((s.count / totalLeads) * 100) : 0,
   }));
 
+
+
   return {
     totalLeads,
     newLeadsToday,
@@ -87,17 +90,18 @@ export const getDashboardStats = async (userRole, userId) => {
 };
 
 export const getRevenueChart = async (userRole, userId, period = 'monthly') => {
-  const aggMatch = { isDeleted: false, status: 'closed_won' };
-  if (userRole === 'sales') aggMatch.assignedTo = userId;
-
   const groupBy = period === 'weekly'
     ? { year: { $year: '$createdAt' }, week: { $week: '$createdAt' } }
     : { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } };
 
-  return Lead.aggregate([
-    { $match: aggMatch },
-    { $group: { _id: groupBy, revenue: { $sum: '$revenue' }, count: { $sum: 1 } } },
-    { $sort: { '_id.year': 1, '_id.month': 1 } },
+  const sortBy = period === 'weekly'
+    ? { '_id.year': 1, '_id.week': 1 }
+    : { '_id.year': 1, '_id.month': 1 };
+
+  return Order.aggregate([
+    { $match: { status: 'DELIVERED', sub_total: { $gt: 0 } } },
+    { $group: { _id: groupBy, revenue: { $sum: '$sub_total' }, count: { $sum: 1 } } },
+    { $sort: sortBy },
     { $limit: 12 },
   ]);
 };

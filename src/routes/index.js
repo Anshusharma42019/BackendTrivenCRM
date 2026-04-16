@@ -8,6 +8,7 @@ import dashboardRoute from '../modules/dashboard/dashboard.routes.js';
 import cnpRoute from '../modules/cnp/cnp.routes.js';
 import verificationRoute from '../modules/verification/verification.routes.js';
 import readyToShipmentRoute from '../modules/readytoshipment/readytoshipment.routes.js';
+import shiprocketRoute from '../modules/shiprocket/shiprocket.routes.js';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ const defaultRoutes = [
   { path: '/cnp', route: cnpRoute },
   { path: '/verification', route: verificationRoute },
   { path: '/ready-to-shipment', route: readyToShipmentRoute },
+  { path: '/shiprocket', route: shiprocketRoute },
 ];
 
 defaultRoutes.forEach((route) => {

@@ -14,14 +14,12 @@ const notifyAdmins = async (data) => {
 };
 
 export const createTask = async (data, createdBy, creatorRole) => {
-  // Auto-assign: if no assignedTo provided, assign to creator (sales) or least-loaded sales user (admin/manager)
-  if (!data.assignedTo) {
-    if (creatorRole === 'sales') {
-      data.assignedTo = createdBy;
-    } else {
-      const { getNextSalesUser } = await import('../lead/lead.service.js');
-      data.assignedTo = await getNextSalesUser();
-    }
+  // Sales staff can only assign tasks to themselves
+  if (creatorRole === 'sales') {
+    data.assignedTo = createdBy;
+  } else if (!data.assignedTo) {
+    const { getNextSalesUser } = await import('../lead/lead.service.js');
+    data.assignedTo = await getNextSalesUser();
   }
 
   const task = await Task.create({ ...data, createdBy });
@@ -39,11 +37,15 @@ export const createTask = async (data, createdBy, creatorRole) => {
 
 export const getTasks = async (filter, userRole, userId) => {
   const query = { isDeleted: false };
-  if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+  // Sales staff always see only their own tasks — cannot be overridden
+  if (userRole === 'sales') {
+    query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+  } else {
+    if (filter.assignedTo) query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
+  }
   if (filter.status) query.status = filter.status;
-  else query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment'] };
+  else query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
   if (filter.type) query.type = filter.type;
-  if (filter.assignedTo && userRole !== 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
   if (filter.lead) query.lead = filter.lead;
 
   console.log('[GET-TASKS] query:', JSON.stringify(query), 'role:', userRole, 'userId:', userId);
@@ -80,6 +82,8 @@ export const getTaskById = async (id, userRole, userId) => {
 
 export const updateTask = async (id, data, userRole, userId) => {
   const task = await getTaskById(id, userRole, userId);
+  // Sales staff cannot reassign tasks to other users
+  if (userRole === 'sales') delete data.assignedTo;
   Object.assign(task, data);
   await task.save();
 
@@ -122,6 +126,7 @@ export const getDailyTasks = async (userId, userRole) => {
   const query = {
     isDeleted: false,
     dueDate: { $gte: start, $lte: end },
+    status: { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] },
   };
   if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
 

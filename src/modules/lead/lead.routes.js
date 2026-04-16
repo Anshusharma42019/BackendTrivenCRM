@@ -18,6 +18,9 @@ router.patch('/:leadId/assign', auth('admin', 'manager'), validate(leadValidatio
 router.patch('/:leadId/cnp', auth('admin', 'manager', 'sales'), leadController.markCNP);
 router.patch('/:leadId/uncnp', auth('admin', 'manager', 'sales'), leadController.unmarkCNP);
 router.post('/:leadId/notes', auth('admin', 'manager', 'sales'), leadController.addNote);
+router.post('/:leadId/follow-up', auth('admin', 'manager', 'sales'), leadController.addFollowUp);
+router.patch('/:leadId/next-follow-up', auth('admin', 'manager', 'sales'), leadController.setNextFollowUp);
+router.get('/follow-up/list', auth('admin', 'manager', 'sales'), leadController.getFollowUpLeads);
 
 router
   .route('/:leadId')

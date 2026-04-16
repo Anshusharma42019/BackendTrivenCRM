@@ -11,10 +11,17 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
+    },
+    phone: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      default: null,
     },
     password: {
       type: String,
@@ -47,6 +54,12 @@ userSchema.plugin(softDeletePlugin);
 // Check if email is taken
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   const user = await this.findOne({ email, _id: { $ne: excludeUserId }, isDeleted: false });
+  return !!user;
+};
+
+// Check if phone is taken
+userSchema.statics.isPhoneTaken = async function (phone, excludeUserId) {
+  const user = await this.findOne({ phone, _id: { $ne: excludeUserId }, isDeleted: false });
   return !!user;
 };
 

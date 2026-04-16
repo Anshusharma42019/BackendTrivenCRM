@@ -92,8 +92,7 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.status) {
     query.status = filter.status;
   } else {
-    // Hide converted (closed_won) leads unless explicitly requested
-    query.status = { $nin: ['closed_won'] };
+    query.status = { $nin: ['closed_won', 'interested'] };
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;

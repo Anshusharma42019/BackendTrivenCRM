@@ -28,6 +28,13 @@ const leadSchema = new mongoose.Schema(
     cnp: { type: Boolean, default: false },
     cnpCount: { type: Number, default: 0 },
     cnpAt: { type: Date },
+    follow_ups: [{
+      date: { type: Date, default: Date.now },
+      note: String,
+      next_date: Date,
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    }],
+    next_follow_up: Date,
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     isDeleted: { type: Boolean, default: false },

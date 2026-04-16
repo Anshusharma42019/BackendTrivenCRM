@@ -32,9 +32,22 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     const records = await ReadyToShipment.find()
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
-      .populate('task')
+      .populate({ path: 'task', match: { status: 'ready_to_shipment', isDeleted: false } })
       .sort({ createdAt: -1 });
 
+    const filtered = records.filter(r => r.task !== null && !r.sentToShiprocket);
+    res.json({ status: 200, data: filtered });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
+router.get('/for-shipment', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    const records = await ReadyToShipment.find()
+      .populate('lead', 'name phone email address')
+      .populate('task', 'title')
+      .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
@@ -52,6 +65,15 @@ router.get('/by-user/:userId', auth('admin', 'manager'), async (req, res) => {
       .populate('lead', 'name phone')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
+router.patch('/:id/sent', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    await ReadyToShipment.findByIdAndUpdate(req.params.id, { sentToShiprocket: true });
+    res.json({ status: 200, message: 'Marked as sent' });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }

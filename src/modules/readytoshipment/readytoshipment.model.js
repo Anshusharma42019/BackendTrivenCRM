@@ -18,6 +18,7 @@ const readyToShipmentSchema = new mongoose.Schema(
     state: { type: String },
     reminderAt: { type: Date },
     notes: [{ text: String, createdAt: { type: Date, default: Date.now } }],
+    sentToShiprocket: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

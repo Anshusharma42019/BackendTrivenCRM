@@ -7,9 +7,10 @@ import Task from '../task/task.model.js';
  * Handle user creation.
  */
 const createUser = async (userBody) => {
-  if (await User.isEmailTaken(userBody.email)) {
-    throw new ApiError(400, 'Email already taken');
+  if (userBody.phone && await User.isPhoneTaken(userBody.phone)) {
+    throw new ApiError(400, 'Phone number already taken');
   }
+  if (!userBody.email) delete userBody.email;
   return User.create(userBody);
 };
 
@@ -36,9 +37,10 @@ const updateUserById = async (userId, updateBody) => {
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
-  if (updateBody.email && (await User.isEmailTaken(updateBody.email, userId))) {
-    throw new ApiError(400, 'Email already taken');
+  if (updateBody.phone && (await User.isPhoneTaken(updateBody.phone, userId))) {
+    throw new ApiError(400, 'Phone number already taken');
   }
+  if (!updateBody.email) delete updateBody.email;
   Object.assign(user, updateBody);
   await user.save();
   return user;
