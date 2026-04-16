@@ -30,6 +30,13 @@ router.post('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     // Update lead status to follow_up
     await Lead.findByIdAndUpdate(leadId, { status: 'follow_up' });
 
+    // Mark any pending/overdue tasks for this lead as cancel_call so they disappear from Tasks
+    const { default: Task } = await import('../task/task.model.js');
+    await Task.updateMany(
+      { lead: leadId, status: { $in: ['pending', 'overdue'] }, isDeleted: false },
+      { status: 'cancel_call' }
+    );
+
     // Upsert — one record per lead
     const record = await CallAgain.findOneAndUpdate(
       { lead: leadId },

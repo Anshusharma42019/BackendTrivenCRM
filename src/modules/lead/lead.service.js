@@ -193,6 +193,11 @@ export const markCNP = async (leadId, userRole, userId) => {
   lead.cnpCount = (lead.cnpCount || 0) + 1;
   lead.cnpAt = new Date();
   await lead.save();
+  // Mark any pending/overdue tasks for this lead as cnp so they disappear from Tasks
+  await Task.updateMany(
+    { lead: leadId, status: { $in: ['pending', 'overdue'] }, isDeleted: false },
+    { status: 'cnp' }
+  );
   return lead;
 };
 
