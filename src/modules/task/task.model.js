@@ -39,6 +39,7 @@ const taskSchema = new mongoose.Schema(
     height: { type: Number },
     otherProblems: { type: String },
     problemDuration: { type: String },
+    price: { type: Number },
     notes: [{
       text: { type: String, required: true },
       createdAt: { type: Date, default: Date.now },

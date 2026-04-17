@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import Lead from './lead.model.js';
 import Task from '../task/task.model.js';
+import Cnp from '../cnp/cnp.model.js';
 import User from '../user/user.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
@@ -100,26 +101,28 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Exclude leads that have been moved to verification, ready_to_shipment, or cnp
-  // but always show on_hold and closed_lost leads in pipeline
-  const advancedLeadIds = await Task.distinct('lead', {
-    status: { $in: ['verification', 'ready_to_shipment', 'cnp'] },
-    lead: { $ne: null },
-    isDeleted: false,
-  });
+  // Exclude leads that have been moved to verification or ready_to_shipment
+  // but NOT cnp — cnp leads should still appear when cnp filter is active
+  // and always show on_hold and closed_lost leads
+  if (!filter.cnp) {
+    const advancedLeadIds = await Task.distinct('lead', {
+      status: { $in: ['verification', 'ready_to_shipment', 'cnp'] },
+      lead: { $ne: null },
+      isDeleted: false,
+    });
 
-  // Get on_hold and closed_lost lead IDs to always include them
-  const alwaysShowIds = await Lead.distinct('_id', {
-    isDeleted: false,
-    status: { $in: ['on_hold', 'closed_lost'] },
-  });
+    const alwaysShowIds = await Lead.distinct('_id', {
+      isDeleted: false,
+      status: { $in: ['on_hold', 'closed_lost'] },
+    });
 
-  const excludeIds = advancedLeadIds.filter(
-    id => !alwaysShowIds.some(aid => String(aid) === String(id))
-  );
+    const excludeIds = advancedLeadIds.filter(
+      id => !alwaysShowIds.some(aid => String(aid) === String(id))
+    );
 
-  if (excludeIds.length) {
-    query._id = { $nin: excludeIds };
+    if (excludeIds.length) {
+      query._id = { $nin: excludeIds };
+    }
   }
 
   if (filter.search) {
@@ -193,11 +196,34 @@ export const markCNP = async (leadId, userRole, userId) => {
   lead.cnpCount = (lead.cnpCount || 0) + 1;
   lead.cnpAt = new Date();
   await lead.save();
-  // Mark any pending/overdue tasks for this lead as cnp so they disappear from Tasks
+
+  // Mark any pending/overdue tasks for this lead as cnp
+  const tasks = await Task.find(
+    { lead: leadId, status: { $in: ['pending', 'overdue'] }, isDeleted: false }
+  ).lean();
+
   await Task.updateMany(
     { lead: leadId, status: { $in: ['pending', 'overdue'] }, isDeleted: false },
     { status: 'cnp' }
   );
+
+  // Create a Cnp record for each task (upsert to avoid duplicates)
+  for (const task of tasks) {
+    await Cnp.findOneAndUpdate(
+      { task: task._id },
+      {
+        task: task._id,
+        title: task.title,
+        assignedTo: task.assignedTo,
+        lead: leadId,
+        dueDate: task.dueDate,
+        cnpCount: 1,
+        lastCnpAt: new Date(),
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
   return lead;
 };
 

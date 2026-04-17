@@ -21,6 +21,6 @@ router
   .route('/:userId')
   .get(auth('admin', 'manager', 'sales'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('admin', 'manager'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('admin'), validate(userValidation.deleteUser), userController.deleteUser);
+  .delete(auth('admin', 'manager'), validate(userValidation.deleteUser), userController.deleteUser);
 
 export default router;

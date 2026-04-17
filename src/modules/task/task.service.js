@@ -45,7 +45,7 @@ export const getTasks = async (filter, userRole, userId) => {
   }
   if (filter.status) {
     query.status = filter.status;
-  } else if (userRole !== 'admin') {
+  } else if (userRole === 'sales') {
     query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
   }
   if (filter.type) query.type = filter.type;

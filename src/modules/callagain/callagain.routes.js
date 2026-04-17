@@ -8,8 +8,10 @@ const router = express.Router();
 // GET all call-again records
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const records = await CallAgain.find({ status: 'pending' })
-      .populate('lead', 'name phone problem assignedTo')
+    const query = { status: 'pending' };
+    if (req.user.role === 'sales') query.assignedTo = req.user._id;
+    const records = await CallAgain.find(query)
+      .populate('lead', 'name phone problem')
       .populate('assignedTo', 'name email')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
@@ -40,7 +42,7 @@ router.post('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     // Upsert — one record per lead
     const record = await CallAgain.findOneAndUpdate(
       { lead: leadId },
-      { lead: leadId, assignedTo: lead.assignedTo, status: 'pending' },
+      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, status: 'pending' },
       { upsert: true, new: true }
     ).populate('lead', 'name phone problem').populate('assignedTo', 'name email');
 
