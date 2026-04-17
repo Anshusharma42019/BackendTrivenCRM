@@ -38,9 +38,14 @@ export const getNextSalesUser = async () => {
   return minUser._id;
 };
 
-export const createLead = async (data, createdBy) => {
+export const createLead = async (data, createdBy, creatorRole) => {
   if (!data.assignedTo) {
-    data.assignedTo = await getNextSalesUser();
+    // If a sales staff manually adds a lead, assign it to themselves
+    if (creatorRole === 'sales' && createdBy) {
+      data.assignedTo = createdBy;
+    } else {
+      data.assignedTo = await getNextSalesUser();
+    }
   }
 
   const payload = { ...data };

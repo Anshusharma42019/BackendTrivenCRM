@@ -6,7 +6,7 @@ import ApiError from '../../utils/ApiError.js';
 import * as leadService from './lead.service.js';
 
 const createLead = catchAsync(async (req, res) => {
-  const lead = await leadService.createLead(req.body, req.user._id);
+  const lead = await leadService.createLead(req.body, req.user._id, req.user.role);
   res.status(httpStatus.CREATED).json(new ApiResponse(httpStatus.CREATED, lead, 'Lead created'));
 });
 
