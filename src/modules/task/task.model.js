@@ -16,7 +16,7 @@ const taskSchema = new mongoose.Schema(
     dueDate: { type: Date, default: null },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment'],
+      enum: ['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment', 'new', 'old'],
       default: 'pending',
     },
     priority: {
@@ -51,6 +51,7 @@ const taskSchema = new mongoose.Schema(
 );
 
 taskSchema.index({ assignedTo: 1, dueDate: 1, status: 1 });
+taskSchema.index({ status: 1, lead: 1, isDeleted: 1 }); // speeds up getLeads exclusion queries
 
 taskSchema.set('toJSON', {
   transform: (doc, ret) => { delete ret.__v; return ret; },

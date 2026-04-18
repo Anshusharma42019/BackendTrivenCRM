@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const typeEnum = z.enum(['call', 'follow_up', 'meeting', 'email', 'task']);
-const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment']);
+const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment', 'new', 'old']);
 const priorityEnum = z.enum(['low', 'medium', 'high']);
 
 export const createTask = {

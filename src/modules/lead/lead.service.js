@@ -106,28 +106,15 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Exclude leads that have been moved to verification or ready_to_shipment
-  // but NOT cnp — cnp leads should still appear when cnp filter is active
-  // and always show on_hold and closed_lost leads
+  // Exclude leads moved to verification/ready_to_shipment/cnp, but keep on_hold/closed_lost
   if (!filter.cnp) {
-    const advancedLeadIds = await Task.distinct('lead', {
-      status: { $in: ['verification', 'ready_to_shipment', 'cnp'] },
-      lead: { $ne: null },
-      isDeleted: false,
-    });
-
-    const alwaysShowIds = await Lead.distinct('_id', {
-      isDeleted: false,
-      status: { $in: ['on_hold', 'closed_lost'] },
-    });
-
-    const excludeIds = advancedLeadIds.filter(
-      id => !alwaysShowIds.some(aid => String(aid) === String(id))
-    );
-
-    if (excludeIds.length) {
-      query._id = { $nin: excludeIds };
-    }
+    const [advancedLeadIds, alwaysShowIds] = await Promise.all([
+      Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment', 'cnp'] }, lead: { $ne: null }, isDeleted: false }),
+      Lead.distinct('_id', { isDeleted: false, status: { $in: ['on_hold', 'closed_lost'] } }),
+    ]);
+    const alwaysShowSet = new Set(alwaysShowIds.map(String));
+    const excludeIds = advancedLeadIds.filter(id => !alwaysShowSet.has(String(id)));
+    if (excludeIds.length) query._id = { $nin: excludeIds };
   }
 
   if (filter.search) {
