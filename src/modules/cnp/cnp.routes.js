@@ -32,4 +32,13 @@ router.patch('/:id/increment', auth('admin', 'manager', 'sales'), async (req, re
   }
 });
 
+router.delete('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    await Cnp.findByIdAndDelete(req.params.id);
+    res.json({ status: 200, message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 export default router;

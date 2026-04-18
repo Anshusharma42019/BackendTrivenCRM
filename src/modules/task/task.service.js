@@ -69,7 +69,7 @@ export const getTasks = async (filter, userRole, userId) => {
   return Task.find(query)
     .populate('assignedTo', 'name email')
     .populate('lead', 'name phone status')
-    .sort({ dueDate: 1 });
+    .sort({ createdAt: -1 });
 };
 
 export const getTaskById = async (id, userRole, userId) => {

@@ -11,7 +11,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     const query = { status: 'pending' };
     if (req.user.role === 'sales') query.assignedTo = req.user._id;
     const records = await CallAgain.find(query)
-      .populate('lead', 'name phone problem')
+      .populate('lead', 'name phone problem email address source status type revenue assignedTo createdBy cnpCount cnpAt notes note createdAt')
       .populate('assignedTo', 'name email')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });

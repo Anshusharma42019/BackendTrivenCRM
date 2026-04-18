@@ -12,6 +12,7 @@ import readyToShipmentRoute from '../modules/readytoshipment/readytoshipment.rou
 import shiprocketRoute from '../modules/shiprocket/shiprocket.routes.js';
 
 const router = express.Router();
+// Define all the routes for the application
 
 const defaultRoutes = [
   { path: '/auth', route: authRoute },

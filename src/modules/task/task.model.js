@@ -34,6 +34,7 @@ const taskSchema = new mongoose.Schema(
     pincode: { type: String },
     state: { type: String },
     address: { type: String },
+    phone: { type: String },
     age: { type: Number },
     weight: { type: Number },
     height: { type: Number },
