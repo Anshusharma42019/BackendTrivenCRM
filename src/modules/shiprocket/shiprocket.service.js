@@ -30,13 +30,7 @@ const call = async (method, url, options = {}) => {
 
   try {
     const res = await axios({ method, url: `${BASE_URL}${url}`, headers, ...options });
-    const body = res.data;
-    // Only throw on clear error responses (not just status_code fields which some endpoints always include)
-    if (body?.status_code && body.status_code >= 400 && !body.data) {
-      console.error('[SR] body-level error:', JSON.stringify(body));
-      throw new Error(body.message || 'Shiprocket API error');
-    }
-    return body;
+    return res.data;
   } catch (err) {
     if (err.response?.status === 401) {
       _token = null;

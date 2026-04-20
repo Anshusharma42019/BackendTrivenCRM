@@ -681,7 +681,8 @@ export const cancelShipment = catchAsync(async (req, res) => {
 // ── Label / Manifest ──────────────────────────────────────────────────────────
 export const generateLabel = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
-  const data = await sr.generateLabel(shipment_id);
+  if (!shipment_id) return res.json(new ApiResponse(400, null, 'shipment_id is required'));
+  const data = await sr.generateLabel(Number(shipment_id));
   if (data?.label_url && shipment_id) {
     await Shipment.findOneAndUpdate(
       { shiprocket_shipment_id: Number(shipment_id) },
@@ -694,7 +695,8 @@ export const generateLabel = catchAsync(async (req, res) => {
 
 export const generateManifest = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
-  const data = await sr.generateManifest(shipment_id);
+  if (!shipment_id) return res.json(new ApiResponse(400, null, 'shipment_id is required'));
+  const data = await sr.generateManifest(Number(shipment_id));
   if (data?.manifest_url && shipment_id) {
     await Shipment.findOneAndUpdate(
       { shiprocket_shipment_id: Number(shipment_id) },
@@ -720,7 +722,9 @@ export const printInvoice = catchAsync(async (req, res) => {
 // ── Pickup ────────────────────────────────────────────────────────────────────
 export const generatePickup = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
-  const data = await sr.generatePickup(shipment_id);
+  if (!shipment_id) return res.json(new ApiResponse(400, null, 'shipment_id is required'));
+  const data = await sr.generatePickup(Number(shipment_id));
+  console.log('[generatePickup] response:', JSON.stringify(data));
   if (data?.pickup_scheduled_date && shipment_id) {
     await Shipment.findOneAndUpdate(
       { shiprocket_shipment_id: Number(shipment_id) },
@@ -739,7 +743,8 @@ export const cancelPickup = catchAsync(async (req, res) => {
 
 export const getPickupLocations = catchAsync(async (req, res) => {
   const data = await sr.getPickupLocations();
-  res.json(new ApiResponse(200, data, 'Pickup locations fetched'));
+  const shipping_address = data?.data?.shipping_address || data?.shipping_address || [];
+  res.json(new ApiResponse(200, { shipping_address }, 'Pickup locations fetched'));
 });
 
 // ── Tracking ──────────────────────────────────────────────────────────────────

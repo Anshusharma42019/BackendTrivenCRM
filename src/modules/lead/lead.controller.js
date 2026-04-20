@@ -104,4 +104,21 @@ const getFollowUpLeads = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, { data: leads, total }, 'Follow-up leads fetched'));
 });
 
-export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads };
+const searchByPhone = catchAsync(async (req, res) => {
+  const { phone } = req.query;
+  if (!phone || phone.trim().length < 3) {
+    return res.json(new ApiResponse(httpStatus.OK, [], 'Search results'));
+  }
+  const leads = await Lead.find({
+    phone: { $regex: phone.trim(), $options: 'i' },
+    isDeleted: false,
+  })
+    .populate('assignedTo', 'name email')
+    .populate('createdBy', 'name')
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+  res.json(new ApiResponse(httpStatus.OK, leads, 'Search results'));
+});
+
+export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone };

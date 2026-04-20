@@ -23,7 +23,7 @@ router.patch('/:id/increment', auth('admin', 'manager', 'sales'), async (req, re
     if (existing.cnpCount >= 3) return res.status(400).json({ message: 'Max CNP count reached' });
     const record = await Cnp.findByIdAndUpdate(
       req.params.id,
-      { $inc: { cnpCount: 1 }, lastCnpAt: new Date() },
+      { $inc: { cnpCount: 1 }, lastCnpAt: new Date(), $push: { cnpHistory: { clickedAt: new Date() } } },
       { new: true }
     ).populate('assignedTo', 'name email').populate('lead', 'name phone');
     res.json({ status: 200, data: record });

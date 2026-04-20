@@ -20,6 +20,7 @@ router.patch('/:leadId/uncnp', auth('admin', 'manager', 'sales'), leadController
 router.post('/:leadId/notes', auth('admin', 'manager', 'sales'), leadController.addNote);
 router.post('/:leadId/follow-up', auth('admin', 'manager', 'sales'), leadController.addFollowUp);
 router.patch('/:leadId/next-follow-up', auth('admin', 'manager', 'sales'), leadController.setNextFollowUp);
+router.get('/search-phone', auth('admin', 'manager', 'sales'), leadController.searchByPhone);
 router.get('/follow-up/list', auth('admin', 'manager', 'sales'), leadController.getFollowUpLeads);
 
 router

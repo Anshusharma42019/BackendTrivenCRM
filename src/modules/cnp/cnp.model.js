@@ -19,6 +19,7 @@ const cnpSchema = new mongoose.Schema(
     notes: [{ text: String, createdAt: { type: Date, default: Date.now } }],
     cnpCount: { type: Number, default: 1 },
     lastCnpAt: { type: Date, default: Date.now },
+    cnpHistory: [{ clickedAt: { type: Date, default: Date.now } }],
   },
   { timestamps: true }
 );

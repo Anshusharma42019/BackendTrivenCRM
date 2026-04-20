@@ -99,18 +99,18 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (filter.status) {
     query.status = filter.status;
-  } else {
+  } else if (!filter.cnp) {
     query.status = { $nin: ['closed_won', 'interested'] };
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Exclude leads moved to verification/ready_to_shipment/cnp, but keep on_hold/closed_lost
+  // Exclude leads moved to verification/ready_to_shipment, but keep on_hold/closed_lost/cnp
   if (!filter.cnp) {
     const [advancedLeadIds, alwaysShowIds] = await Promise.all([
-      Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment', 'cnp'] }, lead: { $ne: null }, isDeleted: false }),
-      Lead.distinct('_id', { isDeleted: false, status: { $in: ['on_hold', 'closed_lost'] } }),
+      Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment'] }, lead: { $ne: null }, isDeleted: false }),
+      Lead.distinct('_id', { isDeleted: false, status: { $in: ['on_hold', 'closed_lost', 'interested'] } }),
     ]);
     const alwaysShowSet = new Set(alwaysShowIds.map(String));
     const excludeIds = advancedLeadIds.filter(id => !alwaysShowSet.has(String(id)));
