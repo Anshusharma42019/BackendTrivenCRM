@@ -10,6 +10,20 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const query = { status: 'pending' };
     if (req.user.role === 'sales') query.assignedTo = req.user._id;
+    const { filter } = req.query;
+    if (filter) {
+      const now = new Date();
+      const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (filter === 'today') query.createdAt = { $gte: startOfDay(now) };
+      else if (filter === 'yesterday') {
+        const start = startOfDay(new Date(now - 86400000));
+        query.createdAt = { $gte: start, $lt: startOfDay(now) };
+      } else if (filter === 'this_week') {
+        query.createdAt = { $gte: startOfDay(new Date(now - now.getDay() * 86400000)) };
+      } else if (filter === 'this_month') {
+        query.createdAt = { $gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+      }
+    }
     const records = await CallAgain.find(query)
       .populate('lead', 'name phone problem email address source status type revenue assignedTo createdBy cnpCount cnpAt notes note createdAt')
       .populate('assignedTo', 'name email')
