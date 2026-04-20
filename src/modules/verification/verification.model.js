@@ -25,6 +25,7 @@ const verificationSchema = new mongoose.Schema(
     height: { type: Number },
     otherProblems: { type: String },
     problemDuration: { type: String },
+    price: { type: Number },
     status: { type: String, enum: ['pending', 'verified', 'rejected', 'on_hold'], default: 'pending' },
     onHoldUntil: { type: Date },
   },
