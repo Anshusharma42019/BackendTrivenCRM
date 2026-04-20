@@ -6,9 +6,10 @@ import ApiError from '../../utils/ApiError.js';
 /**
  * Generate a JWT token.
  */
-const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
+const generateToken = (userId, role, expires, type, secret = config.jwt.secret) => {
   const payload = {
     sub: userId,
+    role,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(expires.getTime() / 1000),
     type,
@@ -22,11 +23,11 @@ const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
 const generateAuthTokens = async (user) => {
   const accessTokenExpires = new Date();
   accessTokenExpires.setMinutes(accessTokenExpires.getMinutes() + config.jwt.accessExpirationMinutes);
-  const accessToken = generateToken(user.id, accessTokenExpires, 'access');
+  const accessToken = generateToken(user.id, user.role, accessTokenExpires, 'access');
 
   const refreshTokenExpires = new Date();
   refreshTokenExpires.setDate(refreshTokenExpires.getDate() + config.jwt.refreshExpirationDays);
-  const refreshToken = generateToken(user.id, refreshTokenExpires, 'refresh');
+  const refreshToken = generateToken(user.id, user.role, refreshTokenExpires, 'refresh');
 
   // Recommendation: Store refresh tokens in the DB for rotation/revocation
   // For now, I'll return them directly to simplify

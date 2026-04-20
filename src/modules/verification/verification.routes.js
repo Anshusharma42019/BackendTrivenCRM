@@ -6,36 +6,37 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    // Sync any tasks with status=verification that aren't in Verification collection yet
-    const verificationTasks = await (await import('../task/task.model.js')).default
-      .find({ status: 'verification', isDeleted: false })
-      .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone status');
+    const Task = (await import('../task/task.model.js')).default;
 
-    for (const task of verificationTasks) {
-      await Verification.findOneAndUpdate(
-        { task: task._id },
-        {
-          $setOnInsert: {
-            task: task._id, title: task.title, assignedTo: task.assignedTo?._id, lead: task.lead?._id,
-            dueDate: task.dueDate, description: task.description,
-            cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
-            houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
-            landmark: task.landmark, pincode: task.pincode, state: task.state,
-            reminderAt: task.reminderAt, notes: task.notes,
-            problem: task.problem, age: task.age, weight: task.weight, height: task.height,
-            otherProblems: task.otherProblems, problemDuration: task.problemDuration,
-          },
-        },
-        { upsert: true }
+    const [verificationTasks, existingTaskIds] = await Promise.all([
+      Task.find({ status: 'verification', isDeleted: false }, '_id title assignedTo lead dueDate description cityVillageType cityVillage houseNo postOffice district landmark pincode state reminderAt notes problem age weight height otherProblems problemDuration'),
+      Verification.distinct('task'),
+    ]);
+
+    const existingSet = new Set(existingTaskIds.map(id => id.toString()));
+    const newTasks = verificationTasks.filter(t => !existingSet.has(t._id.toString()));
+
+    if (newTasks.length > 0) {
+      await Verification.insertMany(
+        newTasks.map(task => ({
+          task: task._id, title: task.title, assignedTo: task.assignedTo, lead: task.lead,
+          dueDate: task.dueDate, description: task.description,
+          cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
+          houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
+          landmark: task.landmark, pincode: task.pincode, state: task.state,
+          reminderAt: task.reminderAt, notes: task.notes,
+          problem: task.problem, age: task.age, weight: task.weight, height: task.height,
+          otherProblems: task.otherProblems, problemDuration: task.problemDuration,
+        })),
+        { ordered: false }
       );
     }
 
-    const records = await Verification.find()
+    const records = await Verification.find({ status: { $ne: 'verified' } })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
-      .populate('task')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ status: 200, data: records });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
