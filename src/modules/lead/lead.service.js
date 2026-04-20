@@ -97,6 +97,8 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (userRole === 'sales') query.assignedTo = userId;
 
+  if (!filter.cnp) query.cnp = { $ne: true };
+
   if (filter.status) {
     query.status = filter.status;
   } else if (!filter.cnp) {
