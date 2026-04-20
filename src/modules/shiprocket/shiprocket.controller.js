@@ -507,24 +507,33 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
 
   // Enrich masked phones from Lead collection
   const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone address').lean();
-  const byName = {}, byFirst = {}, byPin = {}, pinCount = {};
+  const byName = {}, byPin = {}, pinCount = {};
   for (const l of allLeads) {
     if (!l.phone) continue;
     const full = (l.name || '').toLowerCase().trim();
     byName[full] = l;
-    byFirst[full.split(/\s+/)[0]] = l;
+    // Also index by pincode extracted from address
     const pm = (l.address || '').match(/\b(\d{6})\b/);
     if (pm) { pinCount[pm[1]] = (pinCount[pm[1]] || 0) + 1; byPin[pm[1]] = l; }
   }
   for (const p of Object.keys(pinCount)) { if (pinCount[p] > 1) delete byPin[p]; }
 
   const enriched = delivered.map(o => {
-    if (o.billing_phone && !/^x+$/i.test(o.billing_phone) && o.billing_phone.length >= 10) return { ...o, followups: fuMap[String(o._id)] || [] };
+    const followups = fuMap[String(o._id)] || [];
+    if (o.billing_phone && !/^x+$/i.test(o.billing_phone) && String(o.billing_phone).replace(/\D/g, '').length >= 10) {
+      return { ...o, followups };
+    }
     const full = (o.billing_customer_name || '').toLowerCase().trim();
     const pin = String(o.billing_pincode || '').trim();
-    const lead = byName[full] || byFirst[full.split(/\s+/)[0]] || (pin && byPin[pin]);
+    // Try full name, then partial name match, then pincode
+    let lead = byName[full];
+    if (!lead) {
+      const words = full.split(/\s+/);
+      lead = Object.entries(byName).find(([k]) => words.every(w => k.includes(w)))?.[1];
+    }
+    if (!lead && pin) lead = byPin[pin];
     const phone = lead?.phone || o.billing_phone;
-    return { ...o, billing_phone: phone, followups: fuMap[String(o._id)] || [] };
+    return { ...o, billing_phone: phone, followups };
   });
 
   res.json(new ApiResponse(200, enriched, 'Orders with follow-ups fetched'));
