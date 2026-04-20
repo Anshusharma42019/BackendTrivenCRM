@@ -29,22 +29,25 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       );
     }
 
-    // Sync existing verification records with latest task data
+    // Sync existing verification records — only fill missing fields from task
     const existingTasks = verificationTasks.filter(t => existingSet.has(t._id.toString()));
     if (existingTasks.length > 0) {
-      await Promise.all(existingTasks.map(task => 
+      await Promise.all(existingTasks.map(task =>
         Verification.updateOne(
           { task: task._id },
           {
-            title: task.title, assignedTo: task.assignedTo, lead: task.lead,
-            dueDate: task.dueDate, description: task.description,
-            cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
-            houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
-            landmark: task.landmark, pincode: task.pincode, state: task.state,
-            reminderAt: task.reminderAt, notes: task.notes,
-            problem: task.problem, age: task.age, weight: task.weight, height: task.height,
-            otherProblems: task.otherProblems, problemDuration: task.problemDuration, price: task.price,
+            $set: {
+              title: task.title,
+              assignedTo: task.assignedTo,
+              lead: task.lead,
+            },
+            $setOnInsert: {},
           }
+        ).then(() =>
+          Verification.updateOne(
+            { task: task._id, age: { $exists: false } },
+            { $set: { age: task.age, weight: task.weight, height: task.height, price: task.price, problem: task.problem, otherProblems: task.otherProblems, problemDuration: task.problemDuration, description: task.description, cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, landmark: task.landmark, pincode: task.pincode, state: task.state, reminderAt: task.reminderAt } }
+          )
         )
       ));
     }
