@@ -129,7 +129,16 @@ export const updateOrder = catchAsync(async (req, res) => {
     body.order_date = `${body.order_date} 10:00`;
   }
   const data = await sr.updateOrder(body);
-  await Order.findOneAndUpdate({ order_id: String(body.order_id) }, { raw_response: data }, { returnDocument: 'after' });
+  await Order.findOneAndUpdate(
+    {
+      $or: [
+        { shiprocket_order_id: Number(body.order_id) },
+        { order_id: String(body.order_id) },
+      ],
+    },
+    { raw_response: data },
+    { returnDocument: 'after' }
+  );
   res.json(new ApiResponse(200, data, 'Order updated'));
 });
 
@@ -578,32 +587,44 @@ export const getDeliveredOrdersLive = catchAsync(async (req, res) => {
   res.json(new ApiResponse(200, { data: enriched, total: enriched.length }, 'Live delivered orders'));
 });
 
-export const getDeliveredStats = catchAsync(async (req, res) => {
-  const { filterType, year, month, from, to } = req.query;
+const INDIA_TIME_OFFSET = '+05:30';
 
-  // Build date match filter
+const startOfIndiaDate = (date) => new Date(`${date}T00:00:00.000${INDIA_TIME_OFFSET}`);
+const endOfIndiaDate = (date) => new Date(`${date}T23:59:59.999${INDIA_TIME_OFFSET}`);
+
+const buildOrderDateMatch = ({ filterType, year, month, from, to }, field = 'createdAt') => {
   const dateMatch = {};
   if (filterType === 'yearly' && year) {
-    dateMatch.createdAt = {
-      $gte: new Date(`${year}-01-01`),
-      $lt: new Date(`${Number(year) + 1}-01-01`),
+    dateMatch[field] = {
+      $gte: startOfIndiaDate(`${year}-01-01`),
+      $lt: startOfIndiaDate(`${Number(year) + 1}-01-01`),
     };
   } else if (filterType === 'monthly' && year && month) {
     const m = Number(month);
-    dateMatch.createdAt = {
-      $gte: new Date(`${year}-${String(m).padStart(2,'0')}-01`),
-      $lt: new Date(m === 12 ? `${Number(year)+1}-01-01` : `${year}-${String(m+1).padStart(2,'0')}-01`),
+    const start = `${year}-${String(m).padStart(2,'0')}-01`;
+    const next = m === 12 ? `${Number(year)+1}-01-01` : `${year}-${String(m+1).padStart(2,'0')}-01`;
+    dateMatch[field] = {
+      $gte: startOfIndiaDate(start),
+      $lt: startOfIndiaDate(next),
     };
   } else if (filterType === 'range' && from && to) {
-    dateMatch.createdAt = {
-      $gte: new Date(from),
-      $lte: new Date(to + 'T23:59:59'),
+    dateMatch[field] = {
+      $gte: startOfIndiaDate(from),
+      $lte: endOfIndiaDate(to),
     };
   }
+  return dateMatch;
+};
+
+export const getDeliveredStats = catchAsync(async (req, res) => {
+  const { filterType, year, month, from, to } = req.query;
+
+  const dateMatch = buildOrderDateMatch({ filterType, year, month, from, to });
+  const deliveredDateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, 'delivered_at');
 
   const [result, statusBreakdown] = await Promise.all([
     Order.aggregate([
-      { $match: { status: /^delivered$/i, ...dateMatch } },
+      { $match: { status: /^delivered$/i, ...deliveredDateMatch } },
       { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$sub_total' } } },
     ]),
     Order.aggregate([
@@ -613,13 +634,172 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
     ]),
   ]);
   const { count = 0, revenue = 0 } = result[0] || {};
-  res.json(new ApiResponse(200, { count, revenue, statusBreakdown }, 'Delivered stats'));
+  const mergedStatusBreakdown = statusBreakdown.filter(item => !/^delivered$/i.test(item._id || ''));
+  mergedStatusBreakdown.unshift({ _id: 'DELIVERED', count });
+  res.json(new ApiResponse(200, { count, revenue, statusBreakdown: mergedStatusBreakdown }, 'Delivered stats'));
 
   const now = Date.now();
   if (!filterType && now - lastSyncTime > SYNC_COOLDOWN_MS) {
     lastSyncTime = now;
     syncAllToLocal().catch(e => console.error('[Sync] error:', e.message));
   }
+});
+
+export const getStatusOrders = catchAsync(async (req, res) => {
+  const { status, filterType, year, month, from, to, limit = 50 } = req.query;
+  if (!status) {
+    res.status(400).json(new ApiResponse(400, null, 'Status is required'));
+    return;
+  }
+
+  const escapedStatus = String(status).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const isDeliveredStatus = /^delivered$/i.test(status);
+  const dateMatch = buildOrderDateMatch(
+    { filterType, year, month, from, to },
+    isDeliveredStatus ? 'delivered_at' : 'createdAt'
+  );
+  const orders = await Order.find(
+    { status: new RegExp(`^${escapedStatus}$`, 'i'), ...dateMatch },
+    {
+      order_id: 1,
+      shiprocket_order_id: 1,
+      shiprocket_shipment_id: 1,
+      lead_id: 1,
+      status: 1,
+      awb_code: 1,
+      courier_name: 1,
+      billing_customer_name: 1,
+      billing_phone: 1,
+      billing_city: 1,
+      billing_state: 1,
+      billing_pincode: 1,
+      payment_method: 1,
+      sub_total: 1,
+      order_items: 1,
+      createdAt: 1,
+      delivered_at: 1,
+    }
+  )
+    .populate('lead_id', 'phone email')
+    .sort(isDeliveredStatus ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 })
+    .limit(Math.min(Number(limit) || 50, 200))
+    .lean();
+
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
+  const byName = {}, byFirst = {}, byPincode = {}, pinCount = {};
+  for (const l of allLeads) {
+    if (!l.phone) continue;
+    const full = (l.name || '').toLowerCase().trim();
+    const first = full.split(/\s+/)[0];
+    if (full) byName[full] = l;
+    if (first) byFirst[first] = l;
+    const pm = (l.address || '').match(/\b(\d{6})\b/);
+    if (pm) {
+      pinCount[pm[1]] = (pinCount[pm[1]] || 0) + 1;
+      byPincode[pm[1]] = l;
+    }
+  }
+  for (const p of Object.keys(pinCount)) {
+    if (pinCount[p] > 1) delete byPincode[p];
+  }
+
+  const getPhone = (order) => {
+    const current = String(order.billing_phone || '').trim();
+    const digits = current.replace(/\D/g, '');
+    if (digits.length >= 10 && !/^x+$/i.test(current)) return current;
+    if (order.lead_id?.phone) return order.lead_id.phone;
+
+    const full = (order.billing_customer_name || '').toLowerCase().trim();
+    const first = full.split(/\s+/)[0];
+    const pin = String(order.billing_pincode || '').trim();
+    const lead = byName[full] || byFirst[first] || (pin && byPincode[pin]);
+    return lead?.phone || current;
+  };
+
+  const enriched = orders.map(order => ({ ...order, billing_phone: getPhone(order) }));
+
+  res.json(new ApiResponse(200, { data: enriched, total: enriched.length }, 'Status orders fetched'));
+});
+
+export const getLocalOrderLookup = catchAsync(async (req, res) => {
+  const { awb, order_id, channel_order_id, shipment_id } = req.query;
+  const query = [];
+
+  if (awb) query.push({ awb_code: String(awb) });
+  if (order_id) {
+    query.push({ order_id: String(order_id) });
+    if (!Number.isNaN(Number(order_id))) query.push({ shiprocket_order_id: Number(order_id) });
+  }
+  if (channel_order_id) query.push({ order_id: String(channel_order_id) });
+  if (shipment_id && !Number.isNaN(Number(shipment_id))) query.push({ shiprocket_shipment_id: Number(shipment_id) });
+
+  if (!query.length) {
+    res.status(400).json(new ApiResponse(400, null, 'awb, order_id, channel_order_id or shipment_id is required'));
+    return;
+  }
+
+  const order = await Order.findOne(
+    { $or: query },
+    {
+      order_id: 1,
+      shiprocket_order_id: 1,
+      shiprocket_shipment_id: 1,
+      lead_id: 1,
+      status: 1,
+      awb_code: 1,
+      courier_name: 1,
+      billing_customer_name: 1,
+      billing_phone: 1,
+      billing_email: 1,
+      billing_city: 1,
+      billing_state: 1,
+      billing_pincode: 1,
+      billing_address: 1,
+      payment_method: 1,
+      sub_total: 1,
+      createdAt: 1,
+    }
+  ).populate('lead_id', 'phone email').lean();
+
+  if (!order) {
+    res.json(new ApiResponse(200, null, 'Local order not found'));
+    return;
+  }
+
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
+  const byName = {}, byFirst = {}, byPincode = {}, pinCount = {};
+  for (const l of allLeads) {
+    if (!l.phone) continue;
+    const full = (l.name || '').toLowerCase().trim();
+    const first = full.split(/\s+/)[0];
+    if (full) byName[full] = l;
+    if (first) byFirst[first] = l;
+    const pm = (l.address || '').match(/\b(\d{6})\b/);
+    if (pm) {
+      pinCount[pm[1]] = (pinCount[pm[1]] || 0) + 1;
+      byPincode[pm[1]] = l;
+    }
+  }
+  for (const p of Object.keys(pinCount)) {
+    if (pinCount[p] > 1) delete byPincode[p];
+  }
+
+  const current = String(order.billing_phone || '').trim();
+  const digits = current.replace(/\D/g, '');
+  let billing_phone = current;
+  if (!(digits.length >= 10 && !/^x+$/i.test(current))) {
+    if (order.lead_id?.phone) {
+      billing_phone = order.lead_id.phone;
+    } else {
+      const full = (order.billing_customer_name || '').toLowerCase().trim();
+      const first = full.split(/\s+/)[0];
+      const pin = String(order.billing_pincode || '').trim();
+      const lead = byName[full] || byFirst[first] || (pin && byPincode[pin]);
+      billing_phone = lead?.phone || current;
+    }
+  }
+
+  res.json(new ApiResponse(200, { ...order, billing_phone }, 'Local order fetched'));
 });
 
 export const getOrder = catchAsync(async (req, res) => {
@@ -691,12 +871,13 @@ export const cancelShipment = catchAsync(async (req, res) => {
 export const generateLabel = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
   if (!shipment_id) return res.json(new ApiResponse(400, null, 'shipment_id is required'));
-  const data = await sr.generateLabel(Number(shipment_id));
-  if (data?.label_url && shipment_id) {
-    await Shipment.findOneAndUpdate(
-      { shiprocket_shipment_id: Number(shipment_id) },
-      { label_url: data.label_url },
-      { upsert: true, returnDocument: 'after' }
+  const shipmentIds = Array.isArray(shipment_id) ? shipment_id.map(Number).filter(Boolean) : [Number(shipment_id)].filter(Boolean);
+  if (!shipmentIds.length) return res.json(new ApiResponse(400, null, 'Valid shipment_id is required'));
+  const data = await sr.generateLabel(shipmentIds.length === 1 ? shipmentIds[0] : shipmentIds);
+  if (data?.label_url) {
+    await Shipment.updateMany(
+      { shiprocket_shipment_id: { $in: shipmentIds } },
+      { label_url: data.label_url }
     );
   }
   res.json(new ApiResponse(200, data, 'Label generated'));
@@ -705,12 +886,13 @@ export const generateLabel = catchAsync(async (req, res) => {
 export const generateManifest = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
   if (!shipment_id) return res.json(new ApiResponse(400, null, 'shipment_id is required'));
-  const data = await sr.generateManifest(Number(shipment_id));
-  if (data?.manifest_url && shipment_id) {
-    await Shipment.findOneAndUpdate(
-      { shiprocket_shipment_id: Number(shipment_id) },
-      { manifest_url: data.manifest_url },
-      { upsert: true, returnDocument: 'after' }
+  const shipmentIds = Array.isArray(shipment_id) ? shipment_id.map(Number).filter(Boolean) : [Number(shipment_id)].filter(Boolean);
+  if (!shipmentIds.length) return res.json(new ApiResponse(400, null, 'Valid shipment_id is required'));
+  const data = await sr.generateManifest(shipmentIds.length === 1 ? shipmentIds[0] : shipmentIds);
+  if (data?.manifest_url) {
+    await Shipment.updateMany(
+      { shiprocket_shipment_id: { $in: shipmentIds } },
+      { manifest_url: data.manifest_url }
     );
   }
   res.json(new ApiResponse(200, data, 'Manifest generated'));
@@ -839,38 +1021,79 @@ export const ndrAction = catchAsync(async (req, res) => {
 // ── Webhook ───────────────────────────────────────────────────────────────────
 const WEBHOOK_EVENTS = {
   6: 'SHIPPED',
-  8: 'IN_TRANSIT',
-  17: 'OUT_FOR_DELIVERY',
   7: 'DELIVERED',
+  8: 'IN_TRANSIT',
   9: 'RTO_INITIATED',
   16: 'RTO_DELIVERED',
+  17: 'OUT_FOR_DELIVERY',
+  18: 'IN_TRANSIT',
+  20: 'IN_TRANSIT',
+  42: 'PICKED_UP',
+};
+
+const normalizeShiprocketStatus = (value) => String(value || '')
+  .trim()
+  .toUpperCase()
+  .replace(/\s+/g, '_');
+
+const parseShiprocketDate = (value) => {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed;
+  const match = String(value).match(/^(\d{2})\s+(\d{2})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (match) {
+    const [, dd, mm, yyyy, hh, min, ss] = match;
+    return new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}+05:30`);
+  }
+  return new Date();
 };
 
 export const webhook = catchAsync(async (req, res) => {
   const payload = req.body;
-  const statusId = payload?.current_status_id || payload?.status_id;
+  const configuredToken = process.env.SHIPROCKET_WEBHOOK_TOKEN;
+  if (configuredToken && req.get('anx-api-key') !== configuredToken) {
+    return res.status(401).json({ success: false, message: 'Invalid webhook token' });
+  }
+
+  const statusId = Number(payload?.current_status_id || payload?.shipment_status_id || payload?.status_id);
   const awb = payload?.awb || payload?.awb_code;
   const shipmentId = payload?.shipment_id;
-  const orderId = payload?.order_id;
-  const event = WEBHOOK_EVENTS[statusId] || payload?.current_status || 'UNKNOWN';
+  const referenceOrderId = payload?.order_id;
+  const shiprocketOrderId = payload?.sr_order_id || payload?.shiprocket_order_id;
+  const event = normalizeShiprocketStatus(
+    WEBHOOK_EVENTS[statusId] || payload?.current_status || payload?.shipment_status || 'UNKNOWN'
+  );
+  const eventDate = parseShiprocketDate(payload?.current_timestamp || payload?.updated_at || payload?.awb_assigned_date);
 
   // Log every webhook event
   await TrackingLog.create({
     awb_code: awb,
     shipment_id: shipmentId ? Number(shipmentId) : undefined,
-    order_id: orderId ? String(orderId) : undefined,
+    order_id: referenceOrderId ? String(referenceOrderId) : undefined,
     current_status: event,
     current_status_id: statusId,
     raw_response: payload,
   });
 
   // Update order status
-  if (orderId) {
+  const orderQuery = [];
+  if (shiprocketOrderId) orderQuery.push({ shiprocket_order_id: Number(shiprocketOrderId) });
+  if (referenceOrderId) orderQuery.push({ order_id: String(referenceOrderId) });
+  if (awb) orderQuery.push({ awb_code: String(awb) });
+
+  if (orderQuery.length) {
     const updatedOrder = await Order.findOneAndUpdate(
-      { shiprocket_order_id: Number(orderId) },
-      { status: event, ...(event === 'DELIVERED' ? { delivered_at: new Date() } : {}) },
+      { $or: orderQuery },
+      {
+        status: event,
+        ...(awb ? { awb_code: String(awb) } : {}),
+        ...(payload?.courier_name ? { courier_name: payload.courier_name } : {}),
+        ...(shiprocketOrderId ? { shiprocket_order_id: Number(shiprocketOrderId) } : {}),
+        ...(event === 'DELIVERED' ? { delivered_at: eventDate } : {}),
+      },
       { new: true }
-    ).select('lead_id billing_phone billing_customer_name').lean();
+    ).select('lead_id billing_phone billing_customer_name auto_followups_set').lean();
 
     // Auto-move lead to follow_up when delivered + set auto follow-ups
     if (event === 'DELIVERED' && updatedOrder) {
@@ -884,17 +1107,33 @@ export const webhook = catchAsync(async (req, res) => {
         console.log(`[Webhook] Lead ${leadId} moved to follow_up (DELIVERED)`);
       }
       if (!updatedOrder.auto_followups_set) {
-        await setAutoFollowUps(updatedOrder._id, new Date());
+        await setAutoFollowUps(updatedOrder._id, eventDate);
         console.log(`[Webhook] Auto follow-ups set for order ${updatedOrder._id}`);
       }
     }
   }
 
   // Update shipment status
-  if (shipmentId) {
+  const shipmentQuery = [];
+  if (shipmentId) shipmentQuery.push({ shiprocket_shipment_id: Number(shipmentId) });
+  if (shiprocketOrderId) shipmentQuery.push({ shiprocket_order_id: Number(shiprocketOrderId) });
+  if (referenceOrderId) shipmentQuery.push({ order_id: String(referenceOrderId) });
+  if (awb) shipmentQuery.push({ awb_code: String(awb) });
+
+  if (shipmentQuery.length) {
+    const shipmentUpdate = {
+      status: event,
+      raw_response: payload,
+      ...(awb ? { awb_code: String(awb) } : {}),
+      ...(payload?.courier_name ? { courier_name: payload.courier_name } : {}),
+      ...(shipmentId ? { shiprocket_shipment_id: Number(shipmentId) } : {}),
+      ...(shiprocketOrderId ? { shiprocket_order_id: Number(shiprocketOrderId) } : {}),
+      ...(referenceOrderId ? { order_id: String(referenceOrderId) } : {}),
+    };
     await Shipment.findOneAndUpdate(
-      { shiprocket_shipment_id: Number(shipmentId) },
-      { status: event, awb_code: awb || undefined }
+      { $or: shipmentQuery },
+      shipmentUpdate,
+      shipmentId ? { upsert: true, returnDocument: 'after' } : { new: true }
     );
   }
 

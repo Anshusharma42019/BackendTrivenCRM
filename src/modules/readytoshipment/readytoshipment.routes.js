@@ -50,9 +50,10 @@ router.get('/for-shipment', auth('admin', 'manager', 'sales'), async (req, res) 
   try {
     const records = await ReadyToShipment.find()
       .populate('lead', 'name phone email address')
-      .populate('task', 'title')
+      .populate({ path: 'task', match: { status: 'ready_to_shipment', isDeleted: false }, select: 'title' })
       .sort({ createdAt: -1 });
-    res.json({ status: 200, data: records });
+    const filtered = records.filter(r => r.task !== null && !r.sentToShiprocket);
+    res.json({ status: 200, data: filtered });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }
