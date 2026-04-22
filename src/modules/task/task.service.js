@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import Task from './task.model.js';
+import Lead from '../lead/lead.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
 import Cnp from '../cnp/cnp.model.js';
@@ -45,7 +46,7 @@ export const getTasks = async (filter, userRole, userId) => {
   }
   if (filter.status) {
     query.status = filter.status;
-  } else if (userRole === 'sales') {
+  } else {
     query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
   }
   if (filter.type) query.type = filter.type;
@@ -96,6 +97,7 @@ export const updateTask = async (id, data, userRole, userId) => {
     await Cnp.findOneAndUpdate({ task: task._id }, { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 }, $push: { cnpHistory: { clickedAt: new Date() } } }, { upsert: true, new: true });
     await Verification.deleteOne({ task: task._id });
     await ReadyToShipment.deleteOne({ task: task._id });
+    if (task.lead) await Lead.findByIdAndUpdate(task.lead, { cnp: true }).catch(() => {});
   } else if (data.status === 'verification') {
     await Verification.findOneAndUpdate({ task: task._id }, record, { upsert: true, new: true });
     await Cnp.deleteOne({ task: task._id });

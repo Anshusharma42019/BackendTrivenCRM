@@ -53,5 +53,7 @@ export const getLeads = {
     page: z.string().optional(),
     limit: z.string().optional(),
     cnp: z.string().optional(),
+    dateFrom: z.string().optional(),
+    dateTo: z.string().optional(),
   }),
 };

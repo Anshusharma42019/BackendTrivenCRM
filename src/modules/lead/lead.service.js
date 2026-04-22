@@ -97,26 +97,25 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (userRole === 'sales') query.assignedTo = userId;
 
-  if (!filter.cnp) query.cnp = { $ne: true };
+  if (!filter.cnp && filter.status !== 'closed_lost') query.cnp = { $ne: true };
 
   if (filter.status) {
     query.status = filter.status;
   } else if (!filter.cnp) {
-    query.status = { $nin: ['closed_won', 'interested'] };
+    query.status = { $nin: ['closed_won', 'closed_lost', 'interested'] };
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Exclude leads moved to verification/ready_to_shipment, but keep on_hold/closed_lost/cnp
-  if (!filter.cnp) {
-    const [advancedLeadIds, alwaysShowIds] = await Promise.all([
-      Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment'] }, lead: { $ne: null }, isDeleted: false }),
-      Lead.distinct('_id', { isDeleted: false, status: { $in: ['on_hold', 'closed_lost', 'interested'] } }),
+  // Skip exclusion for closed_lost and interested — those should always be visible in pipeline
+  if (!filter.cnp && filter.status !== 'closed_lost' && filter.status !== 'interested') {
+    const [excludeByTask, excludeByCnpCollection] = await Promise.all([
+      Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested', 'cancel_call'] }, lead: { $ne: null }, isDeleted: false }),
+      Cnp.distinct('lead', { lead: { $ne: null } }),
     ]);
-    const alwaysShowSet = new Set(alwaysShowIds.map(String));
-    const excludeIds = advancedLeadIds.filter(id => !alwaysShowSet.has(String(id)));
-    if (excludeIds.length) query._id = { $nin: excludeIds };
+    const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String)])];
+    if (allExclude.length) query._id = { $nin: allExclude };
   }
 
   if (filter.search) {
