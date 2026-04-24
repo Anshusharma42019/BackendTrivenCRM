@@ -247,3 +247,226 @@ export const getRevenueChart = async (userRole, userId, period = 'monthly') => {
     { $limit: 12 },
   ]);
 };
+
+/* ─── Staff Commission ─── */
+const COMMISSION_RATE = 0.05; // 5%
+
+/**
+ * Calculate commission and salary for a single staff member for a given month.
+ */
+export const getStaffCommission = async (userId, month, year) => {
+  const User = (await import('../user/user.model.js')).default;
+  const Attendance = (await import('../attendance/attendance.model.js')).default;
+  const Verification = (await import('../verification/verification.model.js')).default;
+
+  const uid = new mongoose.Types.ObjectId(userId);
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  const nowIST = new Date(Date.now() + IST_OFFSET);
+  const m = month != null ? Number(month) : nowIST.getUTCMonth();
+  const y = year != null ? Number(year) : nowIST.getUTCFullYear();
+  const monthStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
+  const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59) - IST_OFFSET);
+
+  // 1. Get user details for baseSalary
+  const user = await User.findById(uid).select('baseSalary name role').lean();
+
+  // 2. Find leads assigned to this staff
+  const leadIds = await Lead.find({ assignedTo: uid, isDeleted: { $ne: true } }).distinct('_id');
+
+  // 3. Find delivered orders
+  const orders = await Order.find({
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    lead_id: { $in: leadIds },
+    $or: [
+      { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, updatedAt: { $gte: monthStart, $lte: monthEnd } },
+    ],
+  }).select('order_items sub_total delivered_at updatedAt billing_customer_name').lean();
+
+  // 4. Get attendance and verifications
+  const [attendances, verifications] = await Promise.all([
+    Attendance.find({ user: uid, date: { $gte: monthStart, $lte: monthEnd }, isDeleted: false }).lean(),
+    Verification.find({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: monthEnd } }).select('status').lean(),
+  ]);
+
+  // 5. Calculate statistics
+  let totalDeliveries = orders.length;
+  let totalItemRevenue = 0;
+  let totalCommission = 0;
+  const dailyMap = {};
+
+  for (const order of orders) {
+    let orderItemTotal = 0;
+    for (const item of (order.order_items || [])) {
+      const price = Number(item.selling_price) || 0;
+      const units = Number(item.units) || 1;
+      orderItemTotal += price * units;
+    }
+    if (orderItemTotal === 0) orderItemTotal = Number(order.sub_total) || 0;
+
+    const commission = orderItemTotal * COMMISSION_RATE;
+    totalItemRevenue += orderItemTotal;
+    totalCommission += commission;
+
+    const dateKey = (order.delivered_at || order.updatedAt || new Date()).toISOString().slice(0, 10);
+    if (!dailyMap[dateKey]) dailyMap[dateKey] = { date: dateKey, deliveries: 0, revenue: 0, commission: 0 };
+    dailyMap[dateKey].deliveries++;
+    dailyMap[dateKey].revenue += orderItemTotal;
+    dailyMap[dateKey].commission += commission;
+  }
+
+  const attendanceStats = { present: 0, late: 0, half_day: 0, absent: 0 };
+  for (const a of attendances) {
+    if (attendanceStats[a.status] !== undefined) attendanceStats[a.status]++;
+  }
+
+  const verifStats = { assigned: verifications.length, verified: verifications.filter(v => v.status === 'verified').length };
+
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const effectiveDays = attendanceStats.present + attendanceStats.late + (attendanceStats.half_day * 0.5);
+  const basePay = Math.round(((user?.baseSalary || 0) / daysInMonth) * effectiveDays);
+
+  const dailyBreakdown = Object.values(dailyMap).sort((a, b) => b.date.localeCompare(a.date));
+
+  return {
+    user: { name: user?.name, role: user?.role, baseSalary: user?.baseSalary || 0 },
+    totalDeliveries,
+    totalItemRevenue: Math.round(totalItemRevenue),
+    totalCommission: Math.round(totalCommission),
+    commissionRate: COMMISSION_RATE * 100,
+    attendance: attendanceStats,
+    verifications: verifStats,
+    basePay,
+    totalPay: basePay + Math.round(totalCommission),
+    month: m + 1,
+    year: y,
+    dailyBreakdown,
+  };
+};
+
+/**
+ * Get commission and salary data for ALL staff (admin view).
+ */
+export const getAllStaffCommissions = async (month, year) => {
+  const User = (await import('../user/user.model.js')).default;
+  const Attendance = (await import('../attendance/attendance.model.js')).default;
+  const Verification = (await import('../verification/verification.model.js')).default;
+
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  const nowIST = new Date(Date.now() + IST_OFFSET);
+  const m = month != null ? Number(month) : nowIST.getUTCMonth();
+  const y = year != null ? Number(year) : nowIST.getUTCFullYear();
+  const monthStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
+  const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59) - IST_OFFSET);
+
+  // 1. Get all staff
+  const staffUsers = await User.find({ isDeleted: false }).select('_id name phone role baseSalary').lean();
+
+  // 2. Get all delivered orders in the month
+  const deliveredOrders = await Order.find({
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    lead_id: { $exists: true, $ne: null },
+    $or: [
+      { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, updatedAt: { $gte: monthStart, $lte: monthEnd } },
+    ],
+  }).select('order_items sub_total lead_id').lean();
+
+  // 3. Build lead → staff mapping
+  const leadIds = [...new Set(deliveredOrders.map(o => String(o.lead_id)))];
+  const leads = await Lead.find({ _id: { $in: leadIds } }).select('_id assignedTo').lean();
+  const leadToStaff = {};
+  for (const l of leads) {
+    if (l.assignedTo) leadToStaff[String(l._id)] = String(l.assignedTo);
+  }
+
+  // 4. Get attendance and verifications for the month
+  const [attendances, verifications] = await Promise.all([
+    Attendance.find({ date: { $gte: monthStart, $lte: monthEnd }, isDeleted: false }).lean(),
+    Verification.find({ createdAt: { $gte: monthStart, $lte: monthEnd } }).select('assignedTo status').lean(),
+  ]);
+
+  // 5. Aggregate per staff
+  const staffMap = {};
+  for (const u of staffUsers) {
+    staffMap[String(u._id)] = {
+      user: u,
+      totalDeliveries: 0,
+      totalItemRevenue: 0,
+      totalCommission: 0,
+      attendance: { present: 0, late: 0, half_day: 0, absent: 0 },
+      verifications: { assigned: 0, verified: 0 },
+      basePay: 0,
+      totalPay: 0
+    };
+  }
+
+  // Tally Verifications
+  for (const v of verifications) {
+    if (v.assignedTo && staffMap[String(v.assignedTo)]) {
+      staffMap[String(v.assignedTo)].verifications.assigned++;
+      if (v.status === 'verified') staffMap[String(v.assignedTo)].verifications.verified++;
+    }
+  }
+
+  // Tally Attendance
+  for (const a of attendances) {
+    const sid = String(a.user);
+    if (staffMap[sid]) {
+      if (staffMap[sid].attendance[a.status] !== undefined) {
+        staffMap[sid].attendance[a.status]++;
+      }
+    }
+  }
+
+  // Calculate Commissions
+  for (const order of deliveredOrders) {
+    const staffId = leadToStaff[String(order.lead_id)];
+    if (!staffId || !staffMap[staffId]) continue;
+
+    let orderItemTotal = 0;
+    for (const item of (order.order_items || [])) {
+      const price = Number(item.selling_price) || 0;
+      const units = Number(item.units) || 1;
+      orderItemTotal += price * units;
+    }
+    if (orderItemTotal === 0) orderItemTotal = Number(order.sub_total) || 0;
+
+    staffMap[staffId].totalDeliveries++;
+    staffMap[staffId].totalItemRevenue += orderItemTotal;
+    staffMap[staffId].totalCommission += orderItemTotal * COMMISSION_RATE;
+  }
+
+  // Finalize Salaries
+  const result = Object.values(staffMap).map(s => {
+    const base = s.user.baseSalary || 0;
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const effectiveDays = s.attendance.present + s.attendance.late + (s.attendance.half_day * 0.5);
+    
+    s.basePay = Math.round((base / daysInMonth) * effectiveDays);
+    s.totalPay = s.basePay + Math.round(s.totalCommission);
+    
+    return {
+      ...s,
+      totalItemRevenue: Math.round(s.totalItemRevenue),
+      totalCommission: Math.round(s.totalCommission),
+    };
+  });
+
+  // Grand totals
+  const grandTotalDeliveries = result.reduce((a, s) => a + s.totalDeliveries, 0);
+  const grandTotalRevenue = result.reduce((a, s) => a + s.totalItemRevenue, 0);
+  const grandTotalCommission = result.reduce((a, s) => a + s.totalCommission, 0);
+  const grandTotalPay = result.reduce((a, s) => a + s.totalPay, 0);
+
+  return {
+    staff: result,
+    grandTotalDeliveries,
+    grandTotalRevenue,
+    grandTotalCommission,
+    grandTotalPay,
+    commissionRate: COMMISSION_RATE * 100,
+    month: m + 1,
+    year: y,
+  };
+};

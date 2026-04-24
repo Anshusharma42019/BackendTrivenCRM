@@ -47,4 +47,16 @@ const getAllStaffStats = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, data, 'All staff stats fetched'));
 });
 
-export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats };
+const getStaffCommission = catchAsync(async (req, res) => {
+  const { month, year } = req.query;
+  const data = await dashboardService.getStaffCommission(req.user._id, month, year);
+  res.json(new ApiResponse(httpStatus.OK, data, 'Staff commission fetched'));
+});
+
+const getAllStaffCommissions = catchAsync(async (req, res) => {
+  const { month, year } = req.query;
+  const data = await dashboardService.getAllStaffCommissions(month, year);
+  res.json(new ApiResponse(httpStatus.OK, data, 'All staff commissions fetched'));
+});
+
+export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats, getStaffCommission, getAllStaffCommissions };

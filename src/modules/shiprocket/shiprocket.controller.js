@@ -233,6 +233,7 @@ const syncAllToLocal = async () => {
           order_date: o.created_at,
           status: o.status ? o.status.toUpperCase().replace(/ /g, '_') : 'NEW',
           ...(o.status?.toLowerCase() === 'delivered' ? { delivered_at: new Date(o.updated_at || o.created_at || Date.now()) } : {}),
+          status_updated_at: new Date(o.updated_at || o.created_at || Date.now()),
           sub_total: Number(o.total) || 0,
           billing_customer_name: o.customer_name,
           billing_phone: getRealPhone(o.customer_name, o.customer_pincode, o.billing_phone || o.customer_phone),
@@ -621,6 +622,7 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
 
   const dateMatch = buildOrderDateMatch({ filterType, year, month, from, to });
   const deliveredDateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, 'delivered_at');
+  const statusDateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, 'status_updated_at');
 
   const [result, statusBreakdown] = await Promise.all([
     Order.aggregate([
@@ -628,7 +630,7 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
       { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$sub_total' } } },
     ]),
     Order.aggregate([
-      { $match: { ...dateMatch } },
+      { $match: { ...statusDateMatch } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]),
@@ -656,7 +658,7 @@ export const getStatusOrders = catchAsync(async (req, res) => {
   const isDeliveredStatus = /^delivered$/i.test(status);
   const dateMatch = buildOrderDateMatch(
     { filterType, year, month, from, to },
-    isDeliveredStatus ? 'delivered_at' : 'createdAt'
+    isDeliveredStatus ? 'delivered_at' : 'status_updated_at'
   );
   const orders = await Order.find(
     { status: new RegExp(`^${escapedStatus}$`, 'i'), ...dateMatch },

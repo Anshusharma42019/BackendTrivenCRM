@@ -45,6 +45,7 @@ const orderSchema = new mongoose.Schema({
   delivered_at: { type: Date, index: true },
   auto_followups_set: { type: Boolean, default: false },
   notes: { type: String, default: '' },
+  status_updated_at: { type: Date, index: true },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 

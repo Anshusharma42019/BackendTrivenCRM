@@ -14,7 +14,13 @@ const validate = (schema) => (req, res, next) => {
   const result = validSchema.safeParse(object);
 
   if (!result.success) {
-    const errorMessage = (result.error?.errors || []).map((d) => d.message).join(', ');
+    const issues = result.error?.issues || result.error?.errors || [];
+    const errorMessage = issues
+      .map((issue) => {
+        const path = issue.path ? issue.path.join('.') : '';
+        return path ? `${path}: ${issue.message}` : issue.message;
+      })
+      .join(', ');
     return next(new ApiError(400, errorMessage || 'Validation failed'));
   }
 

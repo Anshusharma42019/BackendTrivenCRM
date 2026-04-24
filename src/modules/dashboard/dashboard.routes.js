@@ -12,5 +12,7 @@ router.get('/staff-verifications', auth('sales', 'admin', 'manager'), dashboardC
 router.get('/staff-today-lists', auth('sales', 'admin', 'manager'), dashboardController.getStaffTodayLists);
 router.get('/staff-monthly-chart', auth('sales', 'admin', 'manager'), dashboardController.getStaffMonthlyChart);
 router.get('/all-staff-stats', auth('admin', 'manager'), dashboardController.getAllStaffStats);
+router.get('/staff-commission', auth('sales', 'admin', 'manager'), dashboardController.getStaffCommission);
+router.get('/all-staff-commissions', auth('admin', 'manager'), dashboardController.getAllStaffCommissions);
 
 export default router;
