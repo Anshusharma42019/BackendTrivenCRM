@@ -83,7 +83,7 @@ export const createLead = async (data, createdBy, creatorRole) => {
         status: 'pending',
         isDeleted: false,
       });
-      console.log('[AUTO-TASK] Created call task:', task._id, 'for user:', assignedToId);
+      // console.log('[AUTO-TASK] Created call task:', task._id, 'for user:', assignedToId);
     } else {
       console.warn('[AUTO-TASK] Skipped — no sales user available for lead:', lead._id);
     }

@@ -10,9 +10,9 @@ import { webhook } from "./modules/shiprocket/shiprocket.controller.js";
 
 const app = express();
 
-if (config.env !== "test") {
-  app.use(morgan("dev"));
-}
+// if (config.env !== "test") {
+//   app.use(morgan("dev"));
+// }
 
 // set security HTTP headers
 app.use(helmet());
@@ -30,6 +30,8 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:5500',
   'http://localhost:5500',
+  "http://127.0.0.1:5500/index.html",
+  "https://triven-lendingpage.vercel.app/",
   'https://backend-triven-crm.vercel.app',
   'https://frontendtriven-crm.vercel.app',
   'https://triven-website.vercel.app',

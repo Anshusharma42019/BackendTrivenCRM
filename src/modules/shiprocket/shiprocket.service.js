@@ -25,8 +25,8 @@ const call = async (method, url, options = {}) => {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   // ── Debug: log every outgoing request ──
-  console.log(`[SR] ${method} ${url}`);
-  if (options.data) console.log('[SR] payload:', JSON.stringify(options.data, null, 2));
+  // console.log(`[SR] ${method} ${url}`);
+  // if (options.data) console.log('[SR] payload:', JSON.stringify(options.data, null, 2));
 
   try {
     const res = await axios({ method, url: `${BASE_URL}${url}`, headers, ...options });
@@ -43,8 +43,8 @@ const call = async (method, url, options = {}) => {
       return res.data;
     }
     // Full error dump
-    console.error('[SR] HTTP status:', err.response?.status);
-    console.error('[SR] error body:', JSON.stringify(err.response?.data));
+    // console.error('[SR] HTTP status:', err.response?.status);
+    // console.error('[SR] error body:', JSON.stringify(err.response?.data));
     const msg = err.response?.data?.message || err.message;
     throw new Error(msg);
   }

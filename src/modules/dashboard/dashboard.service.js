@@ -42,7 +42,7 @@ export const getStaffStats = async (userId) => {
 
 export const setStaffTarget = async (userId, target) => {
   const date = todayDateStr();
-  console.log('[setStaffTarget] userId:', userId, 'date:', date, 'target:', target);
+  // console.log('[setStaffTarget] userId:', userId, 'date:', date, 'target:', target);
   let doc = await StaffTarget.findOne({ user: userId, date });
   if (doc) {
     doc.target = Number(target);
@@ -50,7 +50,7 @@ export const setStaffTarget = async (userId, target) => {
   } else {
     doc = await StaffTarget.create({ user: userId, date, target: Number(target) });
   }
-  console.log('[setStaffTarget] saved:', doc);
+  // console.log('[setStaffTarget] saved:', doc);
   return { todayTarget: doc.target };
 };
 
@@ -113,7 +113,7 @@ export const getAllStaffStats = async () => {
   const dateStr = todayDateStr();
 
   const User = (await import('../user/user.model.js')).default;
-  const salesUsers = await User.find({ role: 'sales', isDeleted: false }).select('_id name phone role').lean();
+  const salesUsers = await User.find({ role: { $in: ['sales', 'manager'] }, isDeleted: false }).select('_id name phone role').lean();
 
   const stats = await Promise.all(salesUsers.map(async (u) => {
     const uid = new mongoose.Types.ObjectId(u._id);
@@ -157,6 +157,11 @@ export const getDashboardStats = async (userRole, userId) => {
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const Attendance = (await import('../attendance/attendance.model.js')).default;
+  const User = (await import('../user/user.model.js')).default;
 
   const [
     totalLeads,
@@ -168,6 +173,12 @@ export const getDashboardStats = async (userRole, userId) => {
     sourceData,
     pendingTasks,
     overdueTasks,
+    attendanceToday,
+    totalStaffCount,
+    todayCnp,
+    todayCallAgain,
+    todayInterested,
+    todayNotInterested,
   ] = await Promise.all([
     Lead.countDocuments(countFilter),
 
@@ -204,6 +215,15 @@ export const getDashboardStats = async (userRole, userId) => {
       status: 'overdue',
       ...(userRole === 'sales' ? { assignedTo: userId } : {}),
     }),
+
+    Attendance.find({ date: { $gte: todayStart, $lte: todayEnd }, isDeleted: false }).lean(),
+
+    User.countDocuments({ role: { $in: ['sales', 'manager'] }, isDeleted: false }),
+
+    Cnp.countDocuments({ createdAt: { $gte: todayStart } }),
+    CallAgain.countDocuments({ updatedAt: { $gte: todayStart } }),
+    Task.countDocuments({ status: 'interested', isDeleted: false, updatedAt: { $gte: todayStart } }),
+    Task.countDocuments({ status: 'cancel_call', isDeleted: false, updatedAt: { $gte: todayStart } }),
   ]);
 
   const stageOrder = ['new', 'contacted', 'interested', 'follow_up', 'closed_won', 'closed_lost'];
@@ -216,7 +236,19 @@ export const getDashboardStats = async (userRole, userId) => {
     percentage: totalLeads ? Math.round((s.count / totalLeads) * 100) : 0,
   }));
 
+  const attendanceStats = {
+    present: attendanceToday.filter(a => a.checkIn).length,
+    checkedOut: attendanceToday.filter(a => a.checkOut).length,
+    absent: Math.max(0, totalStaffCount - attendanceToday.filter(a => a.checkIn).length),
+    totalStaff: totalStaffCount
+  };
 
+  const activityStats = {
+    todayCnp,
+    todayCallAgain,
+    todayInterested,
+    todayNotInterested,
+  };
 
   return {
     totalLeads,
@@ -228,6 +260,8 @@ export const getDashboardStats = async (userRole, userId) => {
     salesFunnel,
     sourcePerformance,
     tasks: { pending: pendingTasks, overdue: overdueTasks },
+    attendance: attendanceStats,
+    activity: activityStats,
   };
 };
 
@@ -359,8 +393,8 @@ export const getAllStaffCommissions = async (month, year) => {
   const monthStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
   const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59) - IST_OFFSET);
 
-  // 1. Get all staff
-  const staffUsers = await User.find({ isDeleted: false }).select('_id name phone role baseSalary').lean();
+  // 1. Get all staff (Sales and Managers)
+  const staffUsers = await User.find({ role: { $in: ['sales', 'manager'] }, isDeleted: false }).select('_id name phone role baseSalary').lean();
 
   // 2. Get all delivered orders in the month
   const deliveredOrders = await Order.find({

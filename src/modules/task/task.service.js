@@ -52,7 +52,7 @@ export const getTasks = async (filter, userRole, userId) => {
   if (filter.type) query.type = filter.type;
   if (filter.lead) query.lead = filter.lead;
 
-  console.log('[GET-TASKS] query:', JSON.stringify(query), 'role:', userRole, 'userId:', userId);
+  // console.log('[GET-TASKS] query:', JSON.stringify(query), 'role:', userRole, 'userId:', userId);
   if (filter.date) {
     const start = new Date(filter.date);
     start.setHours(0, 0, 0, 0);
