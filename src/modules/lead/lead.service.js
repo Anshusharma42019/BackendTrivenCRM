@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Lead from './lead.model.js';
 import Task from '../task/task.model.js';
 import Cnp from '../cnp/cnp.model.js';
+import Verification from '../verification/verification.model.js';
 import User from '../user/user.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
@@ -97,13 +98,11 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (userRole === 'sales') query.assignedTo = userId;
 
-  if (!filter.cnp && !filter.status) query.cnp = { $ne: true };
+  if (!filter.cnp) query.cnp = { $ne: true };
 
   if (filter.status) {
     query.status = filter.status;
-    query.cnp = { $ne: true };
     if (filter.status === 'on_hold') {
-      query.cnp = { $ne: true };
       const excludeWithTask = await Task.distinct('lead', { status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false });
       if (excludeWithTask.length) query._id = { $nin: excludeWithTask };
     }
@@ -114,14 +113,20 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Only apply exclusion when fetching the general (unfiltered) lead list
-  if (!filter.cnp && !filter.status) {
-    const [excludeByTask, excludeByCnpCollection] = await Promise.all([
+  // Always exclude leads that are in verification/shipment pipeline (unless fetching CNP list)
+  if (!filter.cnp) {
+    const [excludeByTask, excludeByCnpCollection, excludeByVerification] = await Promise.all([
       Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested', 'cancel_call', 'cancelled'] }, lead: { $ne: null }, isDeleted: false }),
       Cnp.distinct('lead', { lead: { $ne: null } }),
+      Verification.distinct('lead', { lead: { $exists: true, $ne: null } }),
     ]);
-    const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String)])];
-    if (allExclude.length) query._id = { $nin: allExclude };
+    const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String), ...excludeByVerification.map(String)])];
+    if (allExclude.length) {
+      const allExcludeIds = allExclude.map(id => new mongoose.Types.ObjectId(id));
+      query._id = query._id
+        ? { $nin: [...new Set([...query._id.$nin.map(String), ...allExclude])].map(id => new mongoose.Types.ObjectId(id)) }
+        : { $nin: allExcludeIds };
+    }
   }
 
   if (filter.search) {
