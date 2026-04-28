@@ -30,6 +30,11 @@ const call = async (method, url, options = {}) => {
 
   try {
     const res = await axios({ method, url: `${BASE_URL}${url}`, headers, ...options });
+    // Shiprocket sometimes returns 200 with error info in the body
+    if (res.data?.status_code === 500 || res.data?.data?.status_code === 500) {
+      const msg = res.data?.message || res.data?.data?.message || 'Shiprocket internal error';
+      throw new Error(msg);
+    }
     return res.data;
   } catch (err) {
     if (err.response?.status === 401) {

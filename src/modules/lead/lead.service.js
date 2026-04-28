@@ -97,10 +97,16 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (userRole === 'sales') query.assignedTo = userId;
 
-  if (!filter.cnp && filter.status !== 'closed_lost') query.cnp = { $ne: true };
+  if (!filter.cnp && !filter.status) query.cnp = { $ne: true };
 
   if (filter.status) {
     query.status = filter.status;
+    query.cnp = { $ne: true };
+    if (filter.status === 'on_hold') {
+      query.cnp = { $ne: true };
+      const excludeWithTask = await Task.distinct('lead', { status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false });
+      if (excludeWithTask.length) query._id = { $nin: excludeWithTask };
+    }
   } else if (!filter.cnp) {
     query.status = { $nin: ['closed_won', 'closed_lost', 'interested'] };
   }
@@ -108,10 +114,10 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Skip exclusion for closed_lost and interested — those should always be visible in pipeline
-  if (!filter.cnp && filter.status !== 'closed_lost' && filter.status !== 'interested') {
+  // Only apply exclusion when fetching the general (unfiltered) lead list
+  if (!filter.cnp && !filter.status) {
     const [excludeByTask, excludeByCnpCollection] = await Promise.all([
-      Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested', 'cancel_call'] }, lead: { $ne: null }, isDeleted: false }),
+      Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested', 'cancel_call', 'cancelled'] }, lead: { $ne: null }, isDeleted: false }),
       Cnp.distinct('lead', { lead: { $ne: null } }),
     ]);
     const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String)])];
@@ -165,10 +171,29 @@ export const getLeadById = async (id, userRole, userId) => {
 };
 
 export const updateLead = async (id, data, userRole, userId) => {
-  const lead = await getLeadById(id, userRole, userId);
+  const lead = await Lead.findOne({ _id: id, isDeleted: false })
+    .populate('assignedTo', 'name email role');
+  if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  if (userRole === 'sales' && !['closed_lost', 'interested', 'on_hold'].includes(data.status) && String(lead.assignedTo?._id) !== String(userId)) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+  }
+  // Normalize assignedTo — accept object {_id} or string
+  if (data.assignedTo && typeof data.assignedTo === 'object') {
+    data.assignedTo = data.assignedTo._id;
+  }
+  // Sales users can only assign to themselves
+  if (userRole === 'sales') {
+    data.assignedTo = new mongoose.Types.ObjectId(String(userId));
+  }
   const oldStatus = lead.status;
   Object.assign(lead, data);
   await lead.save();
+
+  // When clearing CNP flag, delete cnp-status tasks and remove CNP records
+  if (data.cnp === false) {
+    await Task.deleteMany({ lead: id, status: 'cnp', isDeleted: false });
+    await Cnp.deleteMany({ lead: id });
+  }
 
   if (data.status && data.status !== oldStatus && lead.assignedTo) {
     await createNotification({
@@ -184,7 +209,8 @@ export const updateLead = async (id, data, userRole, userId) => {
 };
 
 export const markCNP = async (leadId, userRole, userId) => {
-  const lead = await getLeadById(leadId, userRole, userId);
+  const lead = await Lead.findOne({ _id: leadId, isDeleted: false });
+  if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   lead.cnp = true;
   lead.cnpCount = (lead.cnpCount || 0) + 1;
   lead.cnpAt = new Date();
@@ -210,6 +236,32 @@ export const markCNP = async (leadId, userRole, userId) => {
         assignedTo: task.assignedTo,
         lead: leadId,
         dueDate: task.dueDate,
+        cnpCount: 1,
+        lastCnpAt: new Date(),
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  // If no tasks exist, create a placeholder task then CNP record
+  if (tasks.length === 0) {
+    const placeholderTask = await Task.create({
+      title: lead.name,
+      type: 'call',
+      lead: leadId,
+      assignedTo: lead.assignedTo,
+      createdBy: lead.assignedTo,
+      dueDate: new Date(),
+      status: 'cnp',
+      isDeleted: false,
+    });
+    await Cnp.findOneAndUpdate(
+      { task: placeholderTask._id },
+      {
+        task: placeholderTask._id,
+        title: lead.name,
+        assignedTo: lead.assignedTo,
+        lead: leadId,
         cnpCount: 1,
         lastCnpAt: new Date(),
       },

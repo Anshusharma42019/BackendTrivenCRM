@@ -598,9 +598,22 @@ export const printManifest = catchAsync(async (req, res) => { res.json(new ApiRe
 export const printInvoice = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.printInvoice(req.body.ids), 'Invoice print URL')); });
 export const generatePickup = catchAsync(async (req, res) => {
   const { shipment_id } = req.body;
-  const data = await sr.generatePickup(Number(shipment_id));
-  if (data?.pickup_scheduled_date) await Shipment.findOneAndUpdate({ shiprocket_shipment_id: Number(shipment_id) }, { pickup_scheduled_date: data.pickup_scheduled_date, pickup_token_number: data.pickup_token_number }, { upsert: true });
-  res.json(new ApiResponse(200, data, 'Pickup generated'));
+  const sid = Number(shipment_id);
+  if (!sid) return res.status(400).json(new ApiResponse(400, null, 'shipment_id is required'));
+  try {
+    const data = await sr.generatePickup(sid);
+    if (data?.pickup_scheduled_date) {
+      await Shipment.findOneAndUpdate(
+        { shiprocket_shipment_id: sid },
+        { pickup_scheduled_date: data.pickup_scheduled_date, pickup_token_number: data.pickup_token_number },
+        { upsert: true }
+      );
+    }
+    res.json(new ApiResponse(200, data, 'Pickup generated'));
+  } catch (err) {
+    const msg = err.message || 'Pickup generation failed';
+    res.status(200).json(new ApiResponse(500, { message: msg }, msg));
+  }
 });
 export const cancelPickup = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.cancelPickup(req.body), 'Pickup cancelled')); });
 export const getPickupLocations = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getPickupLocations(), 'Pickup locations fetched')); });

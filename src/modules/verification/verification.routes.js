@@ -89,4 +89,18 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+router.delete('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    const record = await Verification.findByIdAndDelete(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Not found' });
+    if (record.task) {
+      const Task = (await import('../task/task.model.js')).default;
+      await Task.findByIdAndUpdate(record.task, { isDeleted: true });
+    }
+    res.json({ status: 200, message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 export default router;

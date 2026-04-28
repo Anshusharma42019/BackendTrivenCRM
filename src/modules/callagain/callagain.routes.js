@@ -8,7 +8,7 @@ const router = express.Router();
 // GET all call-again records
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const query = { status: 'pending' };
+    const query = { status: { $in: ['pending'] } };
     if (req.user.role === 'sales') query.assignedTo = req.user._id;
     const { filter } = req.query;
     if (filter) {
@@ -78,10 +78,10 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
 
     if (!record) return res.status(404).json({ message: 'Not found' });
 
-    // Sync lead status
-    if (record.lead) {
+    // Sync lead status (skip for 'done' status)
+    if (record.lead && status !== 'done') {
       const leadStatus = status === 'converted' ? 'closed_won' : status === 'closed_lost' ? 'closed_lost' : status;
-      await Lead.findByIdAndUpdate(record.lead._id || record.lead, { status: leadStatus });
+      await Lead.findByIdAndUpdate(record.lead._id || record.lead, { status: leadStatus, cnp: false });
     }
 
     res.json({ status: 200, data: record });
