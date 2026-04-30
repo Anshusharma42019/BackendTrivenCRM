@@ -23,6 +23,8 @@ router.get('/orders/delivered-stats', auth(), c.getDeliveredStats);
 router.get('/orders/status-details', auth(), c.getStatusOrders);
 router.get('/orders/local-lookup', auth(), c.getLocalOrderLookup);
 router.post('/orders/sync', auth(), c.syncShiprocket);
+router.post('/orders/backfill-delivered', auth(), c.backfillDeliveredAt);
+router.get('/orders/debug-fields', auth(), c.debugOrderFields);
 router.get('/orders/show/:id', auth(), c.getOrder);
 router.post('/orders/:id/follow-up', auth(), c.addFollowUp);
 router.patch('/orders/:id/next-follow-up', auth(), c.setNextFollowUp);

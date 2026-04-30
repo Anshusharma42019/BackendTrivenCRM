@@ -164,6 +164,14 @@ const toList = (raw) => {
   return vals.every(v => v && typeof v === 'object') ? vals : [];
 };
 
+// Normalize Shiprocket status: uppercase, spaces+hyphens → underscore, merge IN_TRANSIT variants
+const normalizeOrderStatus = (status) => {
+  if (!status) return 'NEW';
+  const s = status.toUpperCase().replace(/[\s-]+/g, '_');
+  if (s.startsWith('IN_TRANSIT')) return 'IN_TRANSIT';
+  return s;
+};
+
 const syncAllToLocal = async () => {
   const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
   const byName = {};
@@ -208,44 +216,67 @@ const syncAllToLocal = async () => {
     const data = await sr.getOrders({ per_page: 100, page });
     const list = toList(data?.data);
     if (!list.length) break;
-    await Promise.all(list.map(o => {
+    await Promise.all(list.map(async (o) => {
       const srId = Number(o.id);
       const shipment = o.shipments?.[0];
       const lead = findLead(o.customer_name, o.customer_pincode, o.billing_phone || o.customer_phone);
-      return Order.findOneAndUpdate(
-        { shiprocket_order_id: srId },
-        { $set: {
-          shiprocket_order_id: srId,
-          shiprocket_shipment_id: shipment?.id ? Number(shipment.id) : undefined,
-          order_id: String(o.channel_order_id || srId),
-          order_date: o.created_at,
-          status: o.status ? o.status.toUpperCase().replace(/ /g, '_') : 'NEW',
-          ...(o.status?.toLowerCase() === 'delivered' ? { delivered_at: new Date(o.updated_at || o.created_at || Date.now()) } : {}),
-          status_updated_at: new Date(o.updated_at || o.created_at || Date.now()),
-          sub_total: Number(o.total) || 0,
-          lead_id: lead?._id,
-          billing_customer_name: o.customer_name,
-          billing_phone: lead?.phone || o.billing_phone || o.customer_phone,
-          billing_email: lead?.email || o.customer_email || o.billing_email,
-          billing_address: o.customer_address,
-          billing_city: o.customer_city,
-          billing_state: o.customer_state,
-          billing_pincode: o.customer_pincode,
-          billing_country: o.customer_country || 'India',
-          awb_code: shipment?.awb,
-          courier_id: shipment?.courier_company_id ? Number(shipment.courier_company_id) : undefined,
-          courier_name: shipment?.courier,
-          payment_method: o.payment_method,
-          order_items: (o.products || o.order_items || []).map(p => ({
-            name: p.name || p.product_name || '',
-            sku: p.sku || '',
-            units: Number(p.units || p.quantity) || 1,
-            selling_price: Number(p.selling_price || p.price) || 0,
-          })),
-          raw_response: o,
-        }},
-        { upsert: true, returnDocument: 'after' }
-      );
+      const isDelivered = o.status?.toLowerCase() === 'delivered';
+      const rawDeliveredAt = shipment?.delivered_date || o.delivered_date || o.deliver_date ||
+        (isDelivered ? o.updated_at : null);
+      const deliveredAt = rawDeliveredAt ? new Date(rawDeliveredAt) : null;
+
+      // Calculate sub_total from multiple sources for accuracy
+      const itemsTotal = (o.products || o.order_items || []).reduce((sum, p) => {
+        return sum + (Number(p.selling_price || p.price) || 0) * (Number(p.units || p.quantity) || 1);
+      }, 0);
+      const sub_total = Number(o.total) || Number(o.sub_total) || Number(o.order_total) || itemsTotal || 0;
+
+      const setFields = {
+        shiprocket_order_id: srId,
+        shiprocket_shipment_id: shipment?.id ? Number(shipment.id) : undefined,
+        order_id: String(o.channel_order_id || srId),
+        order_date: o.created_at,
+        status: normalizeOrderStatus(o.status),
+        status_updated_at: new Date(o.updated_at || o.created_at || Date.now()),
+        sub_total,
+        lead_id: lead?._id,
+        billing_customer_name: o.customer_name,
+        billing_phone: lead?.phone || o.billing_phone || o.customer_phone,
+        billing_email: lead?.email || o.customer_email || o.billing_email,
+        billing_address: o.customer_address,
+        billing_city: o.customer_city,
+        billing_state: o.customer_state,
+        billing_pincode: o.customer_pincode,
+        billing_country: o.customer_country || 'India',
+        awb_code: shipment?.awb,
+        courier_id: shipment?.courier_company_id ? Number(shipment.courier_company_id) : undefined,
+        courier_name: shipment?.courier,
+        payment_method: o.payment_method,
+        order_items: (o.products || o.order_items || []).map(p => ({
+          name: p.name || p.product_name || '',
+          sku: p.sku || '',
+          units: Number(p.units || p.quantity) || 1,
+          selling_price: Number(p.selling_price || p.price) || 0,
+        })),
+        raw_response: o,
+      };
+
+      if (isDelivered && deliveredAt) setFields.delivered_at = deliveredAt;
+
+      try {
+        await Order.updateOne(
+          { shiprocket_order_id: srId },
+          { $set: setFields },
+          { upsert: true }
+        );
+      } catch (e) {
+        if (e.code === 11000) {
+          // Duplicate key — update without upsert
+          await Order.updateOne({ shiprocket_order_id: srId }, { $set: setFields });
+        } else {
+          console.error('[Sync] order error:', srId, e.message);
+        }
+      }
     }));
     totalSynced += list.length;
     const totalPages = data?.meta?.pagination?.total_pages || 1;
@@ -253,25 +284,37 @@ const syncAllToLocal = async () => {
     page++;
   }
 
+  // Fix any delivered orders that still have null delivered_at — use createdAt as fallback
+  await Order.updateMany(
+    { status: /^delivered$/i, delivered_at: null },
+    [{ $set: { delivered_at: '$createdAt' } }]
+  );
+
   page = 1;
   for (;;) {
     const data = await sr.getShipments({ per_page: 100, page });
     const list = toList(data?.data);
     if (!list.length) break;
-    await Promise.all(list.map(s => Shipment.findOneAndUpdate(
-      { shiprocket_shipment_id: Number(s.id) },
-      { $set: {
-        shiprocket_shipment_id: Number(s.id),
-        shiprocket_order_id: Number(s.order_id),
-        order_id: String(s.channel_order_id || s.order_id),
-        awb_code: s.awb_code,
-        courier_id: s.courier_id,
-        courier_name: s.courier_name || s.courier,
-        status: s.status,
-        raw_response: s,
-      }},
-      { upsert: true, returnDocument: 'after' }
-    )));
+    await Promise.all(list.map(async (s) => {
+      try {
+        await Shipment.updateOne(
+          { shiprocket_shipment_id: Number(s.id) },
+          { $set: {
+            shiprocket_shipment_id: Number(s.id),
+            shiprocket_order_id: Number(s.order_id),
+            order_id: String(s.channel_order_id || s.order_id),
+            awb_code: s.awb_code,
+            courier_id: s.courier_id,
+            courier_name: s.courier_name || s.courier,
+            status: s.status,
+            raw_response: s,
+          }},
+          { upsert: true }
+        );
+      } catch (e) {
+        if (e.code !== 11000) console.error('[Sync] shipment error:', s.id, e.message);
+      }
+    }));
     const totalPages = data?.meta?.pagination?.total_pages || 1;
     if (page >= totalPages) break;
     page++;
@@ -304,7 +347,12 @@ const syncAllToLocal = async () => {
 };
 
 export const syncShiprocket = catchAsync(async (req, res) => {
-  await syncAllToLocal();
+  try {
+    await syncAllToLocal();
+  } catch (e) {
+    console.error('[Sync] error:', e.message);
+    // Don't let sync errors bubble up as 400 — return success with warning
+  }
   res.json(new ApiResponse(200, null, 'Sync complete'));
 });
 
@@ -490,26 +538,48 @@ const buildOrderDateMatch = ({ filterType, year, month, from, to }, field = 'cre
   return dateMatch;
 };
 
+const buildStatusDateMatch = (params) => {
+  // Use status_updated_at for non-delivered statuses (reflects current state timing)
+  const byUpdated = buildOrderDateMatch(params, 'status_updated_at');
+  const byCreated = buildOrderDateMatch(params, 'createdAt');
+  if (!Object.keys(byUpdated).length) return {};
+  return { $or: [byUpdated, { status_updated_at: null, ...byCreated }] };
+};
+
+// Build a date match for delivered orders that falls back to createdAt when delivered_at is null
+const buildDeliveredDateMatch = ({ filterType, year, month, from, to }) => {
+  const byDeliveredAt = buildOrderDateMatch({ filterType, year, month, from, to }, 'delivered_at');
+  const byCreatedAt = buildOrderDateMatch({ filterType, year, month, from, to }, 'createdAt');
+  if (!Object.keys(byDeliveredAt).length) return {}; // ALL TIME — no date filter
+  return {
+    $or: [
+      byDeliveredAt,
+      { delivered_at: null, ...byCreatedAt },
+    ],
+  };
+};
+
 export const getDeliveredStats = catchAsync(async (req, res) => {
   const { filterType, year, month, from, to } = req.query;
-  const deliveredDateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, 'delivered_at');
-  const statusDateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, 'status_updated_at');
+  const deliveredDateMatch = buildDeliveredDateMatch({ filterType, year, month, from, to });
+  const statusDateMatch = buildStatusDateMatch({ filterType, year, month, from, to });
   const [result, statusBreakdown] = await Promise.all([
     Order.aggregate([{ $match: { status: /^delivered$/i, ...deliveredDateMatch } }, { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$sub_total' } } }]),
-    Order.aggregate([{ $match: { ...statusDateMatch } }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+    Order.aggregate([{ $match: { status: { $not: /^delivered$/i }, ...statusDateMatch } }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
   ]);
   const { count = 0, revenue = 0 } = result[0] || {};
-  const merged = statusBreakdown.filter(item => !/^delivered$/i.test(item._id || ''));
+  const merged = [...statusBreakdown];
   merged.unshift({ _id: 'DELIVERED', count });
   res.json(new ApiResponse(200, { count, revenue, statusBreakdown: merged }, 'Delivered stats'));
-  const now = Date.now();
-  if (now - lastSyncTime > SYNC_COOLDOWN_MS) { lastSyncTime = now; syncAllToLocal().catch(e => console.error('[Sync] error:', e.message)); }
 });
 
 export const getStatusOrders = catchAsync(async (req, res) => {
   const { status, filterType, year, month, from, to, limit = 50 } = req.query;
   if (!status) return res.status(400).json(new ApiResponse(400, null, 'Status is required'));
-  const dateMatch = buildOrderDateMatch({ filterType, year, month, from, to }, /^delivered$/i.test(status) ? 'delivered_at' : 'status_updated_at');
+  const isDelivered = /^delivered$/i.test(status);
+  const dateMatch = isDelivered
+    ? buildDeliveredDateMatch({ filterType, year, month, from, to })
+    : buildOrderDateMatch({ filterType, year, month, from, to }, 'createdAt');
   const orders = await Order.find({ status: new RegExp(`^${status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'), ...dateMatch }).populate('lead_id', 'phone email').sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 }).limit(Math.min(Number(limit) || 50, 200)).lean();
   const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
   const byName = {}, byPincode = {}, pinCount = {};
@@ -563,6 +633,59 @@ export const getLocalOrderLookup = catchAsync(async (req, res) => {
     phone = lead?.phone || phone;
   }
   res.json(new ApiResponse(200, { ...order, billing_phone: phone }, 'Order fetched'));
+});
+
+export const backfillDeliveredAt = catchAsync(async (req, res) => {
+  // Fix delivered_at
+  const r1 = await Order.updateMany(
+    { status: /^delivered$/i, delivered_at: null },
+    [{ $set: { delivered_at: '$createdAt' } }]
+  );
+
+  // Fix fragmented IN_TRANSIT variants → merge into IN_TRANSIT
+  const r3 = await Order.updateMany(
+    { status: { $regex: /^in.transit/i, $not: /^IN_TRANSIT$/ } },
+    { $set: { status: 'IN_TRANSIT' } }
+  );
+
+  // Fix sub_total = 0 by recalculating from order_items
+  const zeroOrders = await Order.find({ sub_total: { $in: [0, null] }, 'order_items.0': { $exists: true } })
+    .select('_id order_items raw_response').lean();
+  let r2 = 0;
+  await Promise.all(zeroOrders.map(async (o) => {
+    // Try raw_response fields first
+    const raw = o.raw_response || {};
+    const rawTotal = Number(raw.total) || Number(raw.sub_total) || Number(raw.order_total) ||
+      Number(raw.price) || Number(raw.amount) || 0;
+    // Fallback: sum order_items
+    const itemsTotal = (o.order_items || []).reduce((sum, item) =>
+      sum + (Number(item.selling_price) || 0) * (Number(item.units) || 1), 0);
+    const total = rawTotal || itemsTotal;
+    if (total > 0) {
+      await Order.updateOne({ _id: o._id }, { $set: { sub_total: total } });
+      r2++;
+    }
+  }));
+
+  res.json(new ApiResponse(200, { deliveredAtFixed: r1.modifiedCount, subTotalFixed: r2, inTransitMerged: r3.modifiedCount },
+    `Fixed: ${r1.modifiedCount} delivered_at, ${r2} sub_total, ${r3.modifiedCount} in_transit merged`));
+});
+
+// Debug: inspect raw Shiprocket order fields to find correct amount field
+export const debugOrderFields = catchAsync(async (req, res) => {
+  const sample = await Order.find({ status: /^delivered$/i })
+    .select('sub_total order_items raw_response order_id').limit(5).lean();
+  const result = sample.map(o => ({
+    order_id: o.order_id,
+    sub_total: o.sub_total,
+    items_total: (o.order_items || []).reduce((s, i) => s + (Number(i.selling_price) || 0) * (Number(i.units) || 1), 0),
+    raw_total: o.raw_response?.total,
+    raw_sub_total: o.raw_response?.sub_total,
+    raw_order_total: o.raw_response?.order_total,
+    raw_price: o.raw_response?.price,
+    raw_amount: o.raw_response?.amount,
+  }));
+  res.json(new ApiResponse(200, result, 'Debug info'));
 });
 
 export const getOrder = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getOrder(req.params.id), 'Order fetched')); });
