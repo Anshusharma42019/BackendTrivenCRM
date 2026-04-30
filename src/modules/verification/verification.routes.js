@@ -29,20 +29,12 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       );
     }
 
-    // Sync existing verification records — only fill missing fields from task
     const existingTasks = verificationTasks.filter(t => existingSet.has(t._id.toString()));
     if (existingTasks.length > 0) {
       await Promise.all(existingTasks.map(task =>
         Verification.updateOne(
           { task: task._id },
-          {
-            $set: {
-              title: task.title,
-              assignedTo: task.assignedTo,
-              lead: task.lead,
-            },
-            $setOnInsert: {},
-          }
+          { $set: { title: task.title, assignedTo: task.assignedTo, lead: task.lead } }
         ).then(() =>
           Verification.updateOne(
             { task: task._id, age: { $exists: false } },
@@ -63,6 +55,50 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+// MUST be before /:id routes
+router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    const Task = (await import('../task/task.model.js')).default;
+    const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
+
+    const verifiedRecords = await Verification.find({ status: 'verified' })
+      .populate('assignedTo', 'name email')
+      .populate('lead', 'name phone');
+
+    let fixed = 0;
+    for (const record of verifiedRecords) {
+      if (!record.task) continue;
+      await Task.findByIdAndUpdate(record.task, { status: 'ready_to_shipment' });
+      await ReadyToShipment.findOneAndUpdate(
+        { task: record.task },
+        {
+          $set: {
+            title: record.title,
+            assignedTo: record.assignedTo?._id || record.assignedTo,
+            lead: record.lead?._id || record.lead,
+            description: record.description,
+            problem: record.problem,
+            age: record.age, weight: record.weight, height: record.height,
+            otherProblems: record.otherProblems, problemDuration: record.problemDuration,
+            price: record.price,
+            cityVillageType: record.cityVillageType, cityVillage: record.cityVillage,
+            houseNo: record.houseNo, postOffice: record.postOffice,
+            district: record.district, landmark: record.landmark,
+            pincode: record.pincode, state: record.state,
+            reminderAt: record.reminderAt,
+          },
+          $setOnInsert: { task: record.task },
+        },
+        { upsert: true }
+      );
+      fixed++;
+    }
+    res.json({ status: 200, message: `Repaired ${fixed} records` });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const { status, onHoldUntil, ...taskFields } = req.body;
@@ -77,9 +113,40 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
     ).populate('assignedTo', 'name email').populate('lead', 'name phone');
     if (!record) return res.status(404).json({ message: 'Not found' });
 
-    // Sync task fields back to the Task document
-    if (record.task) {
-      const Task = (await import('../task/task.model.js')).default;
+    const Task = (await import('../task/task.model.js')).default;
+    const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
+
+    if (status === 'verified' && record.task) {
+      const taskUpdate = await Task.findByIdAndUpdate(
+        record.task,
+        { status: 'ready_to_shipment', ...taskFields },
+        { new: true }
+      );
+      if (!taskUpdate) return res.status(500).json({ status: 500, message: 'Task not found' });
+
+      await ReadyToShipment.findOneAndUpdate(
+        { task: record.task },
+        {
+          $set: {
+            title: record.title,
+            assignedTo: record.assignedTo?._id || record.assignedTo,
+            lead: record.lead?._id || record.lead,
+            description: record.description,
+            problem: record.problem,
+            age: record.age, weight: record.weight, height: record.height,
+            otherProblems: record.otherProblems, problemDuration: record.problemDuration,
+            price: record.price,
+            cityVillageType: record.cityVillageType, cityVillage: record.cityVillage,
+            houseNo: record.houseNo, postOffice: record.postOffice,
+            district: record.district, landmark: record.landmark,
+            pincode: record.pincode, state: record.state,
+            reminderAt: record.reminderAt,
+          },
+          $setOnInsert: { task: record.task },
+        },
+        { upsert: true, new: true }
+      );
+    } else if (record.task && Object.keys(taskFields).length > 0) {
       await Task.findByIdAndUpdate(record.task, taskFields);
     }
 

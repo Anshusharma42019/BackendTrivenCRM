@@ -92,7 +92,32 @@ export const updateTask = async (id, data, userRole, userId) => {
   await task.save();
 
   // Sync to dedicated collections on status change
-  const record = { task: task._id, title: task.title, assignedTo: task.assignedTo, changedBy: userId, lead: task.lead, dueDate: task.dueDate, description: task.description, cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, landmark: task.landmark, pincode: task.pincode, state: task.state, reminderAt: task.reminderAt, notes: task.notes };
+  const record = {
+    task: task._id,
+    title: task.title,
+    assignedTo: task.assignedTo?._id || task.assignedTo,
+    changedBy: userId,
+    lead: task.lead?._id || task.lead,
+    dueDate: task.dueDate,
+    description: task.description,
+    problem: task.problem,
+    age: task.age,
+    weight: task.weight,
+    height: task.height,
+    otherProblems: task.otherProblems,
+    problemDuration: task.problemDuration,
+    price: task.price,
+    cityVillageType: task.cityVillageType,
+    cityVillage: task.cityVillage,
+    houseNo: task.houseNo,
+    postOffice: task.postOffice,
+    district: task.district,
+    landmark: task.landmark,
+    pincode: task.pincode,
+    state: task.state,
+    reminderAt: task.reminderAt,
+    notes: task.notes,
+  };
   if (data.status === 'cnp') {
     await Cnp.findOneAndUpdate({ task: task._id }, { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 }, $push: { cnpHistory: { clickedAt: new Date() } } }, { upsert: true, new: true });
     await Verification.deleteOne({ task: task._id });
