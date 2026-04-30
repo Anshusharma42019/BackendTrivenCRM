@@ -6,6 +6,20 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
+    const records = await Verification.find({ status: { $ne: 'verified' } })
+      .populate('assignedTo', 'name email')
+      .populate('lead', 'name phone status')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ status: 200, data: records });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
+// Sync tasks with status 'verification' into Verification collection
+router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
     const Task = (await import('../task/task.model.js')).default;
 
     const verificationTasks = await Task.find({ status: 'verification', isDeleted: false }, '_id title assignedTo lead dueDate description cityVillageType cityVillage houseNo postOffice district landmark pincode state reminderAt notes problem age weight height otherProblems problemDuration price');
@@ -44,12 +58,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       ));
     }
 
-    const records = await Verification.find({ status: { $ne: 'verified' } })
-      .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone status')
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json({ status: 200, data: records });
+    res.json({ status: 200, message: `Synced ${newTasks.length} new records` });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }
