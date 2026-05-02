@@ -120,4 +120,15 @@ router.patch('/:id/sent', auth('admin', 'manager', 'sales'), async (req, res) =>
   }
 });
 
+router.delete('/:id', auth('admin', 'manager'), async (req, res) => {
+  try {
+    const record = await ReadyToShipment.findByIdAndDelete(req.params.id);
+    if (!record) return res.status(404).json({ status: 404, message: 'Not found' });
+    await Task.findByIdAndUpdate(record.task, { status: 'cancelled' });
+    res.json({ status: 200, message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 export default router;

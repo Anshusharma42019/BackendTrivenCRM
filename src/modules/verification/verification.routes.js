@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const records = await Verification.find({ status: { $ne: 'verified' } })
+    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] } })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
       .sort({ createdAt: -1 })
@@ -69,6 +69,18 @@ router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const Task = (await import('../task/task.model.js')).default;
     const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
+    const Lead = (await import('../lead/lead.model.js')).default;
+
+    // Fix on_hold: sync lead status
+    const onHoldRecords = await Verification.find({ status: 'on_hold' }).lean();
+    for (const record of onHoldRecords) {
+      if (record.lead) await Lead.findByIdAndUpdate(record.lead, {
+        status: 'on_hold',
+        cnp: false,
+        ...(record.onHoldReason && { onHoldReason: record.onHoldReason }),
+        ...(record.onHoldUntil && { onHoldUntil: record.onHoldUntil }),
+      });
+    }
 
     const verifiedRecords = await Verification.find({ status: 'verified' })
       .populate('assignedTo', 'name email')
@@ -110,10 +122,11 @@ router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
 
 router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const { status, onHoldUntil, ...taskFields } = req.body;
+    const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
     const update = { ...taskFields };
     if (status) update.status = status;
     if (onHoldUntil) update.onHoldUntil = onHoldUntil;
+    if (onHoldReason) update.onHoldReason = onHoldReason;
 
     const record = await Verification.findByIdAndUpdate(
       req.params.id,
@@ -124,6 +137,17 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
 
     const Task = (await import('../task/task.model.js')).default;
     const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
+
+    if (status === 'on_hold' && record.lead) {
+      const Lead = (await import('../lead/lead.model.js')).default;
+      const leadId = record.lead._id || record.lead;
+      await Lead.findByIdAndUpdate(leadId, {
+        status: 'on_hold',
+        cnp: false,
+        ...(onHoldReason && { onHoldReason }),
+        ...(onHoldUntil && { onHoldUntil }),
+      });
+    }
 
     if (status === 'verified' && record.task) {
       const taskUpdate = await Task.findByIdAndUpdate(

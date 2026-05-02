@@ -102,10 +102,6 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   if (filter.status) {
     query.status = filter.status;
-    if (filter.status === 'on_hold') {
-      const excludeWithTask = await Task.distinct('lead', { status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false });
-      if (excludeWithTask.length) query._id = { $nin: excludeWithTask };
-    }
   } else if (!filter.cnp) {
     query.status = { $nin: ['closed_won', 'closed_lost', 'interested'] };
   }
@@ -115,10 +111,16 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
   // Always exclude leads that are in verification/shipment pipeline (unless fetching CNP list)
   if (!filter.cnp) {
+    const isOnHold = filter.status === 'on_hold';
+    const isInterested = filter.status === 'interested';
     const [excludeByTask, excludeByCnpCollection, excludeByVerification] = await Promise.all([
-      Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested', 'cancel_call', 'cancelled'] }, lead: { $ne: null }, isDeleted: false }),
-      Cnp.distinct('lead', { lead: { $ne: null } }),
-      Verification.distinct('lead', { lead: { $exists: true, $ne: null } }),
+      (isOnHold || isInterested)
+        ? Promise.resolve([])
+        : Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false }),
+      isOnHold ? Promise.resolve([]) : Cnp.distinct('lead', { lead: { $ne: null } }),
+      (isOnHold || isInterested)
+        ? Promise.resolve([])
+        : Verification.distinct('lead', { lead: { $exists: true, $ne: null }, status: { $nin: ['on_hold'] } }),
     ]);
     const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String), ...excludeByVerification.map(String)])];
     if (allExclude.length) {
@@ -193,6 +195,16 @@ export const updateLead = async (id, data, userRole, userId) => {
   const oldStatus = lead.status;
   Object.assign(lead, data);
   await lead.save();
+
+  // When moving out of on_hold back to interested, remove verification record so lead shows in pipeline
+  if (data.status && data.status === 'interested' && oldStatus === 'on_hold') {
+    const leadObjId = new mongoose.Types.ObjectId(String(id));
+    await Verification.deleteMany({ lead: leadObjId });
+    await Task.updateMany(
+      { lead: leadObjId, status: 'verification', isDeleted: false },
+      { status: 'pending' }
+    );
+  }
 
   // When clearing CNP flag, delete cnp-status tasks and remove CNP records
   if (data.cnp === false) {

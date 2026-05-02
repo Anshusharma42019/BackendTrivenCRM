@@ -35,6 +35,8 @@ const leadSchema = new mongoose.Schema(
       createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     }],
     next_follow_up: Date,
+    onHoldReason: { type: String },
+    onHoldUntil: { type: Date },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     isDeleted: { type: Boolean, default: false },
