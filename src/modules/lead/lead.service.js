@@ -96,7 +96,10 @@ export const createLead = async (data, createdBy, creatorRole) => {
 export const getLeads = async (filter, options, userRole, userId) => {
   const query = { isDeleted: false };
 
-  if (userRole === 'sales') query.assignedTo = userId;
+  // Sales can see all leads for shared statuses (interested, closed_lost, on_hold)
+  const sharedStatuses = ['interested', 'closed_lost', 'on_hold'];
+  const isSharedStatus = filter.status && sharedStatuses.includes(filter.status);
+  if (userRole === 'sales' && !isSharedStatus) query.assignedTo = userId;
 
   if (!filter.cnp) query.cnp = { $ne: true };
 
@@ -113,16 +116,37 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (!filter.cnp) {
     const isOnHold = filter.status === 'on_hold';
     const isInterested = filter.status === 'interested';
+
+    // For on_hold: get lead IDs that have a verification record with on_hold status (these SHOULD show)
+    const verificationOnHoldLeadIds = isOnHold
+      ? (await Verification.distinct('lead', { status: 'on_hold', lead: { $ne: null } })).map(String)
+      : [];
+
+    // Remove cnp leads from whitelist
+    const cnpLeadIds = isOnHold && verificationOnHoldLeadIds.length
+      ? (await Lead.find({ _id: { $in: verificationOnHoldLeadIds }, cnp: true }, '_id').lean()).map(l => String(l._id))
+      : [];
+    const safeWhitelist = verificationOnHoldLeadIds.filter(id => !cnpLeadIds.includes(id));
+
     const [excludeByTask, excludeByCnpCollection, excludeByVerification] = await Promise.all([
-      (isOnHold || isInterested)
-        ? Promise.resolve([])
-        : Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false }),
+      isInterested
+        ? Task.distinct('lead', { type: 'task', status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false })
+        : isOnHold
+          ? Task.distinct('lead', {
+              $or: [
+                { status: { $in: ['verification', 'ready_to_shipment', 'interested'] } },
+                { type: 'task', status: { $in: ['pending', 'overdue'] } },
+              ],
+              lead: { $ne: null }, isDeleted: false
+            })
+          : Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false }),
       isOnHold ? Promise.resolve([]) : Cnp.distinct('lead', { lead: { $ne: null } }),
       (isOnHold || isInterested)
         ? Promise.resolve([])
         : Verification.distinct('lead', { lead: { $exists: true, $ne: null }, status: { $nin: ['on_hold'] } }),
     ]);
-    const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String), ...excludeByVerification.map(String)])];
+    const allExclude = [...new Set([...excludeByTask.map(String), ...excludeByCnpCollection.map(String), ...excludeByVerification.map(String)])]
+      .filter(id => !safeWhitelist.includes(id));
     if (allExclude.length) {
       const allExcludeIds = allExclude.map(id => new mongoose.Types.ObjectId(id));
       query._id = query._id
@@ -171,7 +195,9 @@ export const getLeadById = async (id, userRole, userId) => {
     .populate('createdBy', 'name email')
     .populate('notes.createdBy', 'name');
   if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
-  if (userRole === 'sales' && String(lead.assignedTo?._id) !== String(userId)) {
+  // Sales can view shared-status leads (interested, closed_lost, on_hold) from all staff
+  const sharedStatuses = ['interested', 'closed_lost', 'on_hold'];
+  if (userRole === 'sales' && !sharedStatuses.includes(lead.status) && String(lead.assignedTo?._id) !== String(userId)) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
   return lead;
@@ -200,6 +226,10 @@ export const updateLead = async (id, data, userRole, userId) => {
   if (data.status && data.status === 'interested' && oldStatus === 'on_hold') {
     const leadObjId = new mongoose.Types.ObjectId(String(id));
     await Verification.deleteMany({ lead: leadObjId });
+    await Task.updateMany(
+      { lead: leadObjId, status: { $in: ['verification', 'pending', 'overdue'] }, type: { $in: ['task', 'follow_up'] }, isDeleted: false },
+      { isDeleted: true }
+    );
     await Task.updateMany(
       { lead: leadObjId, status: 'verification', isDeleted: false },
       { status: 'pending' }

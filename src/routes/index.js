@@ -29,7 +29,7 @@ const defaultRoutes = [
   { path: '/shiprocket', route: shiprocketRoute },
   { path: '/attendance', route: attendanceRoute },
 ];
-
+ 
 defaultRoutes.forEach((route) => {
   router.use(route.path, route.route);
 });

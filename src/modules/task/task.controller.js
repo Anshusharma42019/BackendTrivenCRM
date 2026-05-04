@@ -40,4 +40,12 @@ const addNote = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, task, 'Note added'));
 });
 
-export default { createTask, getTasks, getDailyTasks, getTask, updateTask, deleteTask, addNote };
+const getTaskByLead = catchAsync(async (req, res) => {
+  const Task = (await import('./task.model.js')).default;
+  const task = await Task.findOne({ lead: req.params.leadId, isDeleted: false })
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json(new ApiResponse(httpStatus.OK, task, 'Task fetched'));
+});
+
+export default { createTask, getTasks, getDailyTasks, getTask, updateTask, deleteTask, addNote, getTaskByLead };

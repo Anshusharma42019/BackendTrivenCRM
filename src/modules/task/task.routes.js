@@ -7,6 +7,7 @@ import taskController from './task.controller.js';
 const router = express.Router();
 
 router.get('/daily', auth('admin', 'manager', 'sales'), taskController.getDailyTasks);
+router.get('/by-lead/:leadId', auth('admin', 'manager', 'sales'), taskController.getTaskByLead);
 
 router
   .route('/')

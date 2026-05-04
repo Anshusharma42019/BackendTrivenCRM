@@ -9,7 +9,6 @@ const router = express.Router();
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const query = { status: { $in: ['pending'] } };
-    if (req.user.role === 'sales') query.assignedTo = req.user._id;
     const { filter } = req.query;
     if (filter) {
       const now = new Date();
@@ -27,6 +26,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     const records = await CallAgain.find(query)
       .populate('lead', 'name phone problem email address source status type revenue assignedTo createdBy cnpCount cnpAt notes note createdAt')
       .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
   } catch (e) {
@@ -56,9 +56,9 @@ router.post('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     // Upsert — one record per lead
     const record = await CallAgain.findOneAndUpdate(
       { lead: leadId },
-      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, status: 'pending' },
+      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, status: 'pending', createdBy: req.user._id },
       { upsert: true, new: true }
-    ).populate('lead', 'name phone problem').populate('assignedTo', 'name email');
+    ).populate('lead', 'name phone problem').populate('assignedTo', 'name email').populate('createdBy', 'name email');
 
     res.json({ status: 200, data: record });
   } catch (e) {

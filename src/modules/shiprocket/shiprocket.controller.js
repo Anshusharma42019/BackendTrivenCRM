@@ -173,7 +173,7 @@ const normalizeOrderStatus = (status) => {
 };
 
 const syncAllToLocal = async () => {
-  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address pincode').lean();
   const byName = {};
   const byPincode = {};
   const pincodeCount = {};
@@ -181,9 +181,8 @@ const syncAllToLocal = async () => {
   for (const l of allLeads) {
     const full = (l.name || '').toLowerCase().trim();
     byName[full] = l;
-    const pinMatch = (l.address || '').match(/\b(\d{6})\b/);
-    if (pinMatch) {
-      const pin = pinMatch[1];
+    const pin = l.pincode || (l.address || '').match(/\b(\d{6})\b/)?.[1];
+    if (pin) {
       pincodeCount[pin] = (pincodeCount[pin] || 0) + 1;
       byPincode[pin] = l;
     }
@@ -285,10 +284,8 @@ const syncAllToLocal = async () => {
   }
 
   // Fix any delivered orders that still have null delivered_at — use createdAt as fallback
-  await Order.updateMany(
-    { status: /^delivered$/i, delivered_at: null },
-    [{ $set: { delivered_at: '$createdAt' } }]
-  );
+  const nullDeliveredOrders = await Order.find({ status: /^delivered$/i, delivered_at: null }).select('_id createdAt').lean();
+  await Promise.all(nullDeliveredOrders.map(o => Order.updateOne({ _id: o._id }, { $set: { delivered_at: o.createdAt } })));
 
   page = 1;
   for (;;) {
@@ -441,8 +438,14 @@ export const completeFollowUp = catchAsync(async (req, res) => {
 });
 
 export const saveOrderNote = catchAsync(async (req, res) => {
-  const order = await Order.findByIdAndUpdate(req.params.id, { notes: req.body.notes }, { new: true }).select('notes').lean();
-  res.json(new ApiResponse(200, order, 'Note saved'));
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json(new ApiResponse(400, null, 'Comment text required'));
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    { $push: { comments: { text: text.trim(), createdAt: new Date() } } },
+    { new: true }
+  ).select('comments').lean();
+  res.json(new ApiResponse(200, order?.comments || [], 'Comment added'));
 });
 
 export const addFollowUp = catchAsync(async (req, res) => {
@@ -579,25 +582,34 @@ export const getStatusOrders = catchAsync(async (req, res) => {
   const isDelivered = /^delivered$/i.test(status);
   const dateMatch = isDelivered
     ? buildDeliveredDateMatch({ filterType, year, month, from, to })
-    : buildOrderDateMatch({ filterType, year, month, from, to }, 'createdAt');
-  const orders = await Order.find({ status: new RegExp(`^${status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'), ...dateMatch }).populate('lead_id', 'phone email').sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 }).limit(Math.min(Number(limit) || 50, 200)).lean();
-  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address').lean();
+    : buildStatusDateMatch({ filterType, year, month, from, to });
+  // Match underscore, space, and hyphen variants (e.g. UNDELIVERED-2ND_ATTEMPT, UNDELIVERED-2ND ATTEMPT)
+  const statusVariant = status.replace(/[-_]/g, '[-_ ]');
+  const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch }).populate('lead_id', 'phone email').sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 }).limit(Math.min(Number(limit) || 50, 200)).lean();
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address pincode').lean();
   const byName = {}, byPincode = {}, pinCount = {};
   for (const l of allLeads) {
     if (!l.phone) continue;
     const full = (l.name || '').toLowerCase().trim();
     byName[full] = l;
-    const pm = (l.address || '').match(/\b(\d{6})\b/);
-    if (pm) { pinCount[pm[1]] = (pinCount[pm[1]] || 0) + 1; byPincode[pm[1]] = l; }
+    const pin = l.pincode || (l.address || '').match(/\b(\d{6})\b/)?.[1];
+    if (pin) { pinCount[pin] = (pinCount[pin] || 0) + 1; byPincode[pin] = l; }
   }
   for (const p of Object.keys(pinCount)) { if (pinCount[p] > 1) delete byPincode[p]; }
   const enriched = orders.map(o => {
     if (o.lead_id?.phone) return { ...o, billing_phone: o.lead_id.phone };
+    const masked = String(o.billing_phone || '');
+    const ismasked = /^x+$/i.test(masked) || masked.replace(/\D/g, '').length < 10;
+    if (!ismasked) return { ...o };
     const full = (o.billing_customer_name || '').toLowerCase().trim();
     let lead = byName[full];
     if (!lead) {
       const words = full.split(/\s+/).filter(w => w.length > 2);
       if (words.length > 0) lead = Object.entries(byName).find(([k]) => words.every(w => k.includes(w)))?.[1];
+    }
+    if (!lead) {
+      const first = full.split(/\s+/)[0];
+      if (first && first.length > 2) lead = Object.entries(byName).find(([k]) => k.startsWith(first))?.[1];
     }
     if (!lead && o.billing_pincode) lead = byPincode[String(o.billing_pincode).trim()];
     return { ...o, billing_phone: lead?.phone || o.billing_phone };
@@ -636,11 +648,10 @@ export const getLocalOrderLookup = catchAsync(async (req, res) => {
 });
 
 export const backfillDeliveredAt = catchAsync(async (req, res) => {
-  // Fix delivered_at
-  const r1 = await Order.updateMany(
-    { status: /^delivered$/i, delivered_at: null },
-    [{ $set: { delivered_at: '$createdAt' } }]
-  );
+  // Fix delivered_at — fetch and update individually to avoid pipeline syntax issues
+  const nullDelivered = await Order.find({ status: /^delivered$/i, delivered_at: null }).select('_id createdAt').lean();
+  await Promise.all(nullDelivered.map(o => Order.updateOne({ _id: o._id }, { $set: { delivered_at: o.createdAt } })));
+  const r1 = { modifiedCount: nullDelivered.length };
 
   // Fix fragmented IN_TRANSIT variants → merge into IN_TRANSIT
   const r3 = await Order.updateMany(
@@ -653,11 +664,9 @@ export const backfillDeliveredAt = catchAsync(async (req, res) => {
     .select('_id order_items raw_response').lean();
   let r2 = 0;
   await Promise.all(zeroOrders.map(async (o) => {
-    // Try raw_response fields first
     const raw = o.raw_response || {};
     const rawTotal = Number(raw.total) || Number(raw.sub_total) || Number(raw.order_total) ||
       Number(raw.price) || Number(raw.amount) || 0;
-    // Fallback: sum order_items
     const itemsTotal = (o.order_items || []).reduce((sum, item) =>
       sum + (Number(item.selling_price) || 0) * (Number(item.units) || 1), 0);
     const total = rawTotal || itemsTotal;
@@ -667,8 +676,33 @@ export const backfillDeliveredAt = catchAsync(async (req, res) => {
     }
   }));
 
-  res.json(new ApiResponse(200, { deliveredAtFixed: r1.modifiedCount, subTotalFixed: r2, inTransitMerged: r3.modifiedCount },
-    `Fixed: ${r1.modifiedCount} delivered_at, ${r2} sub_total, ${r3.modifiedCount} in_transit merged`));
+  // Backfill lead_id on unlinked orders by matching pincode then name
+  const unlinked = await Order.find({ lead_id: null })
+    .select('_id billing_customer_name billing_pincode billing_phone').lean();
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone address pincode').lean();
+  const byLeadName = {}, byLeadPin = {}, leadPinCount = {};
+  for (const l of allLeads) {
+    byLeadName[(l.name || '').toLowerCase().trim()] = l;
+    const pin = l.pincode || (l.address || '').match(/\b(\d{6})\b/)?.[1];
+    if (pin) { leadPinCount[pin] = (leadPinCount[pin] || 0) + 1; byLeadPin[pin] = l; }
+  }
+  for (const p of Object.keys(leadPinCount)) { if (leadPinCount[p] > 1) delete byLeadPin[p]; }
+  let r4 = 0;
+  await Promise.all(unlinked.map(async (o) => {
+    const full = (o.billing_customer_name || '').toLowerCase().trim();
+    const pin = String(o.billing_pincode || '').trim();
+    let lead = byLeadName[full];
+    if (!lead) {
+      const words = full.split(/\s+/).filter(w => w.length > 2);
+      if (words.length) lead = Object.entries(byLeadName).find(([k]) => words.every(w => k.includes(w)))?.[1];
+    }
+    if (!lead && pin) lead = byLeadPin[pin];
+    if (lead) { await Order.updateOne({ _id: o._id }, { $set: { lead_id: lead._id, billing_phone: lead.phone } }); r4++; }
+  }));
+
+  res.json(new ApiResponse(200,
+    { deliveredAtFixed: r1.modifiedCount, subTotalFixed: r2, inTransitMerged: r3.modifiedCount, leadsLinked: r4 },
+    `Fixed: ${r1.modifiedCount} delivered_at, ${r2} sub_total, ${r3.modifiedCount} in_transit, ${r4} leads linked`));
 });
 
 // Debug: inspect raw Shiprocket order fields to find correct amount field

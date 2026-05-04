@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] } })
+    const records = await Verification.find({ status: { $nin: ['verified'] } })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
       .sort({ createdAt: -1 })
@@ -80,6 +80,7 @@ router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
         ...(record.onHoldReason && { onHoldReason: record.onHoldReason }),
         ...(record.onHoldUntil && { onHoldUntil: record.onHoldUntil }),
       });
+      if (record.task) await Task.findByIdAndUpdate(record.task, { status: 'pending' });
     }
 
     const verifiedRecords = await Verification.find({ status: 'verified' })
@@ -147,6 +148,10 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
         ...(onHoldReason && { onHoldReason }),
         ...(onHoldUntil && { onHoldUntil }),
       });
+      // Reset task status to pending so lead appears in Pipeline On Hold list
+      if (record.task) {
+        await Task.findByIdAndUpdate(record.task, { status: 'pending' });
+      }
     }
 
     if (status === 'verified' && record.task) {
