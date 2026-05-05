@@ -7,6 +7,9 @@ import { Followup } from './models/followup.model.js';
 import { Shipment } from './models/shipment.model.js';
 import { TrackingLog } from './models/trackingLog.model.js';
 import { Return } from './models/return.model.js';
+import { WalletTransaction } from './models/walletTransaction.model.js';
+import { DeliveredOrder } from './models/deliveredOrder.model.js';
+import { InTransitOrder } from './models/inTransitOrder.model.js';
 import ReadyToShipment from '../readytoshipment/readytoshipment.model.js';
 import { Lead } from '../lead/lead.model.js';
 
@@ -348,13 +351,182 @@ export const syncShiprocket = catchAsync(async (req, res) => {
     await syncAllToLocal();
   } catch (e) {
     console.error('[Sync] error:', e.message);
-    // Don't let sync errors bubble up as 400 — return success with warning
   }
+
+  // Sync delivered orders into DeliveredOrder collection
+  try {
+    const delivered = await Order.find({ status: /^delivered$/i })
+      .select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone billing_email billing_address billing_city billing_state billing_pincode awb_code courier_name payment_method sub_total order_items status lead_id delivered_at createdAt')
+      .lean();
+    for (const o of delivered) {
+      await DeliveredOrder.findOneAndUpdate(
+        { order_id: o.order_id },
+        { $set: {
+          order_id: o.order_id,
+          shiprocket_order_id: o.shiprocket_order_id,
+          shiprocket_shipment_id: o.shiprocket_shipment_id,
+          billing_customer_name: o.billing_customer_name || '',
+          billing_phone: o.billing_phone || '',
+          billing_email: o.billing_email || '',
+          billing_address: o.billing_address || '',
+          billing_city: o.billing_city || '',
+          billing_state: o.billing_state || '',
+          billing_pincode: o.billing_pincode || '',
+          awb_code: o.awb_code || '',
+          courier_name: o.courier_name || '',
+          payment_method: o.payment_method || '',
+          sub_total: o.sub_total || 0,
+          order_items: o.order_items || [],
+          status: o.status,
+          lead_id: o.lead_id || null,
+          delivered_at: o.delivered_at || o.createdAt,
+          order_date: o.createdAt,
+        }},
+        { upsert: true }
+      );
+    }
+    console.log('[Sync] delivered orders synced:', delivered.length);
+  } catch (e) {
+    console.error('[Sync] delivered sync error:', e.message);
+  }
+
+  // Sync in-transit orders
+  try {
+    const active = await Order.find({ status: { $not: /^(delivered|rto)/i } })
+      .select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone billing_city billing_state billing_pincode awb_code courier_name payment_method sub_total order_items status lead_id status_updated_at createdAt').lean();
+    for (const o of active) {
+      await InTransitOrder.findOneAndUpdate(
+        { order_id: o.order_id },
+        { $set: { order_id: o.order_id, shiprocket_order_id: o.shiprocket_order_id, billing_customer_name: o.billing_customer_name || '', billing_phone: o.billing_phone || '', billing_city: o.billing_city || '', billing_state: o.billing_state || '', billing_pincode: o.billing_pincode || '', awb_code: o.awb_code || '', courier_name: o.courier_name || '', payment_method: o.payment_method || '', sub_total: o.sub_total || 0, order_items: o.order_items || [], status: o.status, lead_id: o.lead_id || null, status_updated_at: o.status_updated_at || o.createdAt, order_date: o.createdAt }},
+        { upsert: true }
+      ).catch(() => {});
+    }
+    await InTransitOrder.deleteMany({ status: { $regex: /^(delivered|rto)/i } }).catch(() => {});
+    console.log('[Sync] in-transit orders synced:', active.length);
+  } catch (e) {
+    console.error('[Sync] in-transit sync error:', e.message);
+  }
+
   res.json(new ApiResponse(200, null, 'Sync complete'));
 });
 
 let lastSyncTime = 0;
 const SYNC_COOLDOWN_MS = 5 * 60 * 1000;
+
+export const getInTransitOrdersFromSchema = catchAsync(async (req, res) => {
+  const { page = 1, per_page = 20, search, from, to } = req.query;
+
+  // Sync all active (non-delivered, non-RTO) orders into InTransitOrder collection
+  const activeOrders = await Order.find({
+    status: { $not: /^(delivered|rto)/i }
+  }).select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone billing_city billing_state billing_pincode awb_code courier_name payment_method sub_total order_items status lead_id status_updated_at createdAt').lean();
+
+  for (const o of activeOrders) {
+    await InTransitOrder.findOneAndUpdate(
+      { order_id: o.order_id },
+      { $set: {
+        order_id: o.order_id,
+        shiprocket_order_id: o.shiprocket_order_id,
+        shiprocket_shipment_id: o.shiprocket_shipment_id,
+        billing_customer_name: o.billing_customer_name || '',
+        billing_phone: o.billing_phone || '',
+        billing_city: o.billing_city || '',
+        billing_state: o.billing_state || '',
+        billing_pincode: o.billing_pincode || '',
+        awb_code: o.awb_code || '',
+        courier_name: o.courier_name || '',
+        payment_method: o.payment_method || '',
+        sub_total: o.sub_total || 0,
+        order_items: o.order_items || [],
+        status: o.status,
+        lead_id: o.lead_id || null,
+        status_updated_at: o.status_updated_at || o.createdAt,
+        order_date: o.createdAt,
+      }},
+      { upsert: true }
+    ).catch(() => {});
+  }
+
+  // Remove orders that are now delivered or RTO (status changed)
+  await InTransitOrder.deleteMany({ status: { $regex: /^(delivered|rto)/i } }).catch(() => {});
+
+  const skip = (Number(page) - 1) * Number(per_page);
+  const match = {};
+  if (search) match.$or = [
+    { billing_customer_name: { $regex: search, $options: 'i' } },
+    { billing_phone: { $regex: search, $options: 'i' } },
+    { order_id: { $regex: search, $options: 'i' } },
+    { awb_code: { $regex: search, $options: 'i' } },
+  ];
+  if (from || to) {
+    match.order_date = {};
+    if (from) match.order_date.$gte = new Date(from + 'T00:00:00.000+05:30');
+    if (to) match.order_date.$lte = new Date(to + 'T23:59:59.999+05:30');
+  }
+
+  const [data, total] = await Promise.all([
+    InTransitOrder.find(match).sort({ status_updated_at: -1 }).skip(skip).limit(Number(per_page)).lean(),
+    InTransitOrder.countDocuments(match),
+  ]);
+
+  res.json(new ApiResponse(200, { data, total }, 'In-transit orders fetched from schema'));
+});
+
+export const getDeliveredOrdersFromSchema = catchAsync(async (req, res) => {
+  const { page = 1, per_page = 20, search, from, to } = req.query;
+
+  // Auto-sync delivered orders from Order collection
+  const newDelivered = await Order.find({ status: /^delivered$/i })
+    .select('order_id shiprocket_order_id billing_customer_name billing_phone billing_email billing_address billing_city billing_state billing_pincode awb_code courier_name payment_method sub_total order_items status lead_id delivered_at createdAt')
+    .lean();
+  for (const o of newDelivered) {
+    await DeliveredOrder.findOneAndUpdate(
+      { order_id: o.order_id },
+      { $set: {
+        order_id: o.order_id,
+        shiprocket_order_id: o.shiprocket_order_id,
+        billing_customer_name: o.billing_customer_name || '',
+        billing_phone: o.billing_phone || '',
+        billing_email: o.billing_email || '',
+        billing_address: o.billing_address || '',
+        billing_city: o.billing_city || '',
+        billing_state: o.billing_state || '',
+        billing_pincode: o.billing_pincode || '',
+        awb_code: o.awb_code || '',
+        courier_name: o.courier_name || '',
+        payment_method: o.payment_method || '',
+        sub_total: o.sub_total || 0,
+        order_items: o.order_items || [],
+        status: o.status,
+        lead_id: o.lead_id || null,
+        delivered_at: o.delivered_at || o.createdAt,
+        order_date: o.createdAt,
+      }},
+      { upsert: true }
+    ).catch(() => {});
+  }
+
+  const skip = (Number(page) - 1) * Number(per_page);
+  const match = {};
+  if (search) match.$or = [
+    { billing_customer_name: { $regex: search, $options: 'i' } },
+    { billing_phone: { $regex: search, $options: 'i' } },
+    { order_id: { $regex: search, $options: 'i' } },
+    { awb_code: { $regex: search, $options: 'i' } },
+  ];
+  if (from || to) {
+    match.delivered_at = {};
+    if (from) match.delivered_at.$gte = new Date(from + 'T00:00:00.000+05:30');
+    if (to) match.delivered_at.$lte = new Date(to + 'T23:59:59.999+05:30');
+  }
+
+  const [data, total] = await Promise.all([
+    DeliveredOrder.find(match).sort({ delivered_at: -1 }).skip(skip).limit(Number(per_page)).lean(),
+    DeliveredOrder.countDocuments(match),
+  ]);
+
+  res.json(new ApiResponse(200, { data, total }, 'Delivered orders fetched from schema'));
+});
 
 export const getDeliveredOrders = catchAsync(async (req, res) => {
   const { search, page = 1, per_page = 1000, delivered_from, delivered_to } = req.query;
@@ -442,9 +614,9 @@ export const saveOrderNote = catchAsync(async (req, res) => {
   if (!text?.trim()) return res.status(400).json(new ApiResponse(400, null, 'Comment text required'));
   const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { $push: { comments: { text: text.trim(), createdAt: new Date() } } },
+    { $push: { comments: { text: text.trim(), createdBy: req.user._id, createdAt: new Date() } } },
     { new: true }
-  ).select('comments').lean();
+  ).populate('comments.createdBy', 'name role').select('comments').lean();
   res.json(new ApiResponse(200, order?.comments || [], 'Comment added'));
 });
 
@@ -571,7 +743,14 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
     Order.aggregate([{ $match: { status: { $not: /^delivered$/i }, ...statusDateMatch } }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
   ]);
   const { count = 0, revenue = 0 } = result[0] || {};
-  const merged = [...statusBreakdown];
+  // Merge IN_TRANSIT variants
+  const merged = [];
+  let inTransitCount = 0;
+  for (const item of statusBreakdown) {
+    if (/^in.transit/i.test(item._id)) { inTransitCount += item.count; }
+    else merged.push(item);
+  }
+  if (inTransitCount > 0) merged.unshift({ _id: 'IN_TRANSIT', count: inTransitCount });
   merged.unshift({ _id: 'DELIVERED', count });
   res.json(new ApiResponse(200, { count, revenue, statusBreakdown: merged }, 'Delivered stats'));
 });
@@ -585,7 +764,11 @@ export const getStatusOrders = catchAsync(async (req, res) => {
     : buildStatusDateMatch({ filterType, year, month, from, to });
   // Match underscore, space, and hyphen variants (e.g. UNDELIVERED-2ND_ATTEMPT, UNDELIVERED-2ND ATTEMPT)
   const statusVariant = status.replace(/[-_]/g, '[-_ ]');
-  const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch }).populate('lead_id', 'phone email').sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 }).limit(Math.min(Number(limit) || 50, 200)).lean();
+  const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch })
+    .populate('lead_id', 'phone email')
+    .populate('comments.createdBy', 'name role')
+    .sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 })
+    .limit(Math.min(Number(limit) || 50, 200)).lean();
   const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address pincode').lean();
   const byName = {}, byPincode = {}, pinCount = {};
   for (const l of allLeads) {
@@ -789,9 +972,101 @@ export const createReturn = catchAsync(async (req, res) => {
   await Return.create({ shiprocket_order_id: data?.order_id, shiprocket_shipment_id: data?.shipment_id, order_id: String(req.body.order_id || ''), awb_code: data?.awb_code, return_reason: req.body.return_reason, raw_response: data });
   res.json(new ApiResponse(200, data, 'Return created'));
 });
-export const getReturns = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getReturns(req.query), 'Returns fetched')); });
-export const getWalletBalance = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getWalletBalance(), 'Wallet balance fetched')); });
-export const getWalletTransactions = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getWalletTransactions(req.query), 'Wallet transactions fetched')); });
+export const getReturns = catchAsync(async (req, res) => {
+  const { page = 1, per_page = 20 } = req.query;
+
+  // Sync RTO orders from Order collection into Return collection
+  const rtoOrders = await Order.find({
+    status: { $regex: /^rto/i }
+  }).select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone awb_code courier_name sub_total payment_method status createdAt').lean();
+
+  console.log('[returns] RTO orders found:', rtoOrders.length);
+
+  for (const o of rtoOrders) {
+    try {
+      await Return.findOneAndUpdate(
+        { order_id: o.order_id },
+        { $set: {
+          order_id: o.order_id,
+          shiprocket_order_id: o.shiprocket_order_id,
+          billing_customer_name: o.billing_customer_name || '',
+          billing_phone: o.billing_phone || '',
+          awb_code: o.awb_code || '',
+          courier_name: o.courier_name || '',
+          sub_total: o.sub_total || 0,
+          payment_method: o.payment_method || '',
+          status: o.status,
+          return_date: o.createdAt,
+        }},
+        { upsert: true }
+      );
+    } catch (e) {
+      console.log('[returns] upsert error:', o.order_id, e.message);
+    }
+  }
+
+  const skip = (Number(page) - 1) * Number(per_page);
+  const [data, total] = await Promise.all([
+    Return.find().sort({ return_date: -1 }).skip(skip).limit(Number(per_page)).lean(),
+    Return.countDocuments(),
+  ]);
+
+  console.log('[returns] serving from DB:', total);
+  res.json(new ApiResponse(200, { data, total }, 'Returns fetched'));
+});
+export const getWalletBalance = catchAsync(async (req, res) => {
+  try {
+    const data = await sr.getWalletBalance();
+    res.json(new ApiResponse(200, data, 'Wallet balance fetched'));
+  } catch (err) {
+    res.json(new ApiResponse(200, null, err.message || 'Wallet balance unavailable'));
+  }
+});
+export const getWalletTransactions = catchAsync(async (req, res) => {
+  const { page = 1, per_page = 20, from, to, status } = req.query;
+
+  // Sync new orders into WalletTransaction collection
+  const allOrders = await Order.find().select('order_id billing_customer_name billing_phone awb_code courier_name payment_method sub_total status createdAt').lean();
+  if (allOrders.length) {
+    const ops = allOrders.map(o => ({
+      updateOne: {
+        filter: { order_id: o.order_id },
+        update: { $setOnInsert: {
+          order_id: o.order_id,
+          billing_customer_name: o.billing_customer_name || '',
+          billing_phone: o.billing_phone || '',
+          awb_code: o.awb_code || '',
+          courier_name: o.courier_name || '',
+          payment_method: o.payment_method || '',
+          type: o.payment_method?.toLowerCase() === 'cod' ? 'cod' : 'prepaid',
+          amount: o.sub_total || 0,
+          status: o.status || '',
+          note: `${o.billing_customer_name || ''} | ${o.order_id}${o.awb_code ? ' | ' + o.awb_code : ''}`,
+          transaction_date: o.createdAt,
+        }},
+        upsert: true,
+      },
+    }));
+    await WalletTransaction.bulkWrite(ops, { ordered: false }).catch(() => {});
+  }
+
+  // Query with filters
+  const skip = (Number(page) - 1) * Number(per_page);
+  const match = {};
+  if (from || to) {
+    match.transaction_date = {};
+    if (from) match.transaction_date.$gte = new Date(from + 'T00:00:00.000+05:30');
+    if (to) match.transaction_date.$lte = new Date(to + 'T23:59:59.999+05:30');
+  }
+  if (status) match.status = status;
+
+  const [transactions, total] = await Promise.all([
+    WalletTransaction.find(match).sort({ transaction_date: -1 }).skip(skip).limit(Number(per_page)).lean(),
+    WalletTransaction.countDocuments(match),
+  ]);
+
+  res.json(new ApiResponse(200, { data: transactions, total }, 'Wallet transactions fetched'));
+});
 export const getNDR = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getNDR(req.query), 'NDR fetched')); });
 export const ndrAction = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.ndrAction(req.body), 'NDR action submitted')); });
 

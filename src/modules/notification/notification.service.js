@@ -6,7 +6,7 @@ export const createNotification = async (data) => {
 
 export const getUserNotifications = async (userId, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
-  const filter = { user: userId, type: 'lead_assigned' };
+  const filter = { user: userId };
   const [notifications, total, unreadCount] = await Promise.all([
     Notification.find(filter)
       .sort({ createdAt: -1 })
@@ -28,4 +28,12 @@ export const markAsRead = async (notificationId, userId) => {
 
 export const markAllAsRead = async (userId) => {
   return Notification.updateMany({ user: userId, isRead: false }, { isRead: true });
+};
+
+export const deleteNotification = async (notificationId, userId) => {
+  return Notification.findOneAndDelete({ _id: notificationId, user: userId });
+};
+
+export const deleteAllNotifications = async (userId) => {
+  return Notification.deleteMany({ user: userId });
 };

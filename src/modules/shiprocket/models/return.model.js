@@ -1,13 +1,20 @@
 import mongoose from 'mongoose';
 
 const returnSchema = new mongoose.Schema({
-  shiprocket_order_id: { type: Number, index: true },
+  shiprocket_order_id: { type: Number },
   shiprocket_shipment_id: Number,
   order_id: { type: String, index: true },
-  awb_code: String,
-  status: { type: String, default: 'RETURN_INITIATED' },
-  return_reason: String,
+  awb_code: { type: String, default: '' },
+  courier_name: { type: String, default: '' },
+  billing_customer_name: { type: String, default: '' },
+  billing_phone: { type: String, default: '' },
+  sub_total: { type: Number, default: 0 },
+  payment_method: { type: String, default: '' },
+  status: { type: String, default: 'RTO_INITIATED', index: true },
+  return_reason: { type: String, default: '' },
+  return_date: { type: Date, default: Date.now },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 
 export const Return = mongoose.model('ShiprocketReturn', returnSchema);
+export default Return;

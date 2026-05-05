@@ -47,6 +47,7 @@ const orderSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   comments: [{
     text: { type: String, required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },
   }],
   status_updated_at: { type: Date, index: true },

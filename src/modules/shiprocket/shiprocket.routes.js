@@ -17,6 +17,8 @@ router.post('/orders/print/invoice', auth(), c.printInvoice);
 router.delete('/orders/delete/:id', auth(), c.deleteLocalOrder);
 router.get('/orders', auth(), c.getOrders);
 router.get('/orders/delivered', auth(), c.getDeliveredOrders);
+router.get('/orders/delivered-schema', auth(), c.getDeliveredOrdersFromSchema);
+router.get('/orders/in-transit-schema', auth(), c.getInTransitOrdersFromSchema);
 router.get('/orders/with-followups', auth(), c.getOrdersWithFollowUps);
 router.get('/orders/delivered-live', auth(), c.getDeliveredOrdersLive);
 router.get('/orders/delivered-stats', auth(), c.getDeliveredStats);

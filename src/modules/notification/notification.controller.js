@@ -20,4 +20,14 @@ const markAllAsRead = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, null, 'All notifications marked as read'));
 });
 
-export default { getNotifications, markAsRead, markAllAsRead };
+const deleteNotification = catchAsync(async (req, res) => {
+  await notificationService.deleteNotification(req.params.notificationId, req.user._id);
+  res.json(new ApiResponse(httpStatus.OK, null, 'Notification deleted'));
+});
+
+const deleteAllNotifications = catchAsync(async (req, res) => {
+  await notificationService.deleteAllNotifications(req.user._id);
+  res.json(new ApiResponse(httpStatus.OK, null, 'All notifications deleted'));
+});
+
+export default { getNotifications, markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications };

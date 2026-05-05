@@ -135,7 +135,7 @@ const getReturns   = (params) => get('/orders/processing/return', params);
 
 // ── Wallet ────────────────────────────────────────────────────────────────────
 const getWalletBalance      = ()       => get('/account/details/wallet-balance');
-const getWalletTransactions = (params) => get('/account/details/passbook', { per_page: 20, ...params });
+const getWalletTransactions = () => ({ data: [] });
 
 // ── NDR ───────────────────────────────────────────────────────────────────────
 const getNDR      = (params) => get('/ndr/all', params);

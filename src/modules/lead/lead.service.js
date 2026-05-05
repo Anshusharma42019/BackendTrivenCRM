@@ -236,6 +236,15 @@ export const updateLead = async (id, data, userRole, userId) => {
     );
   }
 
+  // When marking interested from CNP, soft-delete pending/overdue tasks so lead shows in pipeline
+  if (data.status === 'interested' && data.cnp === false) {
+    const leadObjId = new mongoose.Types.ObjectId(String(id));
+    await Task.updateMany(
+      { lead: leadObjId, status: { $in: ['pending', 'overdue', 'cnp'] }, isDeleted: false },
+      { isDeleted: true }
+    );
+  }
+
   // When clearing CNP flag, delete cnp-status tasks and remove CNP records
   if (data.cnp === false) {
     await Task.deleteMany({ lead: id, status: 'cnp', isDeleted: false });

@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const records = await Verification.find({ status: { $nin: ['verified'] } })
+    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] } })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
       .sort({ createdAt: -1 })
