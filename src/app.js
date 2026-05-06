@@ -56,6 +56,9 @@ app.use(
   }),
 );
 
+// Health check — keeps server warm, prevents cold start
+app.get("/ping", (req, res) => res.json({ ok: true }));
+
 // Shiprocket webhook (no auth — Shiprocket calls this directly)
 app.post("/webhook/shiprocket", webhook);
 

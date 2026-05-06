@@ -26,7 +26,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     }
     const records = await Cnp.find(query)
       .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone')
+      .populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode notes follow_ups next_follow_up')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
   } catch (e) {
@@ -43,7 +43,7 @@ router.patch('/:id/increment', auth('admin', 'manager', 'sales'), async (req, re
       req.params.id,
       { $inc: { cnpCount: 1 }, lastCnpAt: new Date(), $push: { cnpHistory: { clickedAt: new Date() } } },
       { new: true }
-    ).populate('assignedTo', 'name email').populate('lead', 'name phone');
+    ).populate('assignedTo', 'name email').populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode');
     res.json({ status: 200, data: record });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });

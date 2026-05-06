@@ -1070,6 +1070,68 @@ export const getWalletTransactions = catchAsync(async (req, res) => {
 export const getNDR = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getNDR(req.query), 'NDR fetched')); });
 export const ndrAction = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.ndrAction(req.body), 'NDR action submitted')); });
 
+export const searchOrderByPhone = catchAsync(async (req, res) => {
+  const { phone } = req.query;
+  if (!phone || phone.replace(/\D/g, '').length < 5) {
+    return res.json(new ApiResponse(200, null, 'No result'));
+  }
+  const clean = phone.replace(/\D/g, '');
+  const last10 = clean.slice(-10);
+
+  const findOrder = async () => {
+    let order = await Order.findOne({
+      $or: [
+        { billing_phone: { $regex: last10, $options: 'i' } },
+        { billing_phone: { $regex: clean, $options: 'i' } },
+      ]
+    }).sort({ createdAt: -1 }).lean();
+
+    if (!order) {
+      const lead = await Lead.findOne({
+        phone: { $regex: last10, $options: 'i' },
+        isDeleted: { $ne: true },
+      }).lean();
+      if (lead) {
+        order = await Order.findOne({ lead_id: lead._id }).sort({ createdAt: -1 }).lean();
+      }
+    }
+    return order;
+  };
+
+  const order = await findOrder();
+  if (!order) return res.json(new ApiResponse(200, null, 'Not found'));
+
+  // Parse full address string into parts
+  const fullAddr = order.billing_address || '';
+  const parts = fullAddr.split(',').map(p => p.trim()).filter(Boolean);
+
+  // Extract post office (part containing 'Post' or 'P.O')
+  const postPart = parts.find(p => /post|p\.o/i.test(p));
+  const postOffice = postPart ? postPart.replace(/^post[-\s]*/i, '').trim() : '';
+
+  // Extract district (part containing 'Distt' or 'Dist' or 'District')
+  const distPart = parts.find(p => /distt?|district/i.test(p));
+  const district = distPart ? distPart.replace(/distt?[-\s]*|district[-\s]*/i, '').trim() : order.billing_city || '';
+
+  // House No = first part, Landmark = second part (colony/area)
+  const houseNo = parts[0] || '';
+  const landmark = parts[1] || '';
+
+  res.json(new ApiResponse(200, {
+    patientName: order.billing_customer_name || '',
+    email: order.billing_email || '',
+    address: fullAddr,
+    houseNo,
+    landmark,
+    postOffice,
+    district,
+    city: order.billing_city || '',
+    state: order.billing_state || '',
+    pincode: String(order.billing_pincode || ''),
+    deliveredAt: order.delivered_at || order.createdAt || null,
+  }, 'Order found'));
+});
+
 const WEBHOOK_EVENTS = { 6: 'SHIPPED', 7: 'DELIVERED', 8: 'IN_TRANSIT', 9: 'RTO_INITIATED', 16: 'RTO_DELIVERED', 17: 'OUT_FOR_DELIVERY', 18: 'IN_TRANSIT', 20: 'IN_TRANSIT', 42: 'PICKED_UP' };
 const normalizeShiprocketStatus = (v) => String(v || '').trim().toUpperCase().replace(/\s+/g, '_');
 const parseShiprocketDate = (v) => {

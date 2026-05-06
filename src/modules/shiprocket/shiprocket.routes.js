@@ -23,6 +23,7 @@ router.get('/orders/with-followups', auth(), c.getOrdersWithFollowUps);
 router.get('/orders/delivered-live', auth(), c.getDeliveredOrdersLive);
 router.get('/orders/delivered-stats', auth(), c.getDeliveredStats);
 router.get('/orders/status-details', auth(), c.getStatusOrders);
+router.get('/orders/search-by-phone', auth(), c.searchOrderByPhone);
 router.get('/orders/local-lookup', auth(), c.getLocalOrderLookup);
 router.post('/orders/sync', auth(), c.syncShiprocket);
 router.post('/orders/backfill-delivered', auth(), c.backfillDeliveredAt);

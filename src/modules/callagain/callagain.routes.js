@@ -24,7 +24,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       }
     }
     const records = await CallAgain.find(query)
-      .populate('lead', 'name phone problem email address source status type revenue assignedTo createdBy cnpCount cnpAt notes note createdAt')
+      .populate('lead', 'name phone problem email address houseNo cityVillage postOffice landmark district state pincode source status type revenue assignedTo createdBy cnpCount cnpAt notes follow_ups next_follow_up note createdAt')
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });

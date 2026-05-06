@@ -11,6 +11,8 @@ import verificationRoute from '../modules/verification/verification.routes.js';
 import readyToShipmentRoute from '../modules/readytoshipment/readytoshipment.routes.js';
 import shiprocketRoute from '../modules/shiprocket/shiprocket.routes.js';
 import attendanceRoute from '../modules/attendance/attendance.routes.js';
+import appointmentRoute from '../modules/appointment/appointment.routes.js';
+import searchRoute from '../modules/search/search.routes.js';
 
 const router = express.Router();
 // Define all the routes for the application
@@ -28,6 +30,8 @@ const defaultRoutes = [
   { path: '/ready-to-shipment', route: readyToShipmentRoute },
   { path: '/shiprocket', route: shiprocketRoute },
   { path: '/attendance', route: attendanceRoute },
+  { path: '/appointments', route: appointmentRoute },
+  { path: '/search', route: searchRoute },
 ];
  
 defaultRoutes.forEach((route) => {

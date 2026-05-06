@@ -30,4 +30,7 @@ const readyToShipmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+readyToShipmentSchema.index({ sentToShiprocket: 1, task: 1 });
+readyToShipmentSchema.index({ createdAt: -1 });
+
 export default mongoose.model('ReadyToShipment', readyToShipmentSchema);

@@ -51,7 +51,8 @@ const taskSchema = new mongoose.Schema(
 );
 
 taskSchema.index({ assignedTo: 1, dueDate: 1, status: 1 });
-taskSchema.index({ status: 1, lead: 1, isDeleted: 1 }); // speeds up getLeads exclusion queries
+taskSchema.index({ status: 1, lead: 1, isDeleted: 1 });
+taskSchema.index({ status: 1, isDeleted: 1, _id: 1 }); // fast distinct for ready_to_shipment
 
 taskSchema.set('toJSON', {
   transform: (doc, ret) => { delete ret.__v; return ret; },

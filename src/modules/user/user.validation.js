@@ -9,8 +9,8 @@ export const getUsers = {
     name: z.string().optional(),
     role: z.string().optional(),
     sortBy: z.string().optional(),
-    limit: z.number().int().optional(),
-    page: z.number().int().optional(),
+    limit: z.coerce.number().int().optional(),
+    page: z.coerce.number().int().optional(),
   }),
 };
 
@@ -23,7 +23,8 @@ export const createUser = {
     name: z.string(),
     phone: z.string().min(7),
     password: z.string().min(8),
-    role: z.enum(['manager', 'sales']).optional(),
+    role: z.enum(['manager', 'sales', 'doctor', 'staff']).optional(),
+    specialization: z.string().optional(),
   }),
 };
 
@@ -34,7 +35,8 @@ export const updateUser = {
     phone: z.string().min(7).optional(),
     email: z.string().email().optional(),
     password: z.string().min(8).optional(),
-    role: z.enum(['admin', 'manager', 'sales']).optional(),
+    role: z.enum(['admin', 'manager', 'sales', 'doctor', 'staff']).optional(),
+    specialization: z.string().optional(),
   }).refine((data) => Object.keys(data).length > 0, {
     message: 'Must provide at least one field to update',
   }),
