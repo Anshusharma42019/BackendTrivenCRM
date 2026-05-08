@@ -47,7 +47,7 @@ export const getTasks = async (filter, userRole, userId) => {
   if (filter.status) {
     query.status = filter.status;
   } else {
-    query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] };
+    query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'] };
   }
   if (filter.type) query.type = filter.type;
   if (filter.lead) query.lead = filter.lead;
@@ -119,16 +119,16 @@ export const updateTask = async (id, data, userRole, userId) => {
     notes: task.notes,
   };
   if (data.status === 'cnp') {
-    await Cnp.findOneAndUpdate({ task: task._id }, { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 }, $push: { cnpHistory: { clickedAt: new Date() } } }, { upsert: true, new: true });
+    await Cnp.findOneAndUpdate({ task: task._id }, { ...record, lastCnpAt: new Date(), $inc: { cnpCount: 1 }, $push: { cnpHistory: { clickedAt: new Date() } } }, { upsert: true, returnDocument: 'after' });
     await Verification.deleteOne({ task: task._id });
     await ReadyToShipment.deleteOne({ task: task._id });
     if (task.lead) await Lead.findByIdAndUpdate(task.lead, { cnp: true }).catch(() => {});
   } else if (data.status === 'verification') {
-    await Verification.findOneAndUpdate({ task: task._id }, record, { upsert: true, new: true });
+    await Verification.findOneAndUpdate({ task: task._id }, record, { upsert: true, returnDocument: 'after' });
     await Cnp.deleteOne({ task: task._id });
     await ReadyToShipment.deleteOne({ task: task._id });
   } else if (data.status === 'ready_to_shipment') {
-    await ReadyToShipment.findOneAndUpdate({ task: task._id }, record, { upsert: true, new: true });
+    await ReadyToShipment.findOneAndUpdate({ task: task._id }, record, { upsert: true, returnDocument: 'after' });
     await Verification.deleteOne({ task: task._id });
     await Cnp.deleteOne({ task: task._id });
   } else {
@@ -156,7 +156,7 @@ export const getDailyTasks = async (userId, userRole) => {
   const query = {
     isDeleted: false,
     dueDate: { $gte: start, $lte: end },
-    status: { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested'] },
+    status: { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'] },
   };
   if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
 

@@ -42,7 +42,7 @@ const addNote = catchAsync(async (req, res) => {
 
 const getTaskByLead = catchAsync(async (req, res) => {
   const Task = (await import('./task.model.js')).default;
-  const task = await Task.findOne({ lead: req.params.leadId, isDeleted: false })
+  const task = await Task.findOne({ lead: req.params.leadId })
     .sort({ createdAt: -1 })
     .lean();
   res.json(new ApiResponse(httpStatus.OK, task, 'Task fetched'));

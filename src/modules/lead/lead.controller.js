@@ -68,7 +68,7 @@ const addFollowUp = catchAsync(async (req, res) => {
       $push: { follow_ups: { date: new Date(), note: note || '', next_date: next_date ? new Date(next_date) : undefined, createdBy: req.user._id } },
       ...(next_date ? { next_follow_up: new Date(next_date) } : {}),
     },
-    { new: true }
+    { returnDocument: 'after' }
   ).select('follow_ups next_follow_up').lean();
   res.json(new ApiResponse(httpStatus.OK, lead, 'Follow up added'));
 });
@@ -78,7 +78,7 @@ const setNextFollowUp = catchAsync(async (req, res) => {
   const lead = await Lead.findByIdAndUpdate(
     req.params.leadId,
     { next_follow_up: next_follow_up ? new Date(next_follow_up) : null },
-    { new: true }
+    { returnDocument: 'after' }
   ).select('follow_ups next_follow_up').lean();
   res.json(new ApiResponse(httpStatus.OK, lead, 'Next follow up set'));
 });

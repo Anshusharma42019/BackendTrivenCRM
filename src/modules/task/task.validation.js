@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const typeEnum = z.enum(['call', 'follow_up', 'meeting', 'email', 'task']);
-const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment', 'new', 'old']);
+const statusEnum = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'verification', 'cnp', 'interested', 'cancel_call', 'ready_to_shipment', 'new', 'old', 'on_hold', 'closed_lost']);
 const priorityEnum = z.enum(['low', 'medium', 'high']);
 
 export const createTask = {
@@ -23,6 +23,12 @@ export const createTask = {
     landmark: z.string().optional(),
     pincode: z.string().optional(),
     state: z.string().optional(),
+    age: z.coerce.number().optional(),
+    weight: z.coerce.number().optional(),
+    height: z.coerce.number().optional(),
+    otherProblems: z.string().optional(),
+    problemDuration: z.string().optional(),
+    price: z.coerce.number().optional(),
   }),
 };
 
@@ -45,6 +51,12 @@ export const updateTask = {
     landmark: z.string().optional(),
     pincode: z.string().optional(),
     state: z.string().optional(),
+    age: z.coerce.number().optional(),
+    weight: z.coerce.number().optional(),
+    height: z.coerce.number().optional(),
+    otherProblems: z.string().optional(),
+    problemDuration: z.string().optional(),
+    price: z.coerce.number().optional(),
   }),
 };
 

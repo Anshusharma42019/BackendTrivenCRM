@@ -4,6 +4,7 @@ import Lead from './lead.model.js';
 import Task from '../task/task.model.js';
 import Cnp from '../cnp/cnp.model.js';
 import Verification from '../verification/verification.model.js';
+import CallAgain from '../callagain/callagain.model.js';
 import User from '../user/user.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
@@ -132,13 +133,7 @@ export const getLeads = async (filter, options, userRole, userId) => {
       isInterested
         ? Task.distinct('lead', { type: 'task', status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false })
         : isOnHold
-          ? Task.distinct('lead', {
-              $or: [
-                { status: { $in: ['verification', 'ready_to_shipment', 'interested'] } },
-                { type: 'task', status: { $in: ['pending', 'overdue'] } },
-              ],
-              lead: { $ne: null }, isDeleted: false
-            })
+          ? Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false })
           : Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false }),
       isOnHold ? Promise.resolve([]) : Cnp.distinct('lead', { lead: { $ne: null } }),
       (isOnHold || isInterested)
@@ -219,21 +214,69 @@ export const updateLead = async (id, data, userRole, userId) => {
     data.assignedTo = new mongoose.Types.ObjectId(String(userId));
   }
   const oldStatus = lead.status;
+
+  // When moving to on_hold, force cnp=false and clean up CNP records/tasks BEFORE saving
+  if (data.status === 'on_hold') {
+    data.cnp = false;
+    const leadObjId = new mongoose.Types.ObjectId(String(id));
+    await Cnp.deleteMany({ lead: leadObjId });
+    await CallAgain.deleteMany({ lead: leadObjId });
+    await Task.updateMany(
+      { lead: leadObjId, status: { $in: ['pending', 'overdue', 'cnp'] }, isDeleted: false },
+      { isDeleted: true }
+    );
+  }
+
+  // When clearing CNP flag (from any status), delete cnp-status tasks and remove CNP records BEFORE saving
+  if (data.cnp === false) {
+    await Task.deleteMany({ lead: id, status: 'cnp', isDeleted: false });
+    await Cnp.deleteMany({ lead: id });
+  }
+
   Object.assign(lead, data);
   await lead.save();
 
-  // When moving out of on_hold back to interested, remove verification record so lead shows in pipeline
-  if (data.status && data.status === 'interested' && oldStatus === 'on_hold') {
+  // When moving out of on_hold back to active (new/interested), sync verification record
+  if (data.status && ['new', 'interested'].includes(data.status) && oldStatus === 'on_hold') {
     const leadObjId = new mongoose.Types.ObjectId(String(id));
-    await Verification.deleteMany({ lead: leadObjId });
-    await Task.updateMany(
-      { lead: leadObjId, status: { $in: ['verification', 'pending', 'overdue'] }, type: { $in: ['task', 'follow_up'] }, isDeleted: false },
-      { isDeleted: true }
-    );
-    await Task.updateMany(
-      { lead: leadObjId, status: 'verification', isDeleted: false },
-      { status: 'pending' }
-    );
+    if (data.status === 'new') {
+      const details = {
+        houseNo: lead.houseNo,
+        cityVillage: lead.cityVillage,
+        cityVillageType: lead.cityVillageType,
+        postOffice: lead.postOffice,
+        district: lead.district,
+        state: lead.state,
+        pincode: lead.pincode,
+        landmark: lead.landmark,
+        address: lead.address,
+        problem: lead.problem,
+        phone: lead.phone
+      };
+
+      // Move back to pending in verification if record exists
+      await Verification.updateMany({ lead: leadObjId }, { status: 'pending', ...details });
+      const verRecords = await Verification.find({ lead: leadObjId });
+      for (const vr of verRecords) {
+        if (vr.task) await Task.findByIdAndUpdate(vr.task, { status: 'verification', isDeleted: false, ...details });
+      }
+      // Also restore any soft-deleted call tasks so they show in Action Required
+      await Task.updateMany(
+        { lead: leadObjId, status: { $in: ['pending', 'overdue', 'cnp', 'on_hold'] }, isDeleted: true },
+        { 
+          status: data.forceVerification ? 'verification' : 'pending', 
+          isDeleted: false,
+          ...details
+        }
+      );
+    } else {
+      // Moving to interested - clean up verification so it shows in pipeline
+      await Verification.deleteMany({ lead: leadObjId });
+      await Task.updateMany(
+        { lead: leadObjId, status: { $in: ['verification', 'pending', 'overdue', 'on_hold', 'cnp'] }, isDeleted: false },
+        { isDeleted: true }
+      );
+    }
   }
 
   // When marking interested from CNP, soft-delete pending/overdue tasks so lead shows in pipeline
@@ -243,12 +286,6 @@ export const updateLead = async (id, data, userRole, userId) => {
       { lead: leadObjId, status: { $in: ['pending', 'overdue', 'cnp'] }, isDeleted: false },
       { isDeleted: true }
     );
-  }
-
-  // When clearing CNP flag, delete cnp-status tasks and remove CNP records
-  if (data.cnp === false) {
-    await Task.deleteMany({ lead: id, status: 'cnp', isDeleted: false });
-    await Cnp.deleteMany({ lead: id });
   }
 
   if (data.status && data.status !== oldStatus && lead.assignedTo) {
@@ -295,7 +332,7 @@ export const markCNP = async (leadId, userRole, userId) => {
         cnpCount: 1,
         lastCnpAt: new Date(),
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
   }
 
@@ -341,6 +378,15 @@ export const deleteLead = async (id) => {
   lead.isDeleted = true;
   lead.deletedAt = new Date();
   await lead.save();
+
+  // Cascading soft-delete associated records
+  const leadObjId = new mongoose.Types.ObjectId(String(id));
+  await Promise.all([
+    Task.updateMany({ lead: leadObjId, isDeleted: false }, { isDeleted: true, deletedAt: new Date() }),
+    Verification.updateMany({ lead: leadObjId, isDeleted: false }, { isDeleted: true, deletedAt: new Date() }),
+    Cnp.deleteMany({ lead: leadObjId }),
+    CallAgain.deleteMany({ lead: leadObjId }),
+  ]).catch(err => console.error('Cascading delete error:', err));
 };
 
 export const assignLead = async (leadId, assignedTo) => {

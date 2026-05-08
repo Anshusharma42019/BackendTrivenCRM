@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] } })
+    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] }, isDeleted: { $ne: true } })
       .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone status')
+      .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
       .sort({ createdAt: -1 })
       .lean();
     res.json({ status: 200, data: records });
@@ -28,34 +28,46 @@ router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
     const newTasks = verificationTasks.filter(t => !existingSet.has(t._id.toString()));
 
     if (newTasks.length > 0) {
-      await Verification.insertMany(
-        newTasks.map(task => ({
-          task: task._id, title: task.title, assignedTo: task.assignedTo, lead: task.lead,
-          dueDate: task.dueDate, description: task.description,
-          cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
-          houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
-          landmark: task.landmark, pincode: task.pincode, state: task.state,
-          reminderAt: task.reminderAt, notes: task.notes,
-          problem: task.problem, age: task.age, weight: task.weight, height: task.height,
-          otherProblems: task.otherProblems, problemDuration: task.problemDuration, price: task.price,
-        })),
-        { ordered: false }
-      );
+      try {
+        await Verification.insertMany(
+          newTasks.map(task => ({
+            task: task._id, title: task.title, assignedTo: task.assignedTo, lead: task.lead,
+            dueDate: task.dueDate, description: task.description,
+            cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
+            houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
+            landmark: task.landmark, pincode: task.pincode, state: task.state,
+            reminderAt: task.reminderAt, notes: task.notes,
+            problem: task.problem, age: task.age, weight: task.weight, height: task.height,
+            otherProblems: task.otherProblems, problemDuration: task.problemDuration, price: task.price,
+          })),
+          { ordered: false }
+        );
+      } catch (err) {
+        // Ignore duplicate key errors (11000) during bulk insert
+        if (err.code !== 11000) console.error('Sync insert error:', err);
+      }
     }
 
     const existingTasks = verificationTasks.filter(t => existingSet.has(t._id.toString()));
     if (existingTasks.length > 0) {
-      await Promise.all(existingTasks.map(task =>
-        Verification.updateOne(
-          { task: task._id },
-          { $set: { title: task.title, assignedTo: task.assignedTo, lead: task.lead } }
-        ).then(() =>
-          Verification.updateOne(
-            { task: task._id, age: { $exists: false } },
-            { $set: { age: task.age, weight: task.weight, height: task.height, price: task.price, problem: task.problem, otherProblems: task.otherProblems, problemDuration: task.problemDuration, description: task.description, cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, landmark: task.landmark, pincode: task.pincode, state: task.state, reminderAt: task.reminderAt } }
-          )
-        )
-      ));
+      const ops = existingTasks.map(task => ({
+        updateOne: {
+          filter: { task: task._id },
+          update: { 
+            $set: { 
+              title: task.title, assignedTo: task.assignedTo, lead: task.lead,
+              age: task.age, weight: task.weight, height: task.height, price: task.price, 
+              problem: task.problem, otherProblems: task.otherProblems, 
+              problemDuration: task.problemDuration, description: task.description, 
+              cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, 
+              houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, 
+              landmark: task.landmark, pincode: task.pincode, state: task.state, 
+              reminderAt: task.reminderAt 
+            } 
+          }
+        }
+      }));
+      await Verification.bulkWrite(ops, { ordered: false }).catch(err => console.error('Sync bulkWrite error:', err));
     }
 
     res.json({ status: 200, message: `Synced ${newTasks.length} new records` });
@@ -80,7 +92,7 @@ router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
         ...(record.onHoldReason && { onHoldReason: record.onHoldReason }),
         ...(record.onHoldUntil && { onHoldUntil: record.onHoldUntil }),
       });
-      if (record.task) await Task.findByIdAndUpdate(record.task, { status: 'pending' });
+      if (record.task) await Task.findByIdAndUpdate(record.task, { status: 'on_hold' });
     }
 
     const verifiedRecords = await Verification.find({ status: 'verified' })
@@ -121,6 +133,52 @@ router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    const Lead = (await import('../lead/lead.model.js')).default;
+
+    // Get verification on-hold records
+    const verificationRecords = await Verification.find({ status: 'on_hold', isDeleted: { $ne: true } })
+      .populate('assignedTo', 'name email')
+      .populate('lead', 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
+      .sort({ onHoldUntil: 1 })
+      .lean();
+
+    // Get lead IDs already covered by verification records
+    const verificationLeadIds = new Set(
+      verificationRecords.map(r => r.lead?._id?.toString()).filter(Boolean)
+    );
+
+    const mongoose = (await import('mongoose')).default;
+    // Get pipeline on-hold leads NOT in verification
+    const pipelineOnHoldLeads = await Lead.find({
+      status: 'on_hold',
+      isDeleted: false,
+      _id: { $nin: [...verificationLeadIds].map(id => new mongoose.Types.ObjectId(id)) },
+    })
+      .populate('assignedTo', 'name email')
+      .sort({ onHoldUntil: 1 })
+      .lean();
+
+    // Shape pipeline leads to match verification record structure
+    const pipelineRecords = pipelineOnHoldLeads.map(lead => ({
+      _id: lead._id,
+      title: `Call ${lead.name}`,
+      status: 'on_hold',
+      onHoldReason: lead.onHoldReason,
+      onHoldUntil: lead.onHoldUntil,
+      assignedTo: lead.assignedTo,
+      lead: lead,
+      createdAt: lead.createdAt,
+      _isPipelineOnly: true,
+    }));
+
+    res.json({ status: 200, data: [...verificationRecords, ...pipelineRecords] });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
@@ -132,8 +190,8 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
     const record = await Verification.findByIdAndUpdate(
       req.params.id,
       update,
-      { new: true }
-    ).populate('assignedTo', 'name email').populate('lead', 'name phone');
+      { returnDocument: 'after' }
+    ).populate('assignedTo', 'name email').populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem');
     if (!record) return res.status(404).json({ message: 'Not found' });
 
     const Task = (await import('../task/task.model.js')).default;
@@ -145,12 +203,22 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
       await Lead.findByIdAndUpdate(leadId, {
         status: 'on_hold',
         cnp: false,
+        isDeleted: false,
         ...(onHoldReason && { onHoldReason }),
         ...(onHoldUntil && { onHoldUntil }),
       });
-      // Reset task status to pending so lead appears in Pipeline On Hold list
+      // Set task status to on_hold so lead appears in Pipeline On Hold list
       if (record.task) {
-        await Task.findByIdAndUpdate(record.task, { status: 'pending' });
+        await Task.findByIdAndUpdate(record.task, { status: 'on_hold', isDeleted: false });
+      }
+    }
+
+    if (status === 'pending' && record.lead) {
+      const Lead = (await import('../lead/lead.model.js')).default;
+      const leadId = record.lead._id || record.lead;
+      await Lead.findByIdAndUpdate(leadId, { status: 'new', cnp: false, isDeleted: false });
+      if (record.task) {
+        await Task.findByIdAndUpdate(record.task, { status: 'verification', isDeleted: false });
       }
     }
 
@@ -158,7 +226,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
       const taskUpdate = await Task.findByIdAndUpdate(
         record.task,
         { status: 'ready_to_shipment', ...taskFields },
-        { new: true }
+        { returnDocument: 'after' }
       );
       if (!taskUpdate) return res.status(500).json({ status: 500, message: 'Task not found' });
 
@@ -182,7 +250,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
           },
           $setOnInsert: { task: record.task },
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
     } else if (record.task && Object.keys(taskFields).length > 0) {
       await Task.findByIdAndUpdate(record.task, taskFields);
@@ -196,13 +264,28 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
 
 router.delete('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   try {
-    const record = await Verification.findByIdAndDelete(req.params.id);
-    if (!record) return res.status(404).json({ message: 'Not found' });
-    if (record.task) {
-      const Task = (await import('../task/task.model.js')).default;
-      await Task.findByIdAndUpdate(record.task, { isDeleted: true });
+    const Lead = (await import('../lead/lead.model.js')).default;
+    const Task = (await import('../task/task.model.js')).default;
+    const leadService = await import('../lead/lead.service.js');
+
+    const record = await Verification.findByIdAndUpdate(req.params.id, { isDeleted: true, deletedAt: new Date() }, { returnDocument: 'after' });
+    
+    if (record) {
+      if (record.lead) {
+        await leadService.deleteLead(record.lead).catch(() => {});
+      } else if (record.task) {
+        await Task.findByIdAndUpdate(record.task, { isDeleted: true, deletedAt: new Date() }).catch(() => {});
+      }
+      return res.json({ message: 'Verification record and associated lead soft deleted' });
     }
-    res.json({ status: 200, message: 'Deleted' });
+
+    // If not found in Verification, check if it's a Lead ID (pipeline-only on-hold records)
+    try {
+      await leadService.deleteLead(req.params.id);
+      return res.json({ message: 'Pipeline record and associated tasks soft deleted' });
+    } catch (err) {
+      return res.json({ message: 'Record already deleted' });
+    }
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }

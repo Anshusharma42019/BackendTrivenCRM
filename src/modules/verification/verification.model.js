@@ -29,6 +29,8 @@ const verificationSchema = new mongoose.Schema(
     status: { type: String, enum: ['pending', 'verified', 'rejected', 'on_hold'], default: 'pending' },
     onHoldUntil: { type: Date },
     onHoldReason: { type: String },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );
