@@ -1,5 +1,6 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
+import requireCheckedIn from '../../middleware/requireCheckedIn.js';
 import CallAgain from './callagain.model.js';
 import { Lead } from '../lead/lead.model.js';
 
@@ -35,7 +36,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // POST create a call-again record from a lead
-router.post('/', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.post('/', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const { leadId } = req.body;
     if (!leadId) return res.status(400).json({ message: 'leadId is required' });
@@ -67,7 +68,7 @@ router.post('/', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // PATCH update status
-router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const { status } = req.body;
     const record = await CallAgain.findByIdAndUpdate(

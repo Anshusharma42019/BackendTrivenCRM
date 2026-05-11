@@ -765,11 +765,14 @@ export const getStatusOrders = catchAsync(async (req, res) => {
   // Match underscore, space, and hyphen variants (e.g. UNDELIVERED-2ND_ATTEMPT, UNDELIVERED-2ND ATTEMPT)
   const statusVariant = status.replace(/[-_]/g, '[-_ ]');
   const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch })
-    .populate('lead_id', 'phone email')
+    .populate({ path: 'lead_id', select: 'phone email assignedTo', populate: { path: 'assignedTo', select: 'name role' } })
     .populate('comments.createdBy', 'name role')
     .sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 })
     .limit(Math.min(Number(limit) || 50, 200)).lean();
-  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone email address pincode').lean();
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } })
+    .select('name phone email address pincode assignedTo')
+    .populate('assignedTo', 'name role')
+    .lean();
   const byName = {}, byPincode = {}, pinCount = {};
   for (const l of allLeads) {
     if (!l.phone) continue;
@@ -780,10 +783,11 @@ export const getStatusOrders = catchAsync(async (req, res) => {
   }
   for (const p of Object.keys(pinCount)) { if (pinCount[p] > 1) delete byPincode[p]; }
   const enriched = orders.map(o => {
-    if (o.lead_id?.phone) return { ...o, billing_phone: o.lead_id.phone };
+    const staff = o.lead_id?.assignedTo;
+    if (o.lead_id?.phone) return { ...o, billing_phone: o.lead_id.phone, staff_name: staff?.name || '', staff_role: staff?.role || '' };
     const masked = String(o.billing_phone || '');
     const ismasked = /^x+$/i.test(masked) || masked.replace(/\D/g, '').length < 10;
-    if (!ismasked) return { ...o };
+    if (!ismasked) return { ...o, staff_name: staff?.name || '', staff_role: staff?.role || '' };
     const full = (o.billing_customer_name || '').toLowerCase().trim();
     let lead = byName[full];
     if (!lead) {
@@ -795,7 +799,13 @@ export const getStatusOrders = catchAsync(async (req, res) => {
       if (first && first.length > 2) lead = Object.entries(byName).find(([k]) => k.startsWith(first))?.[1];
     }
     if (!lead && o.billing_pincode) lead = byPincode[String(o.billing_pincode).trim()];
-    return { ...o, billing_phone: lead?.phone || o.billing_phone };
+    const fallbackStaff = lead?.assignedTo;
+    return {
+      ...o,
+      billing_phone: lead?.phone || o.billing_phone,
+      staff_name: staff?.name || fallbackStaff?.name || '',
+      staff_role: staff?.role || fallbackStaff?.role || '',
+    };
   });
   res.json(new ApiResponse(200, { data: enriched, total: enriched.length }, 'Status orders fetched'));
 });
@@ -978,7 +988,7 @@ export const getReturns = catchAsync(async (req, res) => {
   // Sync RTO orders from Order collection into Return collection
   const rtoOrders = await Order.find({
     status: { $regex: /^rto/i }
-  }).select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone awb_code courier_name sub_total payment_method status createdAt').lean();
+  }).select('order_id shiprocket_order_id shiprocket_shipment_id billing_customer_name billing_phone awb_code courier_name sub_total payment_method status lead_id createdAt').lean();
 
   console.log('[returns] RTO orders found:', rtoOrders.length);
 
@@ -996,6 +1006,7 @@ export const getReturns = catchAsync(async (req, res) => {
           sub_total: o.sub_total || 0,
           payment_method: o.payment_method || '',
           status: o.status,
+          lead_id: o.lead_id || null,
           return_date: o.createdAt,
         }},
         { upsert: true }
@@ -1007,12 +1018,22 @@ export const getReturns = catchAsync(async (req, res) => {
 
   const skip = (Number(page) - 1) * Number(per_page);
   const [data, total] = await Promise.all([
-    Return.find().sort({ return_date: -1 }).skip(skip).limit(Number(per_page)).lean(),
+    Return.find()
+      .populate({ path: 'lead_id', select: 'assignedTo', populate: { path: 'assignedTo', select: 'name role' } })
+      .sort({ return_date: -1 })
+      .skip(skip)
+      .limit(Number(per_page))
+      .lean(),
     Return.countDocuments(),
   ]);
 
   console.log('[returns] serving from DB:', total);
-  res.json(new ApiResponse(200, { data, total }, 'Returns fetched'));
+  const enriched = data.map(item => ({
+    ...item,
+    staff_name: item.lead_id?.assignedTo?.name || '',
+    staff_role: item.lead_id?.assignedTo?.role || '',
+  }));
+  res.json(new ApiResponse(200, { data: enriched, total }, 'Returns fetched'));
 });
 export const getWalletBalance = catchAsync(async (req, res) => {
   try {

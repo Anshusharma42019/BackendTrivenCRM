@@ -24,6 +24,7 @@ export const createUser = {
     phone: z.string().min(7),
     password: z.string().min(8),
     role: z.enum(['manager', 'sales', 'doctor', 'staff']).optional(),
+    baseSalary: z.coerce.number().min(0).optional(),
     specialization: z.string().optional(),
   }),
 };
@@ -36,6 +37,7 @@ export const updateUser = {
     email: z.string().email().optional(),
     password: z.string().min(8).optional(),
     role: z.enum(['admin', 'manager', 'sales', 'doctor', 'staff']).optional(),
+    baseSalary: z.coerce.number().min(0).optional(),
     specialization: z.string().optional(),
   }).refine((data) => Object.keys(data).length > 0, {
     message: 'Must provide at least one field to update',

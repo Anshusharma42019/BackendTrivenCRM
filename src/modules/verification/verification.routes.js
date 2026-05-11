@@ -1,5 +1,6 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
+import requireCheckedIn from '../../middleware/requireCheckedIn.js';
 import Verification from './verification.model.js';
 
 const router = express.Router();
@@ -18,7 +19,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // Sync tasks with status 'verification' into Verification collection
-router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.post('/sync', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const Task = (await import('../task/task.model.js')).default;
 
@@ -77,7 +78,7 @@ router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // MUST be before /:id routes
-router.post('/repair', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.post('/repair', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const Task = (await import('../task/task.model.js')).default;
     const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
@@ -179,13 +180,14 @@ router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
     const update = { ...taskFields };
     if (status) update.status = status;
     if (onHoldUntil) update.onHoldUntil = onHoldUntil;
     if (onHoldReason) update.onHoldReason = onHoldReason;
+    if (status === 'on_hold') update.onHoldAt = new Date();
 
     const record = await Verification.findByIdAndUpdate(
       req.params.id,
@@ -262,7 +264,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.delete('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.delete('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const Lead = (await import('../lead/lead.model.js')).default;
     const Task = (await import('../task/task.model.js')).default;

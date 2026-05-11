@@ -13,6 +13,7 @@ const returnSchema = new mongoose.Schema({
   status: { type: String, default: 'RTO_INITIATED', index: true },
   return_reason: { type: String, default: '' },
   return_date: { type: Date, default: Date.now },
+  lead_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead', index: true },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 

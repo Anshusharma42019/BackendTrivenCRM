@@ -4,7 +4,8 @@ import ApiResponse from '../../utils/ApiResponse.js';
 import * as dashboardService from './dashboard.service.js';
 
 const getStats = catchAsync(async (req, res) => {
-  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id);
+  const { date } = req.query;
+  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id, date);
   res.json(new ApiResponse(httpStatus.OK, stats, 'Dashboard stats fetched'));
 });
 
@@ -14,7 +15,9 @@ const getRevenueChart = catchAsync(async (req, res) => {
 });
 
 const getStaffStats = catchAsync(async (req, res) => {
-  const data = await dashboardService.getStaffStats(req.user._id);
+  const { date, staffId } = req.query;
+  const targetId = (req.user.role === 'manager' || req.user.role === 'admin') && staffId ? staffId : req.user._id;
+  const data = await dashboardService.getStaffStats(targetId, date);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff stats fetched'));
 });
 
@@ -33,17 +36,20 @@ const getStaffVerifications = catchAsync(async (req, res) => {
 });
 
 const getStaffTodayLists = catchAsync(async (req, res) => {
-  const data = await dashboardService.getStaffTodayLists(req.user._id);
+  const { date, staffId } = req.query;
+  const data = await dashboardService.getStaffTodayLists(req.user.role, req.user._id, date, staffId);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff today lists fetched'));
 });
 
 const getStaffMonthlyChart = catchAsync(async (req, res) => {
-  const data = await dashboardService.getStaffMonthlyChart(req.user._id);
+  const targetId = (req.user.role === 'admin' || req.user.role === 'manager') ? null : req.user._id;
+  const data = await dashboardService.getStaffMonthlyChart(targetId);
   res.json(new ApiResponse(httpStatus.OK, data, 'Monthly chart fetched'));
 });
 
 const getAllStaffStats = catchAsync(async (req, res) => {
-  const data = await dashboardService.getAllStaffStats();
+  const { date } = req.query;
+  const data = await dashboardService.getAllStaffStats(date);
   res.json(new ApiResponse(httpStatus.OK, data, 'All staff stats fetched'));
 });
 

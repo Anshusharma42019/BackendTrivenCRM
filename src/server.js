@@ -1,12 +1,14 @@
 import app from './app.js';
 import { config } from './config/config.js';
 import connectDB from './config/database.js';
+import initAttendanceCron from './modules/attendance/attendance.cron.js';
 import dns from 'dns';
 
 let server;
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 connectDB().then(() => {
+  initAttendanceCron();
   server = app.listen(config.port, () => {
     console.log(`Server listening on port ${config.port} in ${config.env} mode`);
   });

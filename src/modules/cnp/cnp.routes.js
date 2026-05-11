@@ -1,5 +1,6 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
+import requireCheckedIn from '../../middleware/requireCheckedIn.js';
 import Cnp from './cnp.model.js';
 
 const router = express.Router();
@@ -34,7 +35,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.patch('/:id/increment', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.patch('/:id/increment', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const existing = await Cnp.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Not found' });
@@ -50,7 +51,7 @@ router.patch('/:id/increment', auth('admin', 'manager', 'sales'), async (req, re
   }
 });
 
-router.delete('/:id', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.delete('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     await Cnp.findByIdAndDelete(req.params.id);
     res.json({ status: 200, message: 'Deleted' });

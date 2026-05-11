@@ -168,9 +168,48 @@ const updateAttendance = async (attendanceId, body) => {
   return attendance;
 };
 
+/**
+ * Auto check-out all users who have been checked in for more than X hours.
+ * Defaults to 10 hours as requested.
+ */
+const autoCheckOutByDuration = async (maxHours = 10) => {
+  const today = getTodayDate();
+  const checkedInUsers = await Attendance.find({ 
+    date: today, 
+    checkOut: null, 
+    isDeleted: false 
+  });
+
+  const now = new Date();
+  const maxMs = maxHours * 60 * 60 * 1000;
+  let count = 0;
+
+  for (const attendance of checkedInUsers) {
+    if (attendance.checkIn) {
+      const diffMs = now - attendance.checkIn;
+      
+      if (diffMs >= maxMs) {
+        const diffHrs = diffMs / (1000 * 60 * 60);
+        attendance.checkOut = now;
+        attendance.workingHours = Math.round(diffHrs * 100) / 100;
+        
+        const h = Math.floor(diffHrs);
+        const m = Math.floor((diffHrs - h) * 60);
+        attendance.sessionDuration = `${h}h ${m}m`;
+        
+        attendance.notes = attendance.notes ? `${attendance.notes} (Auto Checked-out after ${maxHours}h)` : `Auto Checked-out after ${maxHours}h`;
+        await attendance.save();
+        count++;
+      }
+    }
+  }
+  return count;
+};
+
 export default {
   checkIn,
   checkOut,
+  autoCheckOutByDuration,
   getTodayStatus,
   getMyAttendance,
   getAllAttendance,
