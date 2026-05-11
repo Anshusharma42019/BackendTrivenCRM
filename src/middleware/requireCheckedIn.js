@@ -10,8 +10,8 @@ const getTodayDate = () => {
 };
 
 /**
- * Blocks the request if the user has not checked in today.
- * Must be used after auth() middleware.
+ Blocks the request if the user has not checked in today.
+ Must be used after auth() middleware.
  */
 const requireCheckedIn = catchAsync(async (req, res, next) => {
   if (req.user.role === 'admin') return next();
@@ -24,3 +24,4 @@ const requireCheckedIn = catchAsync(async (req, res, next) => {
 });
 
 export default requireCheckedIn;
+

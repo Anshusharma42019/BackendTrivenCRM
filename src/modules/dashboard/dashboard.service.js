@@ -42,7 +42,7 @@ export const getStaffStats = async (userId, targetDate) => {
     CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
     Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
     Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Lead.countDocuments({ createdBy: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
+    Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
     Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
     Verification.countDocuments({ assignedTo: uid, status: 'on_hold', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
     Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
@@ -232,7 +232,7 @@ export const getAllStaffStats = async (targetDate) => {
       Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Lead.countDocuments({ createdBy: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
+      Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
       Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Verification.countDocuments({ 
         assignedTo: uid, 
