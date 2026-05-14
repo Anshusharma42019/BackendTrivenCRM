@@ -35,6 +35,10 @@ const orderSchema = new mongoose.Schema({
   sub_total: Number,
   length: Number, breadth: Number, height: Number, weight: Number,
   lead_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead', index: true },
+  created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  verified_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  commission_generated: { type: Boolean, default: false, index: true },
+  commission_generated_at: Date,
   follow_ups: [{
     date: Date,
     note: String,
@@ -47,10 +51,16 @@ const orderSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   comments: [{
     text: { type: String, required: true },
+    type: { type: String, enum: ['general', 'followup'], default: 'general' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },
   }],
   status_updated_at: { type: Date, index: true },
+  followup_done: { type: Boolean, default: false },
+  sent_to_verification: { type: Boolean, default: false },
+  // If this order was created from a re-verification cycle, track the original order
+  source_order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ShiprocketOrder', default: null },
+  reorder_commission_generated: { type: Boolean, default: false },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 

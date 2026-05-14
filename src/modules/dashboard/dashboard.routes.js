@@ -14,5 +14,6 @@ router.get('/staff-monthly-chart', auth('sales', 'admin', 'manager'), dashboardC
 router.get('/all-staff-stats', auth('admin', 'manager'), dashboardController.getAllStaffStats);
 router.get('/staff-commission', auth('sales', 'admin', 'manager'), dashboardController.getStaffCommission);
 router.get('/all-staff-commissions', auth('admin', 'manager'), dashboardController.getAllStaffCommissions);
+router.post('/save-commission-override', auth('admin', 'manager'), dashboardController.saveCommissionOverride);
 
 export default router;

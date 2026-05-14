@@ -14,6 +14,9 @@ const notifyAdmins = async (data) => {
   await Promise.all(admins.map(a => createNotification({ ...data, user: a._id }).catch(() => {})));
 };
 
+const hiddenTaskStatuses = ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'];
+const hiddenTaskLeadStatuses = ['closed_lost', 'on_hold', 'follow_up'];
+
 export const createTask = async (data, createdBy, creatorRole) => {
   // Sales staff can only assign tasks to themselves
   if (creatorRole === 'sales') {
@@ -47,10 +50,14 @@ export const getTasks = async (filter, userRole, userId) => {
   if (filter.status) {
     query.status = filter.status;
   } else {
-    query.status = { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'] };
+    query.status = { $nin: hiddenTaskStatuses };
   }
   if (filter.type) query.type = filter.type;
   if (filter.lead) query.lead = filter.lead;
+  if (!filter.status && !filter.lead) {
+    const hiddenLeadIds = await Lead.distinct('_id', { status: { $in: hiddenTaskLeadStatuses }, isDeleted: { $ne: true } });
+    if (hiddenLeadIds.length) query.lead = { $nin: hiddenLeadIds };
+  }
 
   // console.log('[GET-TASKS] query:', JSON.stringify(query), 'role:', userRole, 'userId:', userId);
   if (filter.date) {
@@ -156,9 +163,11 @@ export const getDailyTasks = async (userId, userRole) => {
   const query = {
     isDeleted: false,
     dueDate: { $gte: start, $lte: end },
-    status: { $nin: ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'] },
+    status: { $nin: hiddenTaskStatuses },
   };
   if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+  const hiddenLeadIds = await Lead.distinct('_id', { status: { $in: hiddenTaskLeadStatuses }, isDeleted: { $ne: true } });
+  if (hiddenLeadIds.length) query.lead = { $nin: hiddenLeadIds };
 
   return Task.find(query)
     .populate('lead', 'name phone status')

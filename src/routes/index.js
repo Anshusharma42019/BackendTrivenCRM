@@ -13,6 +13,7 @@ import shiprocketRoute from '../modules/shiprocket/shiprocket.routes.js';
 import attendanceRoute from '../modules/attendance/attendance.routes.js';
 import appointmentRoute from '../modules/appointment/appointment.routes.js';
 import searchRoute from '../modules/search/search.routes.js';
+import commissionRoute from '../modules/commission/commission.routes.js';
 
 const router = express.Router();
 // Define all the routes for the application
@@ -32,6 +33,7 @@ const defaultRoutes = [
   { path: '/attendance', route: attendanceRoute },
   { path: '/appointments', route: appointmentRoute },
   { path: '/search', route: searchRoute },
+  { path: '/commission', route: commissionRoute },
 ];
  
 defaultRoutes.forEach((route) => {

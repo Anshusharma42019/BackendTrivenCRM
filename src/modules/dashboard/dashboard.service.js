@@ -5,18 +5,25 @@ import Verification from '../verification/verification.model.js';
 import StaffTarget from './staffTarget.model.js';
 import Cnp from '../cnp/cnp.model.js';
 import CallAgain from '../callagain/callagain.model.js';
+import ReorderCommission from '../commission/reorderCommission.model.js';
 import mongoose from 'mongoose';
 
 const todayDateStr = () => new Date().toISOString().slice(0, 10);
 
-export const getStaffStats = async (userId, targetDate) => {
+export const getStaffStats = async (userId, targetDate, from, to) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  let start, end;
   const target = targetDate ? new Date(targetDate) : new Date();
+
+  if (from && to) {
+    start = new Date(`${from}T00:00:00.000+05:30`);
+    end = new Date(`${to}T23:59:59.999+05:30`);
+  } else {
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  }
   
-  const startOfDay = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
-  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
   const monthStart = new Date(Date.UTC(target.getFullYear(), target.getMonth(), 1) - IST_OFFSET);
-  
   const uid = new mongoose.Types.ObjectId(userId);
   const dateStr = target.toISOString().slice(0, 10);
 
@@ -34,18 +41,18 @@ export const getStaffStats = async (userId, targetDate) => {
     onHoldCount,
     todayClosedLost
   ] = await Promise.all([
-    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: endOfDay } }),
+    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: end } }),
     Task.countDocuments({ assignedTo: uid, status: 'pending', isDeleted: false }),
     StaffTarget.findOne({ user: uid, date: dateStr }),
-    Cnp.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Verification.countDocuments({ assignedTo: uid, status: 'on_hold', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-    Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
+    Cnp.countDocuments({ assignedTo: uid, updatedAt: { $gte: start, $lte: end } }),
+    CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ assignedTo: uid, status: 'on_hold', updatedAt: { $gte: start, $lte: end } }),
+    Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
   ]);
 
   return {
@@ -79,15 +86,22 @@ export const setStaffTarget = async (userId, target) => {
   return { todayTarget: doc.target };
 };
 
-export const getStaffTodayLists = async (userRole, userId, targetDate, targetStaffId) => {
+export const getStaffTodayLists = async (userRole, userId, targetDate, targetStaffId, from, to) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const target = targetDate ? new Date(targetDate) : new Date();
-  const todayStart = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
-  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+  let start, end;
 
-  const filter = { createdAt: { $gte: todayStart, $lte: todayEnd } };
-  const updateFilter = { updatedAt: { $gte: todayStart, $lte: todayEnd } };
-  const taskFilter = { isDeleted: false, updatedAt: { $gte: todayStart, $lte: todayEnd } };
+  if (from && to) {
+    start = new Date(`${from}T00:00:00.000+05:30`);
+    end = new Date(`${to}T23:59:59.999+05:30`);
+  } else {
+    const target = targetDate ? new Date(targetDate) : new Date();
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  }
+
+  const filter = { createdAt: { $gte: start, $lte: end } };
+  const updateFilter = { updatedAt: { $gte: start, $lte: end } };
+  const taskFilter = { isDeleted: false, updatedAt: { $gte: start, $lte: end } };
 
   let sid = null;
   if (userRole === 'manager' || userRole === 'admin') {
@@ -111,7 +125,7 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
     Task.find({ ...taskFilter, status: 'cancel_call' })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
-    Verification.find({ ...(sid ? { assignedTo: sid } : {}), status: 'on_hold', updatedAt: { $gte: todayStart, $lte: todayEnd } })
+    Verification.find({ ...(sid ? { assignedTo: sid } : {}), status: 'on_hold', updatedAt: { $gte: start, $lte: end } })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
   ]);
 
@@ -242,7 +256,7 @@ export const getAllStaffStats = async (targetDate) => {
           { onHoldAt: null, updatedAt: { $gte: startOfDay, $lte: endOfDay } }
         ]
       }),
-      Task.countDocuments({ assignedTo: uid, status: 'ready_to_shipment', isDeleted: false }),
+      Task.countDocuments({ assignedTo: uid, status: 'ready_to_shipment', isDeleted: false, updatedAt: { $gte: monthStart, $lte: monthEnd } }),
       Order.countDocuments({ 
         lead_id: { $in: staffLeads }, 
         status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
@@ -291,10 +305,10 @@ export const getAllStaffStats = async (targetDate) => {
   return stats;
 };
 
-export const getDashboardStats = async (userRole, userId, targetDate) => {
-  // For countDocuments — plugin auto-adds isDeleted:false
+export const getDashboardStats = async (userRole, userId, targetDate, from, to) => {
+  // For countDocuments â€” plugin auto-adds isDeleted:false
   const countFilter = {};
-  // For aggregate — plugin does NOT apply, must be explicit
+  // For aggregate â€” plugin does NOT apply, must be explicit
   const aggMatch = { isDeleted: false };
 
   if (userRole === 'sales') {
@@ -303,9 +317,16 @@ export const getDashboardStats = async (userRole, userId, targetDate) => {
   }
 
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const target = targetDate ? new Date(targetDate) : new Date();
-  const todayStart = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
-  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+  let start, end;
+
+  if (from && to) {
+    start = new Date(`${from}T00:00:00.000+05:30`);
+    end = new Date(`${to}T23:59:59.999+05:30`);
+  } else {
+    const target = targetDate ? new Date(targetDate) : new Date();
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  }
 
   const Attendance = (await import('../attendance/attendance.model.js')).default;
   const User = (await import('../user/user.model.js')).default;
@@ -329,17 +350,19 @@ export const getDashboardStats = async (userRole, userId, targetDate) => {
   ] = await Promise.all([
     Lead.countDocuments(countFilter),
 
-    Lead.countDocuments({ ...countFilter, createdAt: { $gte: todayStart, $lte: todayEnd } }),
+    Lead.countDocuments({ ...countFilter, createdAt: { $gte: start, $lte: end } }),
 
     Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
 
-    Task.countDocuments({ status: 'ready_to_shipment', isDeleted: false }),
+    Task.countDocuments({ 
+      status: 'ready_to_shipment', 
+      isDeleted: false
+    }),
 
     Lead.aggregate([
-      { $match: { ...aggMatch, status: 'closed_won' } },
+      { $match: { ...aggMatch, status: 'closed_won', updatedAt: { $gte: start, $lte: end } } },
       { $group: { _id: null, total: { $sum: '$revenue' } } },
     ]),
-
 
     Lead.aggregate([
       { $match: aggMatch },
@@ -363,14 +386,14 @@ export const getDashboardStats = async (userRole, userId, targetDate) => {
       ...(userRole === 'sales' ? { assignedTo: userId } : {}),
     }),
 
-    Attendance.find({ date: { $gte: todayStart, $lte: todayEnd }, isDeleted: false }).lean(),
+    Attendance.find({ date: { $gte: start, $lte: end }, isDeleted: false }).lean(),
 
     User.countDocuments({ role: { $in: ['sales', 'manager'] }, isDeleted: false }),
 
-    Cnp.countDocuments({ updatedAt: { $gte: todayStart, $lte: todayEnd } }),
-    CallAgain.countDocuments({ updatedAt: { $gte: todayStart, $lte: todayEnd } }),
-    Task.countDocuments({ status: 'interested', isDeleted: false, updatedAt: { $gte: todayStart, $lte: todayEnd } }),
-    Task.countDocuments({ status: 'cancel_call', isDeleted: false, updatedAt: { $gte: todayStart, $lte: todayEnd } }),
+    Cnp.countDocuments({ updatedAt: { $gte: start, $lte: end } }),
+    CallAgain.countDocuments({ updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
   ]);
 
   const stageOrder = ['new', 'contacted', 'interested', 'follow_up', 'closed_won', 'closed_lost'];
@@ -395,7 +418,7 @@ export const getDashboardStats = async (userRole, userId, targetDate) => {
     todayCallAgain,
     todayInterested,
     todayNotInterested,
-    todayClosedLost: await Lead.countDocuments({ status: 'closed_lost', updatedAt: { $gte: todayStart, $lte: todayEnd } }),
+    todayClosedLost: await Lead.countDocuments({ status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
   };
 
   return {
@@ -411,6 +434,142 @@ export const getDashboardStats = async (userRole, userId, targetDate) => {
     attendance: attendanceStats,
     activity: activityStats,
   };
+};
+
+export const getStaffCommission = async (userId, month, year) => {
+  const User = (await import('../user/user.model.js')).default;
+  const Attendance = (await import('../attendance/attendance.model.js')).default;
+  const CommissionOverride = (await import('../commission/commissionOverride.model.js')).default;
+
+  const user = await User.findById(userId).lean();
+  if (!user) return null;
+
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  const monthStart = new Date(Date.UTC(year, month, 1) - IST_OFFSET);
+  const monthEnd = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999) - IST_OFFSET);
+
+  const [attendanceRecords, staffLeads, override, reorderComms] = await Promise.all([
+    Attendance.find({ user: userId, date: { $gte: monthStart, $lte: monthEnd }, isDeleted: false }).lean(),
+    Lead.find({ assignedTo: userId, isDeleted: { $ne: true } }).distinct('_id'),
+    CommissionOverride.findOne({ user: userId, month, year }).lean(),
+    ReorderCommission.find({ staff_id: userId, month, year }).lean(),
+  ]);
+
+  const attendance = { present: 0, absent: 0, half_day: 0, late: 0 };
+  attendanceRecords.forEach(r => { if (attendance[r.status] !== undefined) attendance[r.status]++; });
+
+  const workingDays = attendance.present + attendance.late + attendance.half_day;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const basePay = override?.manualBasePay ?? Math.round((user.baseSalary || 0) * (workingDays / daysInMonth));
+
+  const deliveredCount = await Order.countDocuments({
+    lead_id: { $in: staffLeads },
+    source_order_id: null,
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    $or: [
+      { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, status_updated_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
+    ],
+  });
+
+  const revenueResult = await Order.aggregate([
+    {
+      $match: {
+        lead_id: { $in: staffLeads },
+        source_order_id: null,
+        status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+        $or: [
+          { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+          { delivered_at: null, status_updated_at: { $gte: monthStart, $lte: monthEnd } },
+          { delivered_at: null, status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
+        ],
+      },
+    },
+    { $group: { _id: null, total: { $sum: '$sub_total' } } },
+  ]);
+
+  const totalRevenue = revenueResult[0]?.total || 0;
+  const reorderTotal = reorderComms.reduce((acc, c) => acc + (c.commission_amount || 0), 0);
+  const revenueCommission = Math.round(totalRevenue * ((user.commissionRate || 5) / 100));
+  
+  const totalCommission = override?.manualCommission ?? (revenueCommission + reorderTotal);
+  const totalPay = basePay + totalCommission;
+
+  return { 
+    user, 
+    attendance, 
+    totalDeliveries: deliveredCount, 
+    totalRevenue, 
+    revenueCommission,
+    reorderCommission: reorderTotal,
+    totalCommission, 
+    basePay, 
+    totalPay 
+  };
+};
+
+export const getAllStaffCommissions = async (month, year) => {
+  const User = (await import('../user/user.model.js')).default;
+  const allUsers = await User.find({ role: { $in: ['sales', 'manager', 'staff'] }, isDeleted: false })
+    .select('_id name role baseSalary commissionRate').lean();
+
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  const monthStart = new Date(Date.UTC(year, month, 1) - IST_OFFSET);
+  const monthEnd = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999) - IST_OFFSET);
+
+  const staff = await Promise.all(allUsers.map(u => getStaffCommission(u._id, month, year)));
+  const validStaff = staff.filter(Boolean);
+
+  // Fetch company-wide totals regardless of assignment
+  const totalDeliveries = await Order.countDocuments({
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    $or: [
+      { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, status_updated_at: { $gte: monthStart, $lte: monthEnd } },
+      { delivered_at: null, status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
+    ],
+  });
+
+  const totalRevenueResult = await Order.aggregate([
+    {
+      $match: {
+        status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+        $or: [
+          { delivered_at: { $gte: monthStart, $lte: monthEnd } },
+          { delivered_at: null, status_updated_at: { $gte: monthStart, $lte: monthEnd } },
+          { delivered_at: null, status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
+        ],
+      },
+    },
+    { $group: { _id: null, total: { $sum: '$sub_total' } } },
+  ]);
+
+  const grandTotalRevenue = totalRevenueResult[0]?.total || 0;
+  const staffDeliveriesSum = validStaff.reduce((s, x) => s + (x.totalDeliveries || 0), 0);
+  const staffRevenueSum = validStaff.reduce((s, x) => s + (x.totalRevenue || 0), 0);
+
+  return {
+    staff: validStaff,
+    grandTotalDeliveries: totalDeliveries, // Show company-wide total
+    grandTotalRevenue, // Show company-wide total
+    grandTotalCommission: validStaff.reduce((s, x) => s + (x.totalCommission || 0), 0),
+    grandTotalPay: validStaff.reduce((s, x) => s + (x.totalPay || 0), 0),
+    unassignedDeliveries: Math.max(0, totalDeliveries - staffDeliveriesSum),
+    unassignedRevenue: Math.max(0, grandTotalRevenue - staffRevenueSum),
+  };
+};
+
+export const saveCommissionOverride = async ({ userId, month, year, manualCommission, manualBasePay }) => {
+  const CommissionOverride = (await import('../commission/commissionOverride.model.js')).default;
+  const update = {};
+  if (manualCommission !== undefined) update.manualCommission = manualCommission;
+  if (manualBasePay !== undefined) update.manualBasePay = manualBasePay;
+  return CommissionOverride.findOneAndUpdate(
+    { user: userId, month, year },
+    { $set: update },
+    { upsert: true, new: true }
+  ).lean();
 };
 
 export const getRevenueChart = async (userRole, userId, period = 'monthly') => {
@@ -430,276 +589,3 @@ export const getRevenueChart = async (userRole, userId, period = 'monthly') => {
   ]);
 };
 
-/* ─── Staff Commission ─── */
-const COMMISSION_RATE = 0.05; // 5%
-
-const getValidDate = (value) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const getDashboardDeliveredDate = (order) => {
-  return getValidDate(order.delivered_at) || getValidDate(order.createdAt);
-};
-
-const isDeliveredInRange = (order, monthStart, monthEnd) => {
-  const deliveredDate = getDashboardDeliveredDate(order);
-  return !!deliveredDate && deliveredDate >= monthStart && deliveredDate <= monthEnd;
-};
-
-const getOrderRevenue = (order) => {
-  const subTotal = Number(order.sub_total) || 0;
-  if (subTotal > 0) return subTotal;
-  return (order.order_items || []).reduce((sum, item) => {
-    const price = Number(item.selling_price) || 0;
-    const units = Number(item.units) || 1;
-    return sum + (price * units);
-  }, 0);
-};
-
-/**
- * Calculate commission and salary for a single staff member for a given month.
- */
-export const getStaffCommission = async (userId, month, year) => {
-  const User = (await import('../user/user.model.js')).default;
-  const Attendance = (await import('../attendance/attendance.model.js')).default;
-  const Verification = (await import('../verification/verification.model.js')).default;
-
-  const uid = new mongoose.Types.ObjectId(userId);
-  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const nowIST = new Date(Date.now() + IST_OFFSET);
-  const m = month != null ? Number(month) : nowIST.getUTCMonth();
-  const y = year != null ? Number(year) : nowIST.getUTCFullYear();
-  const monthStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
-  const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59) - IST_OFFSET);
-
-  // 1. Get user details for baseSalary
-  const user = await User.findById(uid).select('baseSalary name role').lean();
-
-  // 2. Find leads assigned to this staff
-  const leadIds = await Lead.find({ assignedTo: uid, isDeleted: { $ne: true } }).distinct('_id');
-
-  // 3. Find delivered orders
-  const deliveredOrders = await Order.find({
-    status: /^delivered$/i,
-    lead_id: { $in: leadIds },
-  }).select('order_items sub_total delivered_at status_updated_at raw_response createdAt billing_customer_name').lean();
-  const orders = deliveredOrders.filter(order => isDeliveredInRange(order, monthStart, monthEnd));
-
-  // 4. Get attendance and verifications
-  const [attendances, verifications] = await Promise.all([
-    Attendance.find({ user: uid, date: { $gte: monthStart, $lte: monthEnd }, isDeleted: false }).lean(),
-    Verification.find({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: monthEnd } }).select('status').lean(),
-  ]);
-
-  // 5. Calculate statistics
-  let totalDeliveries = orders.length;
-  let totalItemRevenue = 0;
-  let totalCommission = 0;
-  const dailyMap = {};
-
-  for (const order of orders) {
-    const orderItemTotal = getOrderRevenue(order);
-    const commission = orderItemTotal * COMMISSION_RATE;
-    totalItemRevenue += orderItemTotal;
-    totalCommission += commission;
-
-    const dateKey = getDashboardDeliveredDate(order).toISOString().slice(0, 10);
-    if (!dailyMap[dateKey]) dailyMap[dateKey] = { date: dateKey, deliveries: 0, revenue: 0, commission: 0 };
-    dailyMap[dateKey].deliveries++;
-    dailyMap[dateKey].revenue += orderItemTotal;
-    dailyMap[dateKey].commission += commission;
-  }
-
-  const attendanceStats = { present: 0, late: 0, half_day: 0, absent: 0 };
-  for (const a of attendances) {
-    if (attendanceStats[a.status] !== undefined) attendanceStats[a.status]++;
-  }
-
-  const verifStats = { assigned: verifications.length, verified: verifications.filter(v => v.status === 'verified').length };
-
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const effectiveDays = attendanceStats.present + attendanceStats.late + (attendanceStats.half_day * 0.5);
-  const basePay = Math.round(((user?.baseSalary || 0) / daysInMonth) * effectiveDays);
-
-  const dailyBreakdown = Object.values(dailyMap).sort((a, b) => b.date.localeCompare(a.date));
-
-  return {
-    user: { name: user?.name, role: user?.role, baseSalary: user?.baseSalary || 0 },
-    totalDeliveries,
-    totalItemRevenue: Math.round(totalItemRevenue),
-    totalCommission: Math.round(totalCommission),
-    commissionRate: COMMISSION_RATE * 100,
-    attendance: attendanceStats,
-    verifications: verifStats,
-    basePay,
-    totalPay: basePay + Math.round(totalCommission),
-    month: m + 1,
-    year: y,
-    dailyBreakdown,
-  };
-};
-
-/**
- * Get commission and salary data for ALL staff (admin view).
- */
-export const getAllStaffCommissions = async (month, year) => {
-  const User = (await import('../user/user.model.js')).default;
-  const Attendance = (await import('../attendance/attendance.model.js')).default;
-  const Verification = (await import('../verification/verification.model.js')).default;
-  const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
-
-  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const nowIST = new Date(Date.now() + IST_OFFSET);
-  const m = month != null ? Number(month) : nowIST.getUTCMonth();
-  const y = year != null ? Number(year) : nowIST.getUTCFullYear();
-  const monthStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
-  const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59) - IST_OFFSET);
-
-  // 1. Get all staff (Sales and Managers)
-  const staffUsers = await User.find({
-    role: { $in: ['sales', 'manager'] },
-    createdAt: { $lte: monthEnd },
-    isDeleted: false
-  }).select('_id name phone role baseSalary createdAt').lean();
-
-  // 2. Get all delivered orders in the month
-  const allDeliveredOrders = await Order.find({
-    status: /^delivered$/i,
-  }).select('order_items sub_total lead_id delivered_at status_updated_at raw_response createdAt').lean();
-  const deliveredOrders = allDeliveredOrders.filter(order => isDeliveredInRange(order, monthStart, monthEnd));
-
-  // 3. Build lead → staff mapping
-  const leadIds = [...new Set(deliveredOrders.map(o => o.lead_id ? String(o.lead_id) : null).filter(Boolean))];
-  const staffCreatedAt = Object.fromEntries(staffUsers.map(u => [String(u._id), getValidDate(u.createdAt)]));
-  const [readyRecords, verificationOwnerRecords] = await Promise.all([
-    ReadyToShipment.find({ lead: { $in: leadIds } }).select('lead assignedTo createdAt updatedAt').sort({ createdAt: 1 }).lean(),
-    Verification.find({ lead: { $in: leadIds } }).select('lead assignedTo createdAt updatedAt').sort({ createdAt: 1 }).lean(),
-  ]);
-  const leadWorkflowOwners = {};
-  for (const record of [...verificationOwnerRecords, ...readyRecords]) {
-    const leadId = record.lead ? String(record.lead) : null;
-    if (!leadId || !record.assignedTo) continue;
-    if (!leadWorkflowOwners[leadId]) leadWorkflowOwners[leadId] = [];
-    leadWorkflowOwners[leadId].push({
-      assignedTo: String(record.assignedTo),
-      date: getValidDate(record.updatedAt) || getValidDate(record.createdAt)
-    });
-  }
-  for (const owners of Object.values(leadWorkflowOwners)) {
-    owners.sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
-  }
-
-  // 4. Get attendance and verifications for the month
-  const [attendances, verifications] = await Promise.all([
-    Attendance.find({ date: { $gte: monthStart, $lte: monthEnd }, isDeleted: false }).lean(),
-    Verification.find({ createdAt: { $gte: monthStart, $lte: monthEnd } }).select('assignedTo status').lean(),
-  ]);
-
-  // 5. Aggregate per staff
-  const staffMap = {};
-  for (const u of staffUsers) {
-    staffMap[String(u._id)] = {
-      user: u,
-      totalDeliveries: 0,
-      totalItemRevenue: 0,
-      totalCommission: 0,
-      attendance: { present: 0, late: 0, half_day: 0, absent: 0 },
-      verifications: { assigned: 0, verified: 0 },
-      basePay: 0,
-      totalPay: 0
-    };
-  }
-  const unassignedStaffId = '__unassigned__';
-  staffMap[unassignedStaffId] = {
-    user: {
-      _id: unassignedStaffId,
-      name: 'Unassigned Orders',
-      role: 'unassigned',
-      baseSalary: 0
-    },
-    totalDeliveries: 0,
-    totalItemRevenue: 0,
-    totalCommission: 0,
-    attendance: { present: 0, late: 0, half_day: 0, absent: 0 },
-    verifications: { assigned: 0, verified: 0 },
-    basePay: 0,
-    totalPay: 0
-  };
-
-  // Tally Verifications
-  for (const v of verifications) {
-    if (v.assignedTo && staffMap[String(v.assignedTo)]) {
-      staffMap[String(v.assignedTo)].verifications.assigned++;
-      if (v.status === 'verified') staffMap[String(v.assignedTo)].verifications.verified++;
-    }
-  }
-
-  // Tally Attendance
-  for (const a of attendances) {
-    const sid = String(a.user);
-    if (staffMap[sid]) {
-      if (staffMap[sid].attendance[a.status] !== undefined) {
-        staffMap[sid].attendance[a.status]++;
-      }
-    }
-  }
-
-  // Calculate Commissions
-  for (const order of deliveredOrders) {
-    const deliveredDate = getDashboardDeliveredDate(order);
-    const leadOwners = order.lead_id ? leadWorkflowOwners[String(order.lead_id)] || [] : [];
-    const owner = [...leadOwners].reverse().find(item => (
-      !item.date ||
-      item.date <= deliveredDate ||
-      (item.date >= monthStart && item.date <= monthEnd)
-    ));
-    const staffId = owner?.assignedTo;
-    const staffExistedOnDelivery = staffId && (!staffCreatedAt[staffId] || staffCreatedAt[staffId] <= deliveredDate);
-    const targetStaffId = staffExistedOnDelivery && staffMap[staffId] ? staffId : unassignedStaffId;
-
-    const orderItemTotal = getOrderRevenue(order);
-
-    staffMap[targetStaffId].totalDeliveries++;
-    staffMap[targetStaffId].totalItemRevenue += orderItemTotal;
-    if (targetStaffId !== unassignedStaffId) {
-      staffMap[targetStaffId].totalCommission += orderItemTotal * COMMISSION_RATE;
-    }
-  }
-
-  // Finalize Salaries
-  const result = Object.values(staffMap).filter(s => (
-    s.user._id !== unassignedStaffId || s.totalDeliveries > 0
-  )).map(s => {
-    const base = s.user.baseSalary || 0;
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
-    const effectiveDays = s.attendance.present + s.attendance.late + (s.attendance.half_day * 0.5);
-    
-    s.basePay = Math.round((base / daysInMonth) * effectiveDays);
-    s.totalPay = s.basePay + Math.round(s.totalCommission);
-    
-    return {
-      ...s,
-      totalItemRevenue: Math.round(s.totalItemRevenue),
-      totalCommission: Math.round(s.totalCommission),
-    };
-  });
-
-  // Grand totals
-  const grandTotalDeliveries = result.reduce((a, s) => a + s.totalDeliveries, 0);
-  const grandTotalRevenue = result.reduce((a, s) => a + s.totalItemRevenue, 0);
-  const grandTotalCommission = result.reduce((a, s) => a + s.totalCommission, 0);
-  const grandTotalPay = result.reduce((a, s) => a + s.totalPay, 0);
-
-  return {
-    staff: result,
-    grandTotalDeliveries,
-    grandTotalRevenue,
-    grandTotalCommission,
-    grandTotalPay,
-    commissionRate: COMMISSION_RATE * 100,
-    month: m + 1,
-    year: y,
-  };
-};

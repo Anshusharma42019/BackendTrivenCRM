@@ -107,7 +107,7 @@ export const getLeads = async (filter, options, userRole, userId) => {
   if (filter.status) {
     query.status = filter.status;
   } else if (!filter.cnp) {
-    query.status = { $nin: ['closed_won', 'closed_lost', 'interested'] };
+    query.status = { $nin: ['closed_won', 'closed_lost', 'interested', 'follow_up', 'on_hold'] };
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
@@ -131,12 +131,12 @@ export const getLeads = async (filter, options, userRole, userId) => {
 
     const [excludeByTask, excludeByCnpCollection, excludeByVerification] = await Promise.all([
       isInterested
-        ? Task.distinct('lead', { type: 'task', status: { $in: ['pending', 'overdue'] }, lead: { $ne: null }, isDeleted: false })
+        ? Task.distinct('lead', { status: { $in: ['pending', 'overdue', 'verification', 'ready_to_shipment'] }, lead: { $ne: null }, isDeleted: false })
         : isOnHold
           ? Task.distinct('lead', { status: { $in: ['verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false })
           : Task.distinct('lead', { status: { $in: ['cnp', 'verification', 'ready_to_shipment', 'interested'] }, lead: { $ne: null }, isDeleted: false }),
       isOnHold ? Promise.resolve([]) : Cnp.distinct('lead', { lead: { $ne: null } }),
-      (isOnHold || isInterested)
+      isOnHold
         ? Promise.resolve([])
         : Verification.distinct('lead', { lead: { $exists: true, $ne: null }, status: { $nin: ['on_hold'] } }),
     ]);

@@ -20,6 +20,7 @@ router.get('/orders/delivered', auth(), c.getDeliveredOrders);
 router.get('/orders/delivered-schema', auth(), c.getDeliveredOrdersFromSchema);
 router.get('/orders/in-transit-schema', auth(), c.getInTransitOrdersFromSchema);
 router.get('/orders/with-followups', auth(), c.getOrdersWithFollowUps);
+router.get('/orders/completed-followups', auth(), c.getCompletedFollowUps);
 router.get('/orders/delivered-live', auth(), c.getDeliveredOrdersLive);
 router.get('/orders/delivered-stats', auth(), c.getDeliveredStats);
 router.get('/orders/status-details', auth(), c.getStatusOrders);
@@ -33,6 +34,7 @@ router.post('/orders/:id/follow-up', auth(), c.addFollowUp);
 router.patch('/orders/:id/next-follow-up', auth(), c.setNextFollowUp);
 router.post('/orders/:id/complete-followup', auth(), c.completeFollowUp);
 router.patch('/orders/:id/notes', auth(), c.saveOrderNote);
+router.post('/orders/:id/send-to-verification', auth(), c.sendToVerification);
 
 // ── Courier ───────────────────────────────────────────────────────────────────
 router.get('/courier/serviceability', auth(), c.checkServiceability);
@@ -79,6 +81,7 @@ router.post('/manifest/print', auth(), c.printManifest);
 router.post('/label/generate', auth(), c.generateLabel);
 router.post('/invoice/print', auth(), c.printInvoice);
 router.post('/track/:awb', auth(), c.trackByAWB);
+router.post('/sync', auth(), c.syncShiprocket);
 router.get('/pickup-locations', auth(), c.getPickupLocations);
 
 export default router;

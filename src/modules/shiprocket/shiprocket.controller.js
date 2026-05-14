@@ -12,6 +12,125 @@ import { DeliveredOrder } from './models/deliveredOrder.model.js';
 import { InTransitOrder } from './models/inTransitOrder.model.js';
 import ReadyToShipment from '../readytoshipment/readytoshipment.model.js';
 import { Lead } from '../lead/lead.model.js';
+import Task from '../task/task.model.js';
+import Verification from '../verification/verification.model.js';
+import FollowupCommissionSettings from '../commission/followupCommissionSettings.model.js';
+import ReorderCommission from '../commission/reorderCommission.model.js';
+
+const DEFAULT_FOLLOWUP_TOTAL = 5;
+const DEFAULT_FOLLOWUP_GAP_DAYS = 6;
+
+const getFollowupSettings = () => ({ total_followups: DEFAULT_FOLLOWUP_TOTAL, followup_gap_days: DEFAULT_FOLLOWUP_GAP_DAYS });
+const logOrderActivity = async () => null;
+
+// Cleanup: Remove pending commissions if order is no longer delivered
+const cleanupReorderCommissions = async () => {
+  try {
+    const pendingComms = await ReorderCommission.find({ status: 'pending' }).populate('order_id', 'status').lean();
+    const toDelete = pendingComms.filter(c => {
+      const status = (c.order_id?.status || '').toUpperCase();
+      return status !== 'DELIVERED';
+    }).map(c => c._id);
+
+    if (toDelete.length > 0) {
+      await ReorderCommission.deleteMany({ _id: { $in: toDelete } });
+      console.log(`[Commission] Cleaned up ${toDelete.length} invalid pending commissions`);
+    }
+  } catch (e) {
+    console.error('[Commission] cleanup error:', e.message);
+  }
+};
+
+// Generate commission for re-orders (orders from follow-up → verification → new delivery)
+const generateReorderCommissions = async () => {
+  try {
+    await cleanupReorderCommissions();
+
+    const settings = await FollowupCommissionSettings.findOne().sort({ createdAt: -1 }).lean();
+    if (!settings || !settings.is_active) return;
+
+    const reorders = await Order.find({
+      status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+      source_order_id: { $ne: null },
+      reorder_commission_generated: { $ne: true },
+    }).lean();
+
+    for (const order of reorders) {
+      const deliveredAt = order.delivered_at || order.createdAt || new Date();
+      const month = deliveredAt.getMonth();
+      const year = deliveredAt.getFullYear();
+
+      // ── Staff B: re-verification staff (verified_by on new order) ──────────
+      let staffB = order.verified_by || order.created_by;
+      if (!staffB && order.lead_id) {
+        const lead = await Lead.findById(order.lead_id).select('assignedTo').lean();
+        staffB = lead?.assignedTo;
+      }
+
+      // ── Staff A: original order staff (created_by on source order) ─────────
+      let staffA = null;
+      if (order.source_order_id) {
+        const sourceOrder = await Order.findById(order.source_order_id).select('created_by verified_by lead_id').lean();
+        staffA = sourceOrder?.created_by || sourceOrder?.verified_by;
+        if (!staffA && sourceOrder?.lead_id) {
+          const srcLead = await Lead.findById(sourceOrder.lead_id).select('assignedTo createdBy').lean();
+          staffA = srcLead?.assignedTo || srcLead?.createdBy;
+        }
+      }
+
+      const calcAmount = (isOriginal) => {
+        // Find matching price slab first
+        const price = order.sub_total || 0;
+        const slab = (settings.price_slabs || []).find(s =>
+          price >= s.min_price && (s.max_price === null || s.max_price === undefined || price <= s.max_price)
+        );
+        const src = slab || settings; // fallback to global if no slab matches
+        const amt = isOriginal ? src.original_staff_commission_amount : src.reorder_commission_amount;
+        const pct = isOriginal ? src.original_staff_commission_percent : src.reorder_commission_percent;
+        return settings.commission_type === 'percent' ? (price * pct) / 100 : amt;
+      };
+
+      const base = {
+        source_order_id: order.source_order_id,
+        lead_id: order.lead_id || null,
+        commission_type: settings.commission_type,
+        order_sub_total: order.sub_total || 0,
+        status: 'pending',
+        month,
+        year,
+      };
+
+      // Create Staff B commission (re-verification)
+      if (staffB) {
+        const amountB = calcAmount(false);
+        if (amountB > 0) {
+          await ReorderCommission.findOneAndUpdate(
+            { order_id: order._id, commission_role: 'reorder' },
+            { $setOnInsert: { ...base, order_id: order._id, staff_id: staffB, commission_amount: amountB, commission_role: 'reorder' } },
+            { upsert: true }
+          );
+        }
+      }
+
+      // Create Staff A commission (original delivery)
+      if (staffA && String(staffA) !== String(staffB)) {
+        const amountA = calcAmount(true);
+        if (amountA > 0) {
+          await ReorderCommission.findOneAndUpdate(
+            { order_id: order._id, commission_role: 'original' },
+            { $setOnInsert: { ...base, order_id: order._id, staff_id: staffA, commission_amount: amountA, commission_role: 'original' } },
+            { upsert: true }
+          );
+        }
+      }
+
+      await Order.findByIdAndUpdate(order._id, { reorder_commission_generated: true });
+    }
+  } catch (e) {
+    console.error('[Commission] generateReorderCommissions error:', e.message);
+  }
+};
+
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const login = catchAsync(async (req, res) => {
@@ -100,7 +219,7 @@ export const createOrder = catchAsync(async (req, res) => {
   const data = await sr.createOrder(payload);
 
   // Persist to MongoDB
-  await Order.findOneAndUpdate(
+  const savedOrder = await Order.findOneAndUpdate(
     { order_id: payload.order_id },
     {
       ...payload,
@@ -109,10 +228,31 @@ export const createOrder = catchAsync(async (req, res) => {
       status: data?.status || 'NEW',
       status_code: data?.status_code,
       lead_id: body.lead_id || undefined,
+      created_by: req.user?._id,
       raw_response: data,
     },
     { upsert: true, returnDocument: 'after' }
   );
+
+  // If this lead had a pending re-order source (from follow-up cycle), link it and clear the flag
+  if (body.lead_id && savedOrder) {
+    const lead = await Lead.findById(body.lead_id).select('pending_reorder_source pending_reorder_staff').lean();
+    if (lead?.pending_reorder_source) {
+      await Order.findByIdAndUpdate(savedOrder._id, {
+        source_order_id: lead.pending_reorder_source,
+        verified_by: lead.pending_reorder_staff || req.user?._id,
+      });
+      await Lead.findByIdAndUpdate(body.lead_id, { $unset: { pending_reorder_source: 1, pending_reorder_staff: 1 } });
+    }
+  }
+
+  await logOrderActivity({
+    orderId: savedOrder?._id,
+    actor: req.user?._id,
+    type: 'order_created',
+    title: 'Order Created',
+    description: `Order ${payload.order_id} created`,
+  });
 
   // Remove from Ready to Shipment list once order is created
   if (body.lead_id) {
@@ -344,6 +484,9 @@ const syncAllToLocal = async () => {
   for (const o of needsFollowUps) {
     await setAutoFollowUps(o._id, o.delivered_at || o.createdAt || new Date());
   }
+
+    // Generate re-order commissions for newly delivered orders that came from a follow-up cycle
+  await generateReorderCommissions();
 };
 
 export const syncShiprocket = catchAsync(async (req, res) => {
@@ -575,14 +718,19 @@ export const getDeliveredOrders = catchAsync(async (req, res) => {
 });
 
 const setAutoFollowUps = async (orderId, deliveredAt) => {
+  const settings = getFollowupSettings();
+  const total = Number(settings.total_followups) || DEFAULT_FOLLOWUP_TOTAL;
+  const gap = Number(settings.followup_gap_days) || DEFAULT_FOLLOWUP_GAP_DAYS;
   const base = new Date(deliveredAt);
-  const ops = Array.from({ length: 5 }, (_, i) => {
+  const ops = Array.from({ length: total }, (_, i) => {
     const scheduled_date = new Date(base);
-    scheduled_date.setDate(scheduled_date.getDate() + i * 8);
+    scheduled_date.setDate(scheduled_date.getDate() + (i + 1) * gap);
+    const next_followup_date = i + 1 < total ? new Date(base) : null;
+    if (next_followup_date) next_followup_date.setDate(next_followup_date.getDate() + (i + 2) * gap);
     return {
       updateOne: {
         filter: { order_id: orderId, followup_number: i + 1 },
-        update: { $setOnInsert: { order_id: orderId, followup_number: i + 1, scheduled_date, completed: false } },
+        update: { $setOnInsert: { order_id: orderId, followup_number: i + 1, scheduled_date, next_followup_date, completed: false, status: 'scheduled' } },
         upsert: true,
       },
     };
@@ -593,38 +741,108 @@ const setAutoFollowUps = async (orderId, deliveredAt) => {
 
 export const completeFollowUp = catchAsync(async (req, res) => {
   const { id } = req.params;
+  const settings = getFollowupSettings();
+  const total = Number(settings.total_followups) || DEFAULT_FOLLOWUP_TOTAL;
+  const gap = Number(settings.followup_gap_days) || DEFAULT_FOLLOWUP_GAP_DAYS;
   const count = await Followup.countDocuments({ order_id: id });
   if (count === 0) {
     const order = await Order.findById(id).select('delivered_at createdAt').lean();
     await setAutoFollowUps(id, order?.delivered_at || order?.createdAt || new Date());
   }
   const current = await Followup.findOne({ order_id: id, completed: false }).sort({ followup_number: 1 });
-  if (!current) return res.json(new ApiResponse(200, { completedCount: 5, next_follow_up: null }, 'All follow-ups done'));
+  if (!current) {
+    await Order.findByIdAndUpdate(id, { followup_done: true });
+    return res.json(new ApiResponse(200, { completedCount: total, next_follow_up: null }, 'All follow-ups done'));
+  }
   current.completed = true;
+  current.status = 'completed';
+  current.staff = req.user?._id;
+  current.followup_date = new Date();
+  if (current.followup_number >= total) {
+     await Order.findByIdAndUpdate(id, { followup_done: true });
+  }
   current.completed_at = new Date();
-  if (req.body?.note) current.note = req.body.note;
+  if (req.body?.note) {
+    current.note = req.body.note;
+    current.notes = req.body.note;
+  }
   await current.save();
-  const next = await Followup.findOne({ order_id: id, completed: false }).sort({ followup_number: 1 });
-  await Order.findByIdAndUpdate(id, { next_follow_up: next?.scheduled_date || null });
-  res.json(new ApiResponse(200, { completedCount: current.followup_number, next_follow_up: next?.scheduled_date || null }, 'Follow-up completed'));
+
+  await logOrderActivity({
+    orderId: id,
+    actor: req.user?._id,
+    type: 'followup_completed',
+    title: `${current.followup_number}${current.followup_number === 1 ? 'st' : current.followup_number === 2 ? 'nd' : current.followup_number === 3 ? 'rd' : 'th'} Follow-up Completed`,
+    description: req.body?.note || '',
+    metadata: { followup_number: current.followup_number },
+  });
+
+  // Shift remaining followups based on manual completion date and admin gap.
+  const remaining = await Followup.find({ order_id: id, completed: false }).sort({ followup_number: 1 });
+  let nextDate = null;
+  if (remaining.length > 0) {
+    let base = new Date();
+    for (const fu of remaining) {
+      base.setDate(base.getDate() + gap);
+      fu.scheduled_date = new Date(base);
+      fu.next_followup_date = null;
+      await fu.save();
+    }
+    nextDate = remaining[0].scheduled_date;
+    for (let i = 0; i < remaining.length - 1; i += 1) {
+      remaining[i].next_followup_date = remaining[i + 1].scheduled_date;
+      await remaining[i].save();
+    }
+  }
+
+  await Order.findByIdAndUpdate(id, { next_follow_up: nextDate });
+  res.json(new ApiResponse(200, { completedCount: current.followup_number, next_follow_up: nextDate, total_followups: total, followup_gap_days: gap }, 'Follow-up completed'));
 });
 
 export const saveOrderNote = catchAsync(async (req, res) => {
-  const { text } = req.body;
+  if (Object.prototype.hasOwnProperty.call(req.body, 'notes')) {
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { notes: String(req.body.notes || '') },
+      { new: true }
+    ).select('notes').lean();
+
+    return res.json(new ApiResponse(200, order, 'Note saved'));
+  }
+
+  const { text, type = 'general' } = req.body;
   if (!text?.trim()) return res.status(400).json(new ApiResponse(400, null, 'Comment text required'));
   const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { $push: { comments: { text: text.trim(), createdBy: req.user._id, createdAt: new Date() } } },
+    { $push: { comments: { text: text.trim(), type, createdBy: req.user._id, createdAt: new Date() } } },
     { new: true }
   ).populate('comments.createdBy', 'name role').select('comments').lean();
+  await logOrderActivity({
+    orderId: req.params.id,
+    actor: req.user?._id,
+    type: 'note_added',
+    title: type === 'followup' ? 'Follow-up Note Added' : 'Order Note Added',
+    description: text.trim(),
+  });
   res.json(new ApiResponse(200, order?.comments || [], 'Comment added'));
 });
 
 export const addFollowUp = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { note, next_follow_up } = req.body;
+  const { note, next_follow_up, status = 'scheduled' } = req.body;
   const existing = await Followup.countDocuments({ order_id: id });
-  await Followup.create({ order_id: id, followup_number: existing + 1, scheduled_date: next_follow_up ? new Date(next_follow_up) : new Date(), note: note || '', completed: false });
+  await Followup.create({
+    order_id: id,
+    followup_number: existing + 1,
+    scheduled_date: next_follow_up ? new Date(next_follow_up) : new Date(),
+    followup_date: status === 'completed' ? new Date() : undefined,
+    staff: status === 'completed' ? req.user?._id : undefined,
+    status,
+    note: note || '',
+    notes: note || '',
+    completed: status === 'completed',
+    completed_at: status === 'completed' ? new Date() : undefined,
+  });
   const order = await Order.findByIdAndUpdate(id, { ...(next_follow_up ? { next_follow_up: new Date(next_follow_up) } : {}) }, { new: true }).select('follow_ups next_follow_up').lean();
   res.json(new ApiResponse(200, order, 'Follow up added'));
 });
@@ -635,19 +853,80 @@ export const setNextFollowUp = catchAsync(async (req, res) => {
 });
 
 export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
-  const delivered = await Order.find({ status: { $in: ['DELIVERED', 'Delivered', 'delivered'] } }).sort({ delivered_at: -1, createdAt: -1 }).lean();
+  const settings = getFollowupSettings();
+  const totalFollowups = Number(settings.total_followups) || DEFAULT_FOLLOWUP_TOTAL;
+  // ---- AUTO MARK EXPIRED FOLLOW-UPS AS COMPLETED ----
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiredFollowups = await Followup.find({ scheduled_date: { $lt: today }, completed: false }).lean();
+  if (expiredFollowups.length > 0) {
+    const expiredIds = expiredFollowups.map(f => f._id);
+    await Followup.updateMany(
+      { _id: { $in: expiredIds } },
+      { $set: { completed: true, completed_at: new Date(), followup_date: new Date(), status: 'missed', note: 'Auto-marked missed call', notes: 'Auto-marked missed call' } }
+    );
+    
+    // Update next_follow_up for affected orders
+    const orderIds = [...new Set(expiredFollowups.map(f => String(f.order_id)))];
+    for (const oid of orderIds) {
+      const next = await Followup.findOne({ order_id: oid, completed: false }).sort({ followup_number: 1 });
+      const update = { next_follow_up: next ? next.scheduled_date : null };
+      if (!next) update.followup_done = true;
+      await Order.findByIdAndUpdate(oid, update);
+    }
+    console.log(`[FollowUp] Auto-marked ${expiredIds.length} expired follow-ups.`);
+  }
+
+  // Backfill: flag orders where all configured followups are done but followup_done not set
+  const unflagged = await Order.find({
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    auto_followups_set: true,
+    followup_done: { $ne: true },
+  }).select('_id').lean();
+  if (unflagged.length > 0) {
+    const fuCounts = await Followup.aggregate([
+      { $match: { order_id: { $in: unflagged.map(o => o._id) } } },
+      { $group: { _id: '$order_id', total: { $sum: 1 }, incomplete: { $sum: { $cond: ['$completed', 0, 1] } } } },
+      { $match: { total: { $gte: totalFollowups }, incomplete: 0 } },
+    ]);
+    if (fuCounts.length > 0) {
+      await Order.updateMany({ _id: { $in: fuCounts.map(f => f._id) } }, { $set: { followup_done: true } });
+      console.log(`[FollowUp] Backfilled followup_done for ${fuCounts.length} orders.`);
+    }
+  }
+
+  const delivered = await Order.find({ 
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    followup_done: { $ne: true }
+  })
+    .populate({
+      path: 'lead_id',
+      select: 'createdBy assignedTo',
+      populate: [
+        { path: 'createdBy', select: 'name role' },
+        { path: 'assignedTo', select: 'name role' }
+      ]
+    })
+    .sort({ delivered_at: -1, createdAt: -1 }).lean();
   const needsSetting = delivered.filter(o => !o.auto_followups_set);
   if (needsSetting.length) {
     await Promise.all(needsSetting.map(o => setAutoFollowUps(o._id, o.delivered_at || o.createdAt || new Date())));
   }
-  const allFollowups = await Followup.find({ order_id: { $in: delivered.map(o => o._id) } }).sort({ followup_number: 1 }).lean();
+  const allFollowups = await Followup.find({ order_id: { $in: delivered.map(o => o._id) } })
+    .populate('staff', 'name role')
+    .sort({ followup_number: 1 })
+    .lean();
   const fuMap = {};
   for (const fu of allFollowups) {
     const key = String(fu.order_id);
     if (!fuMap[key]) fuMap[key] = [];
     fuMap[key].push(fu);
   }
-  const allLeads = await Lead.find({ isDeleted: { $ne: true } }).select('name phone address').lean();
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } })
+    .select('name phone address assignedTo createdBy')
+    .populate('assignedTo', 'name role')
+    .populate('createdBy', 'name role')
+    .lean();
   const byName = {}, byPin = {}, pinCount = {};
   for (const l of allLeads) {
     if (!l.phone) continue;
@@ -668,9 +947,85 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
       lead = Object.entries(byName).find(([k]) => words.every(w => k.includes(w)))?.[1];
     }
     if (!lead && o.billing_pincode) lead = byPin[String(o.billing_pincode).trim()];
-    return { ...o, billing_phone: lead?.phone || o.billing_phone, followups };
+    return { ...o, lead_id: o.lead_id || lead, billing_phone: lead?.phone || o.billing_phone, followups };
   });
   res.json(new ApiResponse(200, enriched, 'Orders with follow-ups fetched'));
+});
+
+export const getCompletedFollowUps = catchAsync(async (req, res) => {
+  const { search, page = 1, per_page = 20 } = req.query;
+  const match = {
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    followup_done: true,
+    sent_to_verification: { $ne: true },
+  };
+  if (search) {
+    match.$or = [
+      { billing_customer_name: { $regex: search, $options: 'i' } },
+      { billing_phone: { $regex: search, $options: 'i' } },
+      { order_id: { $regex: search, $options: 'i' } },
+      { awb_code: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const skip = (Number(page) - 1) * Number(per_page);
+  const [orders, total] = await Promise.all([
+    Order.find(match)
+      .populate({
+        path: 'lead_id',
+        select: 'createdBy assignedTo',
+        populate: [
+          { path: 'createdBy', select: 'name role' },
+          { path: 'assignedTo', select: 'name role' },
+        ],
+      })
+      .sort({ delivered_at: -1, updatedAt: -1 })
+      .skip(skip)
+      .limit(Number(per_page))
+      .lean(),
+    Order.countDocuments(match),
+  ]);
+
+  const allFollowups = await Followup.find({ order_id: { $in: orders.map(o => o._id) } })
+    .populate('staff', 'name role')
+    .sort({ followup_number: 1 })
+    .lean();
+  const fuMap = {};
+  for (const fu of allFollowups) {
+    const key = String(fu.order_id);
+    if (!fuMap[key]) fuMap[key] = [];
+    fuMap[key].push(fu);
+  }
+
+  const allLeads = await Lead.find({ isDeleted: { $ne: true } })
+    .select('name phone address assignedTo createdBy')
+    .populate('assignedTo', 'name role')
+    .populate('createdBy', 'name role')
+    .lean();
+  const byName = {}, byPin = {}, pinCount = {};
+  for (const l of allLeads) {
+    if (!l.phone) continue;
+    const full = (l.name || '').toLowerCase().trim();
+    byName[full] = l;
+    const pm = (l.address || '').match(/\b(\d{6})\b/);
+    if (pm) { pinCount[pm[1]] = (pinCount[pm[1]] || 0) + 1; byPin[pm[1]] = l; }
+  }
+  for (const p of Object.keys(pinCount)) { if (pinCount[p] > 1) delete byPin[p]; }
+
+  const enriched = orders.map(o => {
+    const followups = fuMap[String(o._id)] || [];
+    if (o.billing_phone && !/^x+$/i.test(o.billing_phone) && String(o.billing_phone).replace(/\D/g, '').length >= 10) return { ...o, followups };
+    const full = (o.billing_customer_name || '').toLowerCase().trim();
+    let lead = byName[full];
+    if (!lead) {
+      const words = full.split(/\s+/);
+      lead = Object.entries(byName).find(([k]) => words.every(w => k.includes(w)))?.[1];
+    }
+    if (!lead && o.billing_pincode) lead = byPin[String(o.billing_pincode).trim()];
+    return { ...o, lead_id: o.lead_id || lead, billing_phone: lead?.phone || o.billing_phone, followups };
+  });
+
+  res.json(new ApiResponse(200, { data: enriched, total, page: Number(page), per_page: Number(per_page) }, 'Completed follow-ups fetched'));
 });
 
 export const getDeliveredOrdersLive = catchAsync(async (req, res) => {
@@ -698,6 +1053,7 @@ export const getDeliveredOrdersLive = catchAsync(async (req, res) => {
   });
   res.json(new ApiResponse(200, { data: enriched, total: enriched.length }, 'Live delivered orders'));
 });
+
 
 const INDIA_TIME_OFFSET = '+05:30';
 const startOfIndiaDate = (date) => new Date(`${date}T00:00:00.000${INDIA_TIME_OFFSET}`);
@@ -758,10 +1114,12 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
 export const getStatusOrders = catchAsync(async (req, res) => {
   const { status, filterType, year, month, from, to, limit = 50 } = req.query;
   if (!status) return res.status(400).json(new ApiResponse(400, null, 'Status is required'));
+  
   const isDelivered = /^delivered$/i.test(status);
   const dateMatch = isDelivered
     ? buildDeliveredDateMatch({ filterType, year, month, from, to })
     : buildStatusDateMatch({ filterType, year, month, from, to });
+
   // Match underscore, space, and hyphen variants (e.g. UNDELIVERED-2ND_ATTEMPT, UNDELIVERED-2ND ATTEMPT)
   const statusVariant = status.replace(/[-_]/g, '[-_ ]');
   const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch })
@@ -769,45 +1127,70 @@ export const getStatusOrders = catchAsync(async (req, res) => {
     .populate('comments.createdBy', 'name role')
     .sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 })
     .limit(Math.min(Number(limit) || 50, 200)).lean();
-  const allLeads = await Lead.find({ isDeleted: { $ne: true } })
-    .select('name phone email address pincode assignedTo')
-    .populate('assignedTo', 'name role')
-    .lean();
-  const byName = {}, byPincode = {}, pinCount = {};
-  for (const l of allLeads) {
-    if (!l.phone) continue;
-    const full = (l.name || '').toLowerCase().trim();
-    byName[full] = l;
-    const pin = l.pincode || (l.address || '').match(/\b(\d{6})\b/)?.[1];
-    if (pin) { pinCount[pin] = (pinCount[pin] || 0) + 1; byPincode[pin] = l; }
+
+  // Optimized enrichment: instead of fetching all leads, only fetch what's needed for these specific orders
+  const unlinked = orders.filter(o => !o.lead_id || !o.lead_id.assignedTo);
+  
+  if (unlinked.length > 0) {
+    const phones = unlinked.map(o => String(o.billing_phone || '').replace(/\D/g, '')).filter(p => p.length >= 10 && !/^x+$/i.test(p));
+    const names = unlinked.map(o => (o.billing_customer_name || '').toLowerCase().trim()).filter(Boolean);
+    const pins = unlinked.map(o => String(o.billing_pincode || '').trim()).filter(p => p.length === 6);
+
+    const leads = await Lead.find({
+      isDeleted: { $ne: true },
+      $or: [
+        { phone: { $in: phones } },
+        { name: { $in: names } },
+        { pincode: { $in: pins } }
+      ]
+    }).select('name phone email address pincode assignedTo').populate('assignedTo', 'name role').lean();
+
+    const byPhone = {};
+    const byName = {};
+    const byPin = {};
+    const pinCount = {};
+
+    leads.forEach(l => {
+      if (l.phone) byPhone[String(l.phone).replace(/\D/g, '')] = l;
+      if (l.name) byName[l.name.toLowerCase().trim()] = l;
+      if (l.pincode) {
+        pinCount[l.pincode] = (pinCount[l.pincode] || 0) + 1;
+        byPin[l.pincode] = l;
+      }
+    });
+    // Remove ambiguous pincode matches
+    Object.keys(pinCount).forEach(p => { if (pinCount[p] > 1) delete byPin[p]; });
+
+    orders.forEach(o => {
+      const staff = o.lead_id?.assignedTo;
+      if (staff) {
+        o.staff_name = staff.name || '';
+        o.staff_role = staff.role || '';
+        return;
+      }
+
+      const cleanPhone = String(o.billing_phone || '').replace(/\D/g, '');
+      const lead = (cleanPhone.length >= 10 && byPhone[cleanPhone]) || 
+                   byName[(o.billing_customer_name || '').toLowerCase().trim()] || 
+                   byPin[String(o.billing_pincode || '').trim()];
+
+      if (lead) {
+        o.staff_name = lead.assignedTo?.name || '';
+        o.staff_role = lead.assignedTo?.role || '';
+        if (!o.billing_phone || /^x+$/i.test(o.billing_phone)) o.billing_phone = lead.phone;
+      } else {
+        o.staff_name = '';
+        o.staff_role = '';
+      }
+    });
+  } else {
+    orders.forEach(o => {
+      o.staff_name = o.lead_id?.assignedTo?.name || '';
+      o.staff_role = o.lead_id?.assignedTo?.role || '';
+    });
   }
-  for (const p of Object.keys(pinCount)) { if (pinCount[p] > 1) delete byPincode[p]; }
-  const enriched = orders.map(o => {
-    const staff = o.lead_id?.assignedTo;
-    if (o.lead_id?.phone) return { ...o, billing_phone: o.lead_id.phone, staff_name: staff?.name || '', staff_role: staff?.role || '' };
-    const masked = String(o.billing_phone || '');
-    const ismasked = /^x+$/i.test(masked) || masked.replace(/\D/g, '').length < 10;
-    if (!ismasked) return { ...o, staff_name: staff?.name || '', staff_role: staff?.role || '' };
-    const full = (o.billing_customer_name || '').toLowerCase().trim();
-    let lead = byName[full];
-    if (!lead) {
-      const words = full.split(/\s+/).filter(w => w.length > 2);
-      if (words.length > 0) lead = Object.entries(byName).find(([k]) => words.every(w => k.includes(w)))?.[1];
-    }
-    if (!lead) {
-      const first = full.split(/\s+/)[0];
-      if (first && first.length > 2) lead = Object.entries(byName).find(([k]) => k.startsWith(first))?.[1];
-    }
-    if (!lead && o.billing_pincode) lead = byPincode[String(o.billing_pincode).trim()];
-    const fallbackStaff = lead?.assignedTo;
-    return {
-      ...o,
-      billing_phone: lead?.phone || o.billing_phone,
-      staff_name: staff?.name || fallbackStaff?.name || '',
-      staff_role: staff?.role || fallbackStaff?.role || '',
-    };
-  });
-  res.json(new ApiResponse(200, { data: enriched, total: enriched.length }, 'Status orders fetched'));
+
+  res.json(new ApiResponse(200, { data: orders, total: orders.length }, 'Status orders fetched'));
 });
 
 export const getLocalOrderLookup = catchAsync(async (req, res) => {
@@ -1179,6 +1562,13 @@ export const webhook = catchAsync(async (req, res) => {
   if (query.length) {
     const order = await Order.findOneAndUpdate({ $or: query }, { status: event, ...(awb ? { awb_code: String(awb) } : {}), ...(event === 'DELIVERED' ? { delivered_at: eventDate } : {}) }, { new: true }).lean();
     if (event === 'DELIVERED' && order) {
+      await logOrderActivity({
+        orderId: order._id,
+        type: 'delivered',
+        title: 'Delivered',
+        description: 'Order marked delivered by Shiprocket',
+        metadata: { awb_code: awb },
+      });
       let lid = order.lead_id;
       if (!lid && order.billing_phone && !/^x+$/i.test(order.billing_phone)) {
         const lead = await Lead.findOne({ phone: order.billing_phone, isDeleted: { $ne: true } }).select('_id').lean();
@@ -1189,4 +1579,76 @@ export const webhook = catchAsync(async (req, res) => {
     }
   }
   res.json({ success: true, event });
+});
+
+export const sendToVerification = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const order = await Order.findById(id).populate('lead_id');
+  if (!order) return res.status(404).json(new ApiResponse(404, null, 'Order not found'));
+
+  let lead = order.lead_id;
+
+  // If no lead is linked, try to find one by phone or create a minimal lead
+  if (!lead) {
+    const phone = order.billing_phone;
+    if (phone && !/^x+$/i.test(phone) && String(phone).replace(/\D/g, '').length >= 10) {
+      lead = await Lead.findOne({ phone, isDeleted: { $ne: true } });
+    }
+    if (!lead) {
+      lead = await Lead.create({
+        name: order.billing_customer_name || 'Unknown Customer',
+        phone: phone || 'N/A',
+        address: order.billing_address || '',
+        status: 'follow_up',
+        createdBy: req.user._id,
+      });
+      await Order.findByIdAndUpdate(id, { lead_id: lead._id });
+    }
+  }
+
+  // Create a new task with status 'verification'
+  const task = await Task.create({
+    title: `Re-Verification for ${lead.name || order.billing_customer_name}`,
+    lead: lead._id,
+    assignedTo: lead.assignedTo || req.user._id,
+    createdBy: req.user._id,
+    status: 'verification',
+    dueDate: new Date(),
+    problem: lead.problem,
+    cityVillage: order.billing_city,
+    state: order.billing_state,
+    pincode: order.billing_pincode,
+    address: order.billing_address,
+    phone: order.billing_phone,
+    price: order.sub_total
+  });
+
+  // Create Verification record linked to this task
+  await Verification.create({
+    task: task._id,
+    title: task.title,
+    assignedTo: task.assignedTo,
+    lead: task.lead,
+    dueDate: task.dueDate,
+    cityVillage: task.cityVillage,
+    state: task.state,
+    pincode: task.pincode,
+    address: task.address,
+    problem: task.problem,
+    price: task.price
+  });
+  // Mark follow-up as done and flag as sent to verification, store this order's id on the lead for linking future re-orders
+  await Order.findByIdAndUpdate(id, { followup_done: true, sent_to_verification: true, verified_by: task.assignedTo });
+  // Store source_order_id on lead so new order created from this verification can be linked back
+  await Lead.findByIdAndUpdate(lead._id, { $set: { pending_reorder_source: id, pending_reorder_staff: task.assignedTo } });
+  await logOrderActivity({
+    orderId: id,
+    actor: req.user?._id,
+    type: 'verification_sent',
+    title: 'Verification Sent',
+    description: `Verification task created for ${lead.name || order.billing_customer_name}`,
+    metadata: { task: task._id, assignedTo: task.assignedTo },
+  });
+
+  res.json(new ApiResponse(200, task, 'Order sent to verification successfully'));
 });

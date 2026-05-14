@@ -25,31 +25,38 @@ const call = async (method, url, options = {}) => {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   // ── Debug: log every outgoing request ──
-  // console.log(`[SR] ${method} ${url}`);
-  // if (options.data) console.log('[SR] payload:', JSON.stringify(options.data, null, 2));
+  console.log(`[Shiprocket Request] ${method} ${url}`);
+  if (options.data) console.log('[Shiprocket Payload]:', JSON.stringify(options.data, null, 2));
 
   try {
     const res = await axios({ method, url: `${BASE_URL}${url}`, headers, ...options });
     // Shiprocket sometimes returns 200 with error info in the body
     if (res.data?.status_code === 500 || res.data?.data?.status_code === 500) {
       const msg = res.data?.message || res.data?.data?.message || 'Shiprocket internal error';
+      console.error(`[Shiprocket Error] 500 in body for ${url}:`, msg);
       throw new Error(msg);
     }
     return res.data;
   } catch (err) {
     if (err.response?.status === 401) {
+      console.warn(`[Shiprocket Auth] Token expired (401) for ${url}. Refreshing...`);
       _token = null;
-      const freshToken = await getToken();
-      const res = await axios({
-        method, url: `${BASE_URL}${url}`,
-        headers: { Authorization: `Bearer ${freshToken}`, 'Content-Type': 'application/json' },
-        ...options,
-      });
-      return res.data;
+      try {
+        const freshToken = await getToken();
+        console.log('[Shiprocket Auth] Token refreshed successfully.');
+        const res = await axios({
+          method, url: `${BASE_URL}${url}`,
+          headers: { Authorization: `Bearer ${freshToken}`, 'Content-Type': 'application/json' },
+          ...options,
+        });
+        return res.data;
+      } catch (retryErr) {
+        console.error(`[Shiprocket Auth] Retry failed for ${url}:`, retryErr.message);
+        throw retryErr;
+      }
     }
     // Full error dump
-    // console.error('[SR] HTTP status:', err.response?.status);
-    // console.error('[SR] error body:', JSON.stringify(err.response?.data));
+    console.error(`[Shiprocket Error] HTTP ${err.response?.status || 'ERR'} for ${url}:`, err.response?.data?.message || err.message);
     const msg = err.response?.data?.message || err.message;
     throw new Error(msg);
   }

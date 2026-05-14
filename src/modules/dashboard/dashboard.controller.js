@@ -4,8 +4,8 @@ import ApiResponse from '../../utils/ApiResponse.js';
 import * as dashboardService from './dashboard.service.js';
 
 const getStats = catchAsync(async (req, res) => {
-  const { date } = req.query;
-  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id, date);
+  const { date, from, to } = req.query;
+  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id, date, from, to);
   res.json(new ApiResponse(httpStatus.OK, stats, 'Dashboard stats fetched'));
 });
 
@@ -15,9 +15,9 @@ const getRevenueChart = catchAsync(async (req, res) => {
 });
 
 const getStaffStats = catchAsync(async (req, res) => {
-  const { date, staffId } = req.query;
+  const { date, staffId, from, to } = req.query;
   const targetId = (req.user.role === 'manager' || req.user.role === 'admin') && staffId ? staffId : req.user._id;
-  const data = await dashboardService.getStaffStats(targetId, date);
+  const data = await dashboardService.getStaffStats(targetId, date, from, to);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff stats fetched'));
 });
 
@@ -36,8 +36,8 @@ const getStaffVerifications = catchAsync(async (req, res) => {
 });
 
 const getStaffTodayLists = catchAsync(async (req, res) => {
-  const { date, staffId } = req.query;
-  const data = await dashboardService.getStaffTodayLists(req.user.role, req.user._id, date, staffId);
+  const { date, staffId, from, to } = req.query;
+  const data = await dashboardService.getStaffTodayLists(req.user.role, req.user._id, date, staffId, from, to);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff today lists fetched'));
 });
 
@@ -55,14 +55,19 @@ const getAllStaffStats = catchAsync(async (req, res) => {
 
 const getStaffCommission = catchAsync(async (req, res) => {
   const { month, year } = req.query;
-  const data = await dashboardService.getStaffCommission(req.user._id, month, year);
+  const data = await dashboardService.getStaffCommission(req.user._id, Number(month), Number(year));
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff commission fetched'));
 });
 
 const getAllStaffCommissions = catchAsync(async (req, res) => {
   const { month, year } = req.query;
-  const data = await dashboardService.getAllStaffCommissions(month, year);
+  const data = await dashboardService.getAllStaffCommissions(Number(month), Number(year));
   res.json(new ApiResponse(httpStatus.OK, data, 'All staff commissions fetched'));
 });
 
-export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats, getStaffCommission, getAllStaffCommissions };
+const saveCommissionOverride = catchAsync(async (req, res) => {
+  const data = await dashboardService.saveCommissionOverride(req.body);
+  res.json(new ApiResponse(httpStatus.OK, data, 'Commission override saved'));
+});
+
+export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats, getStaffCommission, getAllStaffCommissions, saveCommissionOverride };
