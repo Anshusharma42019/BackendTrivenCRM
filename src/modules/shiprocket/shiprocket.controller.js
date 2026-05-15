@@ -405,13 +405,10 @@ const syncAllToLocal = async () => {
           if (uniqueDates.size > 0) deliveryAttempt = uniqueDates.size;
         }
 
-        // Find the most recent activity matching the current status prefix
-        const prefix = status.split('_')[0]; // e.g. "OUT" or "RTO" or "IN"
-        const relevantAct = activities.find(a => 
-          String(a.status || '').toUpperCase().includes(prefix) || 
-          String(a.activity || '').toUpperCase().includes(prefix)
-        );
-        if (relevantAct?.date) statusUpdatedAt = parseShiprocketDate(relevantAct.date);
+        // Use the absolute latest activity for the timestamp
+        if (activities.length > 0) {
+          statusUpdatedAt = parseShiprocketDate(activities[0].date);
+        }
       }
 
       // Calculate sub_total from multiple sources for accuracy
@@ -1613,8 +1610,8 @@ const parseShiprocketDate = (v) => {
     if (ampm && ampm.toUpperCase() === 'PM' && hh < 12) hh += 12;
     if (ampm && ampm.toUpperCase() === 'AM' && hh === 12) hh = 0;
     
-    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${String(hh).padStart(2, '0')}:${mm.padStart(2, '0')}:${(ss || '00').padStart(2, '0')}+05:30`;
-    const finalDate = new Date(iso);
+    // Create using local system timezone (user's machine is already in IST)
+    const finalDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), hh, parseInt(mm), parseInt(ss || 0));
     if (!Number.isNaN(finalDate.getTime())) return finalDate;
   }
 
