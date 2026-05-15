@@ -1168,13 +1168,18 @@ export const getStatusOrders = catchAsync(async (req, res) => {
   if (!status) return res.status(400).json(new ApiResponse(400, null, 'Status is required'));
   
   const isDelivered = /^delivered$/i.test(status);
+  const isUndelivered = /^undelivered$/i.test(status);
   const dateMatch = isDelivered
     ? buildDeliveredDateMatch({ filterType, year, month, from, to })
     : buildStatusDateMatch({ filterType, year, month, from, to });
 
   // Match underscore, space, and hyphen variants (e.g. UNDELIVERED-2ND_ATTEMPT, UNDELIVERED-2ND ATTEMPT)
   const statusVariant = status.replace(/[-_]/g, '[-_ ]');
-  const orders = await Order.find({ status: new RegExp(`^${statusVariant}$`, 'i'), ...dateMatch })
+  const statusQuery = isUndelivered
+    ? { status: { $regex: /^undelivered/i } }
+    : { status: new RegExp(`^${statusVariant}$`, 'i') };
+
+  const orders = await Order.find({ ...statusQuery, ...dateMatch })
     .populate({ path: 'lead_id', select: 'phone email assignedTo', populate: { path: 'assignedTo', select: 'name role' } })
     .populate('comments.createdBy', 'name role')
     .sort(/^delivered$/i.test(status) ? { delivered_at: -1, createdAt: -1 } : { createdAt: -1 })
