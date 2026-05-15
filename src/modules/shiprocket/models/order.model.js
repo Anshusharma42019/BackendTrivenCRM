@@ -52,6 +52,7 @@ const orderSchema = new mongoose.Schema({
   comments: [{
     text: { type: String, required: true },
     type: { type: String, enum: ['general', 'followup'], default: 'general' },
+    section: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },
   }],

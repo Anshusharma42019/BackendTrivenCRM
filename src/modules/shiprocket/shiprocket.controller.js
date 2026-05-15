@@ -862,11 +862,11 @@ export const saveOrderNote = catchAsync(async (req, res) => {
     return res.json(new ApiResponse(200, order, 'Note saved'));
   }
 
-  const { text, type = 'general' } = req.body;
+  const { text, type = 'general', section = '' } = req.body;
   if (!text?.trim()) return res.status(400).json(new ApiResponse(400, null, 'Comment text required'));
   const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { $push: { comments: { text: text.trim(), type, createdBy: req.user._id, createdAt: new Date() } } },
+    { $push: { comments: { text: text.trim(), type, section: section.trim(), createdBy: req.user._id, createdAt: new Date() } } },
     { new: true }
   ).populate('comments.createdBy', 'name role').select('comments').lean();
   await logOrderActivity({
