@@ -358,14 +358,61 @@ const syncAllToLocal = async () => {
     const data = await sr.getOrders({ per_page: 100, page });
     const list = toList(data?.data);
     if (!list.length) break;
+    const trackableStatuses = ['OUT_FOR_DELIVERY', 'RTO_OFD', 'IN_TRANSIT', 'RTO_IN_TRANSIT', 'PICKUP_SCHEDULED'];
+    const activeOrders = list.filter(o => trackableStatuses.includes(normalizeOrderStatus(o.status)) && o.shipments?.[0]?.awb);
+    let trackingMap = {};
+    if (activeOrders.length > 0) {
+      try {
+        // Shiprocket limits bulk tracking to 50 AWBs per request
+        const awbs = activeOrders.slice(0, 50).map(o => o.shipments[0].awb);
+        const trackingRes = await sr.trackBulk(awbs);
+        // The response might be in tracking_data or the root object depending on API version
+        trackingMap = trackingRes?.tracking_data || trackingRes || {};
+      } catch (e) {
+        console.error('[Sync] bulk track error:', e.message);
+      }
+    }
+
     await Promise.all(list.map(async (o) => {
       const srId = Number(o.id);
       const shipment = o.shipments?.[0];
       const lead = findLead(o.customer_name, o.customer_pincode, o.billing_phone || o.customer_phone);
       const isDelivered = o.status?.toLowerCase() === 'delivered';
+      const status = normalizeOrderStatus(o.status);
+
       const rawDeliveredAt = shipment?.delivered_date || o.delivered_date || o.deliver_date ||
         (isDelivered ? o.updated_at : null);
-      const deliveredAt = rawDeliveredAt ? new Date(rawDeliveredAt) : null;
+      const deliveredAt = rawDeliveredAt ? parseShiprocketDate(rawDeliveredAt) : null;
+
+      // Extract precise status update time and attempt number from tracking if available
+      let statusUpdatedAt = parseShiprocketDate(o.status_updated_at || o.updated_at || o.created_at);
+      let deliveryAttempt = Number(shipment?.attempt_count || o.attempt_count || 1);
+
+      if (trackableStatuses.includes(status) && shipment?.awb) {
+        const trackingList = trackingMap?.shipment_track || [];
+        const track = trackingList.find(t => String(t.awb_code) === String(shipment.awb));
+        const activities = track?.shipment_track_activities || [];
+
+        // Count OFD/Re-attempt occurrences across history to determine attempt number if not provided
+        if (deliveryAttempt <= 1) {
+          const ofdEvents = activities.filter(a => {
+            const act = String(a.activity || '').toLowerCase();
+            const stat = String(a.status || '').toUpperCase();
+            return stat === 'OFD' || act.includes('out for delivery') || act.includes('re-attempt') || act.includes('undelivered');
+          });
+          // Unique dates for attempts to avoid double counting same-day logs
+          const uniqueDates = new Set(ofdEvents.map(a => String(a.date || '').split(' ')[0]));
+          if (uniqueDates.size > 0) deliveryAttempt = uniqueDates.size;
+        }
+
+        // Find the most recent activity matching the current status prefix
+        const prefix = status.split('_')[0]; // e.g. "OUT" or "RTO" or "IN"
+        const relevantAct = activities.find(a => 
+          String(a.status || '').toUpperCase().includes(prefix) || 
+          String(a.activity || '').toUpperCase().includes(prefix)
+        );
+        if (relevantAct?.date) statusUpdatedAt = parseShiprocketDate(relevantAct.date);
+      }
 
       // Calculate sub_total from multiple sources for accuracy
       const itemsTotal = (o.products || o.order_items || []).reduce((sum, p) => {
@@ -373,13 +420,22 @@ const syncAllToLocal = async () => {
       }, 0);
       const sub_total = Number(o.total) || Number(o.sub_total) || Number(o.order_total) || itemsTotal || 0;
 
+      // Auto-sort generic undelivered statuses into specific attempt categories for accuracy
+      let finalStatus = status;
+      if (status === 'UNDELIVERED' || status === 'UNDELIVERED_ATTEMPT_FAILURE' || status === 'UNDELIVERED_FAILURE') {
+        if (deliveryAttempt === 1) finalStatus = 'UNDELIVERED_1ST_ATTEMPT';
+        else if (deliveryAttempt === 2) finalStatus = 'UNDELIVERED_2ND_ATTEMPT';
+        else if (deliveryAttempt >= 3) finalStatus = 'UNDELIVERED_3RD_ATTEMPT';
+      }
+
       const setFields = {
         shiprocket_order_id: srId,
         shiprocket_shipment_id: shipment?.id ? Number(shipment.id) : undefined,
         order_id: String(o.channel_order_id || srId),
         order_date: o.created_at,
-        status: normalizeOrderStatus(o.status),
-        status_updated_at: new Date(o.updated_at || o.created_at || Date.now()),
+        status: finalStatus,
+        status_updated_at: statusUpdatedAt,
+        delivery_attempt: deliveryAttempt,
         sub_total,
         lead_id: lead?._id,
         billing_customer_name: o.customer_name,
@@ -413,7 +469,6 @@ const syncAllToLocal = async () => {
         );
       } catch (e) {
         if (e.code === 11000) {
-          // Duplicate key — update without upsert
           await Order.updateOne({ shiprocket_order_id: srId }, { $set: setFields });
         } else {
           console.error('[Sync] order error:', srId, e.message);
@@ -1537,13 +1592,34 @@ export const searchOrderByPhone = catchAsync(async (req, res) => {
 });
 
 const WEBHOOK_EVENTS = { 6: 'SHIPPED', 7: 'DELIVERED', 8: 'IN_TRANSIT', 9: 'RTO_INITIATED', 16: 'RTO_DELIVERED', 17: 'OUT_FOR_DELIVERY', 18: 'IN_TRANSIT', 20: 'IN_TRANSIT', 42: 'PICKED_UP' };
-const normalizeShiprocketStatus = (v) => String(v || '').trim().toUpperCase().replace(/\s+/g, '_');
+const normalizeShiprocketStatus = (v) => String(v || '').trim().toUpperCase().replace(/[-\s]+/g, '_').replace(/_+/g, '_');
 const parseShiprocketDate = (v) => {
   if (!v) return new Date();
+  let str = String(v).trim();
+  
+  // Try to find date/time components (handles YYYY-MM-DD and DD-MM-YYYY)
+  const parts = str.match(/(\d{4})[-\/\s](\d{1,2})[-\/\s](\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)?/i) ||
+                str.match(/(\d{1,2})[-\/\s](\d{1,2})[-\/\s](\d{4})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)?/i);
+
+  if (parts) {
+    let y, m, d, hh, mm, ss, ampm;
+    if (parts[1].length === 4) { // YYYY-MM-DD format
+      [y, m, d, hh, mm, ss, ampm] = parts.slice(1);
+    } else { // DD-MM-YYYY format
+      [d, m, y, hh, mm, ss, ampm] = parts.slice(1);
+    }
+    
+    hh = parseInt(hh);
+    if (ampm && ampm.toUpperCase() === 'PM' && hh < 12) hh += 12;
+    if (ampm && ampm.toUpperCase() === 'AM' && hh === 12) hh = 0;
+    
+    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${String(hh).padStart(2, '0')}:${mm.padStart(2, '0')}:${(ss || '00').padStart(2, '0')}+05:30`;
+    const finalDate = new Date(iso);
+    if (!Number.isNaN(finalDate.getTime())) return finalDate;
+  }
+
   const parsed = new Date(v);
   if (!Number.isNaN(parsed.getTime())) return parsed;
-  const match = String(v).match(/^(\d{2})\s+(\d{2})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
-  if (match) return new Date(`${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:${match[6]}+05:30`);
   return new Date();
 };
 
@@ -1560,7 +1636,7 @@ export const webhook = catchAsync(async (req, res) => {
   if (awb) query.push({ awb_code: String(awb) });
 
   if (query.length) {
-    const order = await Order.findOneAndUpdate({ $or: query }, { status: event, ...(awb ? { awb_code: String(awb) } : {}), ...(event === 'DELIVERED' ? { delivered_at: eventDate } : {}) }, { new: true }).lean();
+    const order = await Order.findOneAndUpdate({ $or: query }, { status: event, status_updated_at: eventDate, ...(awb ? { awb_code: String(awb) } : {}), ...(event === 'DELIVERED' ? { delivered_at: eventDate } : {}) }, { new: true }).lean();
     if (event === 'DELIVERED' && order) {
       await logOrderActivity({
         orderId: order._id,

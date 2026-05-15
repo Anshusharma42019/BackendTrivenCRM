@@ -135,6 +135,7 @@ const getPickupLocations = ()           => get('/settings/company/pickup');
 // ── Tracking ──────────────────────────────────────────────────────────────────
 const trackByAWB      = (awb) => get(`/courier/track/awb/${awb}`);
 const trackByShipment = (id)  => get(`/courier/track/shipment/${id}`);
+const trackBulk       = (awbs) => post(`/courier/track/awbs`, { awbs: Array.isArray(awbs) ? awbs : [awbs] });
 
 // ── Returns ───────────────────────────────────────────────────────────────────
 const createReturn = (body)   => post('/orders/create/return', body);
@@ -155,7 +156,7 @@ export default {
   getShipments, getShipmentsWithDetails, getShipment, cancelShipment,
   generateLabel, generateManifest, printManifest, printInvoice,
   generatePickup, cancelPickup, getPickupLocations,
-  trackByAWB, trackByShipment,
+  trackByAWB, trackByShipment, trackBulk,
   createReturn, getReturns,
   getWalletBalance, getWalletTransactions,
   getNDR, ndrAction,

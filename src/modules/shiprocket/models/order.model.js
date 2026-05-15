@@ -61,6 +61,7 @@ const orderSchema = new mongoose.Schema({
   // If this order was created from a re-verification cycle, track the original order
   source_order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ShiprocketOrder', default: null },
   reorder_commission_generated: { type: Boolean, default: false },
+  delivery_attempt: { type: Number, default: 1 },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 
