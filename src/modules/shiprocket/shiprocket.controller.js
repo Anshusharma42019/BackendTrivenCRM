@@ -436,7 +436,7 @@ const syncAllToLocal = async () => {
         sub_total,
         lead_id: lead?._id,
         billing_customer_name: o.customer_name,
-        billing_phone: lead?.phone || o.billing_phone || o.customer_phone,
+        billing_phone: lead?.phone || (o.billing_phone && !/^x+$/i.test(o.billing_phone) ? o.billing_phone : null) || o.customer_phone,
         billing_email: lead?.email || o.customer_email || o.billing_email,
         billing_address: o.customer_address,
         billing_city: o.customer_city,
@@ -890,7 +890,19 @@ export const updateOrderContact = catchAsync(async (req, res) => {
   }
   if (!Object.keys(update).length) return res.status(400).json(new ApiResponse(400, null, 'No valid fields'));
   const order = await Order.findByIdAndUpdate(id, { $set: update }, { new: true })
-    .select(allowed.join(' ')).lean();
+    .select(allowed.join(' ') + ' lead_id').lean();
+
+  // Also update Lead so phone persists after Shiprocket sync
+  if (order?.lead_id) {
+    const leadUpdate = {};
+    if (update.billing_phone) leadUpdate.phone = update.billing_phone;
+    if (update.billing_city) leadUpdate.city = update.billing_city;
+    if (update.billing_state) leadUpdate.state = update.billing_state;
+    if (update.billing_pincode) leadUpdate.pincode = update.billing_pincode;
+    if (update.billing_address) leadUpdate.address = update.billing_address;
+    if (Object.keys(leadUpdate).length) await Lead.findByIdAndUpdate(order.lead_id, { $set: leadUpdate });
+  }
+
   res.json(new ApiResponse(200, order, 'Contact updated'));
 });
 
