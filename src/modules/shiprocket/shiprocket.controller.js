@@ -851,6 +851,32 @@ export const completeFollowUp = catchAsync(async (req, res) => {
   res.json(new ApiResponse(200, { completedCount: current.followup_number, next_follow_up: nextDate, total_followups: total, followup_gap_days: gap }, 'Follow-up completed'));
 });
 
+export const updateFollowupRelief = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { followup_number, relief_percentage } = req.body;
+  if (!followup_number || relief_percentage === undefined) return res.status(400).json(new ApiResponse(400, null, 'followup_number and relief_percentage required'));
+  const fu = await Followup.findOneAndUpdate(
+    { order_id: id, followup_number: Number(followup_number) },
+    { $set: { relief_percentage: Number(relief_percentage) } },
+    { new: true }
+  );
+  if (!fu) return res.status(404).json(new ApiResponse(404, null, 'Followup not found'));
+  res.json(new ApiResponse(200, fu, 'Relief percentage updated'));
+});
+
+export const updateOrderContact = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const allowed = ['billing_phone', 'billing_city', 'billing_state', 'billing_pincode', 'billing_address'];
+  const update = {};
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) update[key] = String(req.body[key]).trim();
+  }
+  if (!Object.keys(update).length) return res.status(400).json(new ApiResponse(400, null, 'No valid fields'));
+  const order = await Order.findByIdAndUpdate(id, { $set: update }, { new: true })
+    .select(allowed.join(' ')).lean();
+  res.json(new ApiResponse(200, order, 'Contact updated'));
+});
+
 export const saveOrderNote = catchAsync(async (req, res) => {
   if (Object.prototype.hasOwnProperty.call(req.body, 'notes')) {
     const order = await Order.findByIdAndUpdate(
@@ -949,7 +975,8 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
 
   const delivered = await Order.find({ 
     status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
-    followup_done: { $ne: true }
+    followup_done: { $ne: true },
+    sent_to_verification: { $ne: true },
   })
     .populate({
       path: 'lead_id',
@@ -1009,7 +1036,6 @@ export const getCompletedFollowUps = catchAsync(async (req, res) => {
   const match = {
     status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
     followup_done: true,
-    sent_to_verification: { $ne: true },
   };
   if (search) {
     match.$or = [
@@ -1684,6 +1710,10 @@ export const sendToVerification = catchAsync(async (req, res) => {
     }
   }
 
+  // Get last saved relief percentage from followups
+  const followups = await Followup.find({ order_id: id }).sort({ followup_number: 1 }).lean();
+  const lastRelief = [...followups].reverse().find(f => f.relief_percentage != null)?.relief_percentage ?? null;
+
   // Create a new task with status 'verification'
   const task = await Task.create({
     title: `Re-Verification for ${lead.name || order.billing_customer_name}`,
@@ -1713,7 +1743,8 @@ export const sendToVerification = catchAsync(async (req, res) => {
     pincode: task.pincode,
     address: task.address,
     problem: task.problem,
-    price: task.price
+    price: task.price,
+    relief_percentage: lastRelief,
   });
   // Mark follow-up as done and flag as sent to verification, store this order's id on the lead for linking future re-orders
   await Order.findByIdAndUpdate(id, { followup_done: true, sent_to_verification: true, verified_by: task.assignedTo });

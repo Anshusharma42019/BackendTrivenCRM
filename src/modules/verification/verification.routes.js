@@ -12,6 +12,32 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
       .sort({ createdAt: -1 })
       .lean();
+
+    // Backfill relief_percentage from followups for records missing it
+    try {
+      const missing = records.filter(r => r.relief_percentage == null && r.lead);
+      if (missing.length > 0) {
+        const Order = (await import('../shiprocket/models/order.model.js')).default;
+        const Followup = (await import('../shiprocket/models/followup.model.js')).default;
+        const leadIds = missing.map(r => r.lead?._id || r.lead).filter(Boolean);
+        const orders = await Order.find({ lead_id: { $in: leadIds } }).select('_id lead_id').lean();
+        const orderMap = {};
+        for (const o of orders) orderMap[String(o.lead_id)] = String(o._id);
+        await Promise.all(missing.map(async r => {
+          const leadId = String(r.lead?._id || r.lead);
+          const orderId = orderMap[leadId];
+          if (!orderId) return;
+          const followups = await Followup.find({ order_id: orderId, relief_percentage: { $ne: null } }).sort({ followup_number: -1 }).limit(1).lean();
+          if (followups[0]?.relief_percentage != null) {
+            r.relief_percentage = followups[0].relief_percentage;
+            await Verification.findByIdAndUpdate(r._id, { relief_percentage: followups[0].relief_percentage });
+          }
+        }));
+      }
+    } catch (backfillErr) {
+      console.error('[Verification] backfill relief_percentage error:', backfillErr.message);
+    }
+
     res.json({ status: 200, data: records });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });

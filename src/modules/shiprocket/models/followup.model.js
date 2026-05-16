@@ -12,6 +12,7 @@ const followupSchema = new mongoose.Schema({
   completed_at: { type: Date },
   notes: { type: String, default: '' },
   note: { type: String, default: '' },
+  relief_percentage: { type: Number, default: null },
 }, { timestamps: true });
 
 followupSchema.index({ order_id: 1, followup_number: 1 }, { unique: true });
