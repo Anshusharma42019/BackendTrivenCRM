@@ -459,6 +459,11 @@ const syncAllToLocal = async () => {
       if (isDelivered && deliveredAt) setFields.delivered_at = deliveredAt;
 
       try {
+        const existingOrder = await Order.findOne({ shiprocket_order_id: srId }).select('billing_phone').lean();
+        const existingPhone = existingOrder?.billing_phone;
+        const hasRealPhone = existingPhone && !/^x+$/i.test(existingPhone) && String(existingPhone).replace(/\D/g, '').length >= 10;
+        if (hasRealPhone) setFields.billing_phone = existingPhone; // keep real phone, don't overwrite
+
         await Order.updateOne(
           { shiprocket_order_id: srId },
           { $set: setFields },
@@ -896,11 +901,26 @@ export const updateOrderContact = catchAsync(async (req, res) => {
   if (order?.lead_id) {
     const leadUpdate = {};
     if (update.billing_phone) leadUpdate.phone = update.billing_phone;
-    if (update.billing_city) leadUpdate.city = update.billing_city;
+    if (update.billing_city) leadUpdate.cityVillage = update.billing_city;
     if (update.billing_state) leadUpdate.state = update.billing_state;
     if (update.billing_pincode) leadUpdate.pincode = update.billing_pincode;
     if (update.billing_address) leadUpdate.address = update.billing_address;
     if (Object.keys(leadUpdate).length) await Lead.findByIdAndUpdate(order.lead_id, { $set: leadUpdate });
+  }
+
+  // If no lead linked, try to find by name/pincode and link it
+  if (!order?.lead_id && update.billing_phone) {
+    const existingOrder = await Order.findById(id).select('billing_customer_name billing_pincode').lean();
+    if (existingOrder) {
+      const lead = await Lead.findOne({
+        $or: [
+          { phone: update.billing_phone },
+          { name: { $regex: new RegExp(existingOrder.billing_customer_name, 'i') } },
+        ],
+        isDeleted: { $ne: true },
+      }).select('_id').lean();
+      if (lead) await Order.findByIdAndUpdate(id, { lead_id: lead._id });
+    }
   }
 
   res.json(new ApiResponse(200, order, 'Contact updated'));
