@@ -864,6 +864,23 @@ export const updateFollowupRelief = catchAsync(async (req, res) => {
   res.json(new ApiResponse(200, fu, 'Relief percentage updated'));
 });
 
+export const getOrderActivity = catchAsync(async (req, res) => {
+  const order = await Order.findById(req.params.id)
+    .select('comments notes order_id billing_customer_name status createdAt')
+    .populate('comments.createdBy', 'name role')
+    .lean();
+  if (!order) return res.status(404).json(new ApiResponse(404, null, 'Order not found'));
+  const activity = (order.comments || []).map(c => ({
+    _id: c._id,
+    type: c.type || 'general',
+    title: c.type === 'followup' ? 'Follow-up Note' : 'Note Added',
+    description: c.text || '',
+    actor: c.createdBy,
+    createdAt: c.createdAt,
+  }));
+  res.json(new ApiResponse(200, activity, 'Activity fetched'));
+});
+
 export const updateOrderContact = catchAsync(async (req, res) => {
   const { id } = req.params;
   const allowed = ['billing_phone', 'billing_city', 'billing_state', 'billing_pincode', 'billing_address'];

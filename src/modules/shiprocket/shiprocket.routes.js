@@ -36,6 +36,7 @@ router.post('/orders/:id/complete-followup', auth(), c.completeFollowUp);
 router.patch('/orders/:id/followup-relief', auth(), c.updateFollowupRelief);
 router.patch('/orders/:id/notes', auth(), c.saveOrderNote);
 router.patch('/orders/:id/contact', auth(), c.updateOrderContact);
+router.get('/orders/:id/activity', auth(), c.getOrderActivity);
 router.post('/orders/:id/send-to-verification', auth(), c.sendToVerification);
 
 // ── Courier ───────────────────────────────────────────────────────────────────
