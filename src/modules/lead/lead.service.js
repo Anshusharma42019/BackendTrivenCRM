@@ -41,6 +41,9 @@ export const getNextSalesUser = async () => {
 };
 
 export const createLead = async (data, createdBy, creatorRole) => {
+  const existingLead = await Lead.findOne({ phone: data.phone?.trim(), isDeleted: false });
+  if (existingLead) throw new ApiError(httpStatus.CONFLICT, 'A lead with this phone number already exists');
+
   if (!data.assignedTo) {
     // If a sales staff manually adds a lead, assign it to themselves
     if (creatorRole === 'sales' && createdBy) {
