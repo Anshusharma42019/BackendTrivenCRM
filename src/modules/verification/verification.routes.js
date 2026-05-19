@@ -206,6 +206,16 @@ router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+router.get('/by-task/:taskId', auth('admin', 'manager', 'sales'), async (req, res) => {
+  try {
+    const record = await Verification.findOne({ task: req.params.taskId, isDeleted: { $ne: true } }).select('_id status').lean();
+    if (!record) return res.status(404).json({ status: 404, message: 'Not found' });
+    res.json({ status: 200, data: record });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
   try {
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;

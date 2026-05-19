@@ -1326,8 +1326,9 @@ export const getStatusOrders = catchAsync(async (req, res) => {
 });
 
 export const getLocalOrderLookup = catchAsync(async (req, res) => {
-  const { awb, order_id, channel_order_id, shipment_id } = req.query;
+  const { awb, order_id, channel_order_id, shipment_id, _id } = req.query;
   const query = [];
+  if (_id) query.push({ _id: String(_id) });
   if (awb) query.push({ awb_code: String(awb) });
   if (order_id) { query.push({ order_id: String(order_id) }); if (!Number.isNaN(Number(order_id))) query.push({ shiprocket_order_id: Number(order_id) }); }
   if (channel_order_id) query.push({ order_id: String(channel_order_id) });
@@ -1708,6 +1709,7 @@ export const webhook = catchAsync(async (req, res) => {
   const awb = payload?.awb || payload?.awb_code;
   const srid = payload?.sr_order_id || payload?.shiprocket_order_id;
   const query = [];
+  if (_id) query.push({ _id: String(_id) });
   if (srid) query.push({ shiprocket_order_id: Number(srid) });
   if (payload?.order_id) query.push({ order_id: String(payload.order_id) });
   if (awb) query.push({ awb_code: String(awb) });
