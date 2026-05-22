@@ -15,7 +15,7 @@ const app = express();
 // }
 
 // set security HTTP headers
-app.use(helmet());
+app.use(helmet({ referrerPolicy: { policy: "no-referrer-when-downgrade" } }));
 
 // parse json request body (limit raised to support base64 image uploads)
 app.use(express.json({ limit: "10mb" }));
@@ -61,6 +61,17 @@ app.get("/ping", (req, res) => res.json({ ok: true }));
 
 // Shiprocket webhook (no auth — Shiprocket calls this directly)
 app.post("/webhook/shiprocket", webhook);
+
+// Pincode proxy — avoids CORS/referrer issues with external API
+app.get("/api/pincode/:pin", async (req, res) => {
+  try {
+    const response = await fetch(`http://www.postalpincode.in/api/pincode/${req.params.pin}`);
+    const data = await response.json();
+    res.json(data);
+  } catch {
+    res.status(502).json({ error: "Failed to fetch pincode data" });
+  }
+});
 
 // v1 api routes
 app.use("/api/v1", routes);
