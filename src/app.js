@@ -62,8 +62,11 @@ app.get("/ping", (req, res) => res.json({ ok: true }));
 // Shiprocket webhook (no auth — Shiprocket calls this directly)
 app.post("/webhook/shiprocket", webhook);
 
+// v1 api routes
+app.use("/api/v1", routes);
+
 // Pincode proxy — avoids CORS/referrer issues with external API
-app.get("/api/pincode/:pin", async (req, res) => {
+app.get("/api/v1/pincode/:pin", async (req, res) => {
   try {
     const response = await fetch(`http://www.postalpincode.in/api/pincode/${req.params.pin}`);
     const data = await response.json();
@@ -72,9 +75,6 @@ app.get("/api/pincode/:pin", async (req, res) => {
     res.status(502).json({ error: "Failed to fetch pincode data" });
   }
 });
-
-// v1 api routes
-app.use("/api/v1", routes);
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
