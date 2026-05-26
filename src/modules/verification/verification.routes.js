@@ -6,22 +6,37 @@ import Verification from './verification.model.js';
 
 const router = express.Router();
 
+
+
 router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const query = { status: { $nin: ['verified', 'on_hold'] }, isDeleted: { $ne: true } };
     if (['sales', 'support', 'logistics'].includes(req.user.role)) {
       if (req.userDepartments && req.userDepartments.length > 0) {
-        query.department = { $in: req.userDepartments };
+        query.$or = [
+          { department: { $in: req.userDepartments } },
+          { department: null }
+        ];
       }
     } else if (req.query.department) {
       query.department = req.query.department;
     }
     const records = await Verification.find(query)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'name email departments')
       .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department')
       .populate('task', 'department')
       .sort({ createdAt: -1 })
       .lean();
+
+    // Auto-backfill department from assignedTo.departments or lead.department if missing
+    const deptUpdates = records.filter(r => !r.department);
+    if (deptUpdates.length > 0) {
+      await Promise.all(deptUpdates.map(r => {
+        const dept = r.assignedTo?.departments?.[0] || r.lead?.department || r.task?.department || 'migraine';
+        r.department = dept;
+        return Verification.updateOne({ _id: r._id }, { $set: { department: dept } });
+      }));
+    }
 
     // Backfill relief_percentage from followups for records missing it
     try {
@@ -219,7 +234,10 @@ router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentF
     const query = { status: 'on_hold', isDeleted: { $ne: true } };
     if (['sales', 'support', 'logistics'].includes(req.user.role)) {
       if (req.userDepartments && req.userDepartments.length > 0) {
-        query.department = { $in: req.userDepartments };
+        query.$or = [
+          { department: { $in: req.userDepartments } },
+          { department: null }
+        ];
       }
     } else if (req.query.department) {
       query.department = req.query.department;
@@ -227,10 +245,20 @@ router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentF
 
     // Get verification on-hold records
     const verificationRecords = await Verification.find(query)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'name email departments')
       .populate('lead', 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
       .sort({ onHoldUntil: 1 })
       .lean();
+
+    // Auto-backfill department from assignedTo.departments or lead.department if missing
+    const deptUpdates = verificationRecords.filter(r => !r.department);
+    if (deptUpdates.length > 0) {
+      await Promise.all(deptUpdates.map(r => {
+        const dept = r.assignedTo?.departments?.[0] || r.lead?.department || 'migraine';
+        r.department = dept;
+        return Verification.updateOne({ _id: r._id }, { $set: { department: dept } });
+      }));
+    }
 
     // Get lead IDs already covered by verification records
     const verificationLeadIds = new Set(

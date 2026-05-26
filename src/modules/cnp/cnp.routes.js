@@ -6,12 +6,17 @@ import Cnp from './cnp.model.js';
 
 const router = express.Router();
 
+
+
 router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const query = {};
     if (['sales', 'support', 'logistics'].includes(req.user.role)) {
       if (req.userDepartments && req.userDepartments.length > 0) {
-        query.department = { $in: req.userDepartments };
+        query.$or = [
+          { department: { $in: req.userDepartments } },
+          { department: null }
+        ];
       }
     } else if (req.query.department) {
       query.department = req.query.department;
@@ -34,9 +39,20 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
       }
     }
     const records = await Cnp.find(query)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'name email departments')
       .populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode notes follow_ups next_follow_up department')
       .sort({ createdAt: -1 });
+
+    // Auto-backfill department from assignedTo.departments or lead.department if missing
+    const deptUpdates = records.filter(r => !r.department);
+    if (deptUpdates.length > 0) {
+      await Promise.all(deptUpdates.map(r => {
+        const dept = r.assignedTo?.departments?.[0] || r.lead?.department || 'migraine';
+        r.department = dept;
+        return Cnp.updateOne({ _id: r._id }, { $set: { department: dept } });
+      }));
+    }
+
     res.json({ status: 200, data: records });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });

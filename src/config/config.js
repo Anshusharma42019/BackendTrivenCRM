@@ -32,7 +32,9 @@ export const config = {
   port: envVars.data.PORT,
   mongoose: {
     url: envVars.data.MONGODB_URL + (envVars.data.NODE_ENV === 'test' ? '-test' : ''),
-    options: {},
+    options: {
+      tlsAllowInvalidCertificates: true,
+    },
   },
   jwt: {
     secret: envVars.data.JWT_SECRET,
