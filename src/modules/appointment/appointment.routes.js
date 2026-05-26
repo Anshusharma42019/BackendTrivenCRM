@@ -6,18 +6,18 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.createAppointment)
-  .get(auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.getAppointments);
+  .post(auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.createAppointment)
+  .get(auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.getAppointments);
 
-router.get('/availability', auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.getAvailability);
-router.get('/booked-slots', auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.getBookedSlots);
+router.get('/availability', auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.getAvailability);
+router.get('/booked-slots', auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.getBookedSlots);
 
 router
   .route('/:id')
-  .get(auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.getAppointment)
-  .patch(auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.updateAppointment)
+  .get(auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.getAppointment)
+  .patch(auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.updateAppointment)
   .delete(auth('admin', 'manager'), appointmentController.deleteAppointment);
 
-router.post('/:id/field-notes', auth('admin', 'manager', 'sales', 'doctor', 'staff'), appointmentController.addFieldNote);
+router.post('/:id/field-notes', auth('admin', 'manager', 'sales', 'doctor', 'staff', 'support'), appointmentController.addFieldNote);
 
 export default router;

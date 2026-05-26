@@ -12,7 +12,7 @@ const router = express.Router();
 router
   .route('/')
   .post(auth('admin', 'manager'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('admin', 'manager', 'staff', 'sales', 'doctor'), validate(userValidation.getUsers), userController.getUsers);
+  .get(auth('admin', 'manager', 'staff', 'sales', 'doctor', 'support'), validate(userValidation.getUsers), userController.getUsers);
   
 router.get('/me', auth(), catchAsync(async (req, res) => {
   const User = (await import('./user.model.js')).default;
