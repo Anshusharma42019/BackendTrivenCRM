@@ -49,14 +49,17 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
   if (existingLead) throw new ApiError(httpStatus.CONFLICT, 'A lead with this phone number already exists');
 
   if (!data.assignedTo) {
-    // If a sales staff manually adds a lead, assign it to themselves
-    if (creatorRole === 'sales' && createdBy) {
+    // If Admin/Manager adds a lead, auto-distribute it.
+    // If regular staff (sales/support) manually adds a lead, assign it to themselves.
+    if (createdBy && creatorRole !== 'admin' && creatorRole !== 'manager') {
       data.assignedTo = createdBy;
-      data.department = userDepartments[0] || null;
+      if (userDepartments && userDepartments.length > 0) {
+        data.department = userDepartments[0] || null;
+      }
     } else {
       data.assignedTo = await getNextSalesUser(data.department);
     }
-  } else if (creatorRole === 'sales') {
+  } else if (creatorRole === 'sales' && userDepartments && userDepartments.length > 0) {
     data.department = userDepartments[0] || null;
   }
 
