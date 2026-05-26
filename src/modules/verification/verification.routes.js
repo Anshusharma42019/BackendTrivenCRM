@@ -23,7 +23,11 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
     }
     const records = await Verification.find(query)
       .populate('assignedTo', 'name email departments')
-      .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department')
+      .populate({
+        path: 'lead',
+        select: 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department createdBy',
+        populate: { path: 'createdBy', select: 'name role' }
+      })
       .populate('task', 'department')
       .sort({ createdAt: -1 })
       .lean();
@@ -191,18 +195,25 @@ router.post('/repair', auth('admin', 'manager', 'sales', 'support'), departmentF
 
     const verifiedRecords = await Verification.find({ status: 'verified' })
       .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone');
+      .populate('lead', 'name phone status createdBy assignedTo pending_reorder_source');
 
     let fixed = 0;
     for (const record of verifiedRecords) {
       if (!record.task) continue;
-      await Task.findByIdAndUpdate(record.task, { status: 'ready_to_shipment' });
+      let rtsAssignedTo = record.assignedTo?._id || record.assignedTo;
+      if (record.lead) {
+        const isOldLead = record.lead.status === 'old' || record.lead.pending_reorder_source;
+        if (!isOldLead) {
+          rtsAssignedTo = record.lead.createdBy || record.lead.assignedTo || rtsAssignedTo;
+        }
+      }
+      await Task.findByIdAndUpdate(record.task, { status: 'ready_to_shipment', assignedTo: rtsAssignedTo });
       await ReadyToShipment.findOneAndUpdate(
         { task: record.task },
         {
           $set: {
             title: record.title,
-            assignedTo: record.assignedTo?._id || record.assignedTo,
+            assignedTo: rtsAssignedTo,
             lead: record.lead?._id || record.lead,
             description: record.description,
             problem: record.problem,
@@ -246,7 +257,11 @@ router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentF
     // Get verification on-hold records
     const verificationRecords = await Verification.find(query)
       .populate('assignedTo', 'name email departments')
-      .populate('lead', 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
+      .populate({
+        path: 'lead',
+        select: 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem createdBy',
+        populate: { path: 'createdBy', select: 'name role' }
+      })
       .sort({ onHoldUntil: 1 })
       .lean();
 
@@ -317,7 +332,12 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
   try {
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
     const update = { ...taskFields };
-    if (status) update.status = status;
+    if (status) {
+      update.status = status;
+      if (!update.assignedTo) {
+        update.assignedTo = req.user._id;
+      }
+    }
     if (onHoldUntil) update.onHoldUntil = onHoldUntil;
     if (onHoldReason) update.onHoldReason = onHoldReason;
     if (status === 'on_hold') update.onHoldAt = new Date();
@@ -326,7 +346,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
       req.params.id,
       update,
       { returnDocument: 'after' }
-    ).populate('assignedTo', 'name email').populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem');
+    ).populate('assignedTo', 'name email').populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem createdBy assignedTo pending_reorder_source');
     if (!record) return res.status(404).json({ message: 'Not found' });
 
     const Task = (await import('../task/task.model.js')).default;
@@ -358,9 +378,17 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
     }
 
     if (status === 'verified' && record.task) {
+      let rtsAssignedTo = record.assignedTo?._id || record.assignedTo;
+      if (record.lead) {
+        const isOldLead = record.lead.status === 'old' || record.lead.pending_reorder_source;
+        if (!isOldLead) {
+          rtsAssignedTo = record.lead.createdBy || record.lead.assignedTo || rtsAssignedTo;
+        }
+      }
+
       const taskUpdate = await Task.findByIdAndUpdate(
         record.task,
-        { status: 'ready_to_shipment', ...taskFields },
+        { status: 'ready_to_shipment', assignedTo: rtsAssignedTo, ...taskFields },
         { returnDocument: 'after' }
       );
       if (!taskUpdate) return res.status(500).json({ status: 500, message: 'Task not found' });
@@ -370,7 +398,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
         {
           $set: {
             title: record.title,
-            assignedTo: record.assignedTo?._id || record.assignedTo,
+            assignedTo: rtsAssignedTo,
             lead: record.lead?._id || record.lead,
             description: record.description,
             problem: record.problem,

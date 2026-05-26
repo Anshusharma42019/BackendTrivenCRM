@@ -49,25 +49,31 @@ const generateReorderCommissions = async () => {
     const settings = await FollowupCommissionSettings.findOne().sort({ createdAt: -1 }).lean();
     if (!settings || !settings.is_active) return;
 
-    const reorders = await Order.find({
+    // Find all delivered orders that haven't had commission generated yet
+    const pendingOrders = await Order.find({
       status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
-      source_order_id: { $ne: null },
       reorder_commission_generated: { $ne: true },
-    }).lean();
+    }).populate('lead_id').lean();
+
+    const reorders = [];
+    for (const o of pendingOrders) {
+      if (o.source_order_id || o.lead_id?.status === 'old') {
+        reorders.push(o);
+      }
+    }
 
     for (const order of reorders) {
       const deliveredAt = order.delivered_at || order.createdAt || new Date();
       const month = deliveredAt.getMonth();
       const year = deliveredAt.getFullYear();
 
-      // ── Staff B: re-verification staff (verified_by on new order) ──────────
+      // ── Staff B: re-verification staff / current order staff ──────────
       let staffB = order.verified_by || order.created_by;
       if (!staffB && order.lead_id) {
-        const lead = await Lead.findById(order.lead_id).select('assignedTo').lean();
-        staffB = lead?.assignedTo;
+        staffB = order.lead_id.assignedTo || order.lead_id.createdBy;
       }
 
-      // ── Staff A: original order staff (created_by on source order) ─────────
+      // ── Staff A: original order staff (created_by on source order or original lead creator) ─────────
       let staffA = null;
       if (order.source_order_id) {
         const sourceOrder = await Order.findById(order.source_order_id).select('created_by verified_by lead_id').lean();
@@ -76,6 +82,8 @@ const generateReorderCommissions = async () => {
           const srcLead = await Lead.findById(sourceOrder.lead_id).select('assignedTo createdBy').lean();
           staffA = srcLead?.assignedTo || srcLead?.createdBy;
         }
+      } else if (order.lead_id?.status === 'old') {
+        staffA = order.lead_id.createdBy || order.lead_id.assignedTo;
       }
 
       const calcAmount = (isOriginal) => {
@@ -91,8 +99,8 @@ const generateReorderCommissions = async () => {
       };
 
       const base = {
-        source_order_id: order.source_order_id,
-        lead_id: order.lead_id || null,
+        source_order_id: order.source_order_id || order._id,
+        lead_id: order.lead_id?._id || order.lead_id || null,
         commission_type: settings.commission_type,
         order_sub_total: order.sub_total || 0,
         status: 'pending',
@@ -1003,7 +1011,7 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
 
   // --- Department Filtering Logic ---
   let leadQuery = { isDeleted: { $ne: true } };
-  if (['sales', 'support', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
+  if (['sales', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
     leadQuery.department = { $in: req.userDepartments };
   } else if (req.query.department) {
     leadQuery.department = req.query.department;
@@ -1028,12 +1036,14 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
   const delivered = await Order.find(query)
     .populate({
       path: 'lead_id',
-      select: 'createdBy assignedTo department',
+      select: 'createdBy assignedTo department status',
       populate: [
         { path: 'createdBy', select: 'name role' },
         { path: 'assignedTo', select: 'name role' }
       ]
     })
+    .populate('verified_by', 'name role')
+    .populate('created_by', 'name role')
     .sort({ delivered_at: -1, createdAt: -1 }).lean();
   const needsSetting = delivered.filter(o => !o.auto_followups_set);
   if (needsSetting.length) {
@@ -1083,7 +1093,7 @@ export const getCompletedFollowUps = catchAsync(async (req, res) => {
   const { search, page = 1, per_page = 20 } = req.query;
   // --- Department Filtering Logic ---
   let leadQuery = { isDeleted: { $ne: true } };
-  if (['sales', 'support', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
+  if (['sales', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
     leadQuery.department = { $in: req.userDepartments };
   } else if (req.query.department) {
     leadQuery.department = req.query.department;
@@ -1117,12 +1127,14 @@ export const getCompletedFollowUps = catchAsync(async (req, res) => {
     Order.find(match)
       .populate({
         path: 'lead_id',
-        select: 'createdBy assignedTo department',
+        select: 'createdBy assignedTo department status',
         populate: [
           { path: 'createdBy', select: 'name role' },
           { path: 'assignedTo', select: 'name role' },
         ],
       })
+      .populate('verified_by', 'name role')
+      .populate('created_by', 'name role')
       .sort({ delivered_at: -1, updatedAt: -1 })
       .skip(skip)
       .limit(Number(per_page))

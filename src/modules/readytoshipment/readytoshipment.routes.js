@@ -50,21 +50,28 @@ router.post('/sync', auth('admin', 'manager', 'sales', 'logistics'), departmentF
     }
 
     const [verifiedStuck, tasks] = await Promise.all([
-      Verification.find({ status: 'verified' }).populate('assignedTo', 'name email').populate('lead', 'name phone'),
+      Verification.find({ status: 'verified' }).populate('assignedTo', 'name email').populate('lead', 'name phone status createdBy assignedTo pending_reorder_source'),
       Task.find(taskQuery).populate('assignedTo', 'name email').populate('lead', 'name phone status'),
     ]);
 
     await Promise.all([
-      ...verifiedStuck.filter(v => v.task).map(v =>
-        Promise.all([
-          Task.findByIdAndUpdate(v.task, { status: 'ready_to_shipment' }),
+      ...verifiedStuck.filter(v => v.task).map(v => {
+        let rtsAssignedTo = v.assignedTo?._id || v.assignedTo;
+        if (v.lead) {
+          const isOldLead = v.lead.status === 'old' || v.lead.pending_reorder_source;
+          if (!isOldLead) {
+            rtsAssignedTo = v.lead.createdBy || v.lead.assignedTo || rtsAssignedTo;
+          }
+        }
+        return Promise.all([
+          Task.findByIdAndUpdate(v.task, { status: 'ready_to_shipment', assignedTo: rtsAssignedTo }),
           ReadyToShipment.findOneAndUpdate(
             { task: v.task },
-            { $set: { title: v.title, assignedTo: v.assignedTo?._id || v.assignedTo, lead: v.lead?._id || v.lead, description: v.description, problem: v.problem, age: v.age, weight: v.weight, height: v.height, otherProblems: v.otherProblems, problemDuration: v.problemDuration, price: v.price, cityVillageType: v.cityVillageType, cityVillage: v.cityVillage, houseNo: v.houseNo, postOffice: v.postOffice, district: v.district, landmark: v.landmark, pincode: v.pincode, state: v.state, reminderAt: v.reminderAt }, $setOnInsert: { task: v.task } },
+            { $set: { title: v.title, assignedTo: rtsAssignedTo, lead: v.lead?._id || v.lead, description: v.description, problem: v.problem, age: v.age, weight: v.weight, height: v.height, otherProblems: v.otherProblems, problemDuration: v.problemDuration, price: v.price, cityVillageType: v.cityVillageType, cityVillage: v.cityVillage, houseNo: v.houseNo, postOffice: v.postOffice, district: v.district, landmark: v.landmark, pincode: v.pincode, state: v.state, reminderAt: v.reminderAt }, $setOnInsert: { task: v.task } },
             { upsert: true }
           ),
-        ])
-      ),
+        ]);
+      }),
       ...tasks.map(task =>
         ReadyToShipment.findOneAndUpdate(
           { task: task._id },
