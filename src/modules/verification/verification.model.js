@@ -27,6 +27,11 @@ const verificationSchema = new mongoose.Schema(
     problemDuration: { type: String },
     price: { type: Number },
     relief_percentage: { type: Number, default: null },
+    department: {
+      type: String,
+      enum: ['migraine', 'piles'],
+      default: null,
+    },
     status: { type: String, enum: ['pending', 'verified', 'rejected', 'on_hold'], default: 'pending' },
     onHoldUntil: { type: Date },
     onHoldAt: { type: Date },

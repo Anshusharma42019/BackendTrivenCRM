@@ -1,16 +1,23 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
 import requireCheckedIn from '../../middleware/requireCheckedIn.js';
+import departmentFilter from '../../middleware/departmentFilter.js';
 import CallAgain from './callagain.model.js';
 import { Lead } from '../lead/lead.model.js';
 
 const router = express.Router();
 
 // GET all call-again records
-router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const query = { status: { $in: ['pending'] } };
-    const { filter } = req.query;
+    const { filter, department } = req.query;
+
+    const userDepts = ['sales', 'support', 'logistics'].includes(req.user.role) ? req.userDepartments : (department ? [department] : []);
+    if (userDepts && userDepts.length > 0) {
+      query.department = { $in: userDepts };
+    }
+    
     if (filter) {
       const now = new Date();
       const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -25,7 +32,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
       }
     }
     const records = await CallAgain.find(query)
-      .populate('lead', 'name phone problem email address houseNo cityVillage postOffice landmark district state pincode source status type revenue assignedTo createdBy cnpCount cnpAt notes follow_ups next_follow_up note createdAt')
+      .populate('lead', 'name phone problem email address houseNo cityVillage postOffice landmark district state pincode source status type revenue assignedTo createdBy cnpCount cnpAt notes follow_ups next_follow_up note createdAt department')
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
@@ -36,7 +43,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // POST create a call-again record from a lead
-router.post('/', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.post('/', auth('admin', 'manager', 'sales', 'support'), requireCheckedIn, async (req, res) => {
   try {
     const { leadId } = req.body;
     if (!leadId) return res.status(400).json({ message: 'leadId is required' });
@@ -57,9 +64,9 @@ router.post('/', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req
     // Upsert — one record per lead
     const record = await CallAgain.findOneAndUpdate(
       { lead: leadId },
-      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, status: 'pending', createdBy: req.user._id },
+      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, department: lead.department, status: 'pending', createdBy: req.user._id },
       { upsert: true, new: true }
-    ).populate('lead', 'name phone problem').populate('assignedTo', 'name email').populate('createdBy', 'name email');
+    ).populate('lead', 'name phone problem department').populate('assignedTo', 'name email').populate('createdBy', 'name email');
 
     res.json({ status: 200, data: record });
   } catch (e) {
@@ -68,14 +75,14 @@ router.post('/', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req
 });
 
 // PATCH update status
-router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), requireCheckedIn, async (req, res) => {
   try {
     const { status } = req.body;
     const record = await CallAgain.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
-    ).populate('lead', 'name phone').populate('assignedTo', 'name email');
+    ).populate('lead', 'name phone department').populate('assignedTo', 'name email');
 
     if (!record) return res.status(404).json({ message: 'Not found' });
 

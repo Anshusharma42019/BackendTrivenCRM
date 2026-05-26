@@ -52,12 +52,18 @@ const leadSchema = new mongoose.Schema(
     // Tracks if this lead was sent to re-verification from follow-up cycle
     pending_reorder_source: { type: mongoose.Schema.Types.ObjectId, ref: 'ShiprocketOrder', default: null },
     pending_reorder_staff: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    department: {
+      type: String,
+      enum: ['migraine', 'piles'],
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
 leadSchema.index({ status: 1, assignedTo: 1, createdAt: -1 });
 leadSchema.index({ name: 'text', phone: 'text', email: 'text' });
+leadSchema.index({ department: 1, status: 1 });
 
 leadSchema.set('toJSON', {
   transform: (doc, ret) => { delete ret.__v; return ret; },

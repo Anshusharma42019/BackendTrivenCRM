@@ -12,7 +12,7 @@ import httpStatus from 'http-status';
 
 const router = express.Router();
 
-router.get('/', auth('admin', 'manager', 'sales'), catchAsync(async (req, res) => {
+router.get('/', auth('admin', 'manager', 'sales', 'support', 'logistics'), catchAsync(async (req, res) => {
   const { q } = req.query;
   if (!q || q.trim().length < 3) {
     return res.json(new ApiResponse(httpStatus.OK, [], 'Search results'));

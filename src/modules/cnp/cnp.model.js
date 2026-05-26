@@ -17,6 +17,11 @@ const cnpSchema = new mongoose.Schema(
     state: { type: String },
     address: { type: String },
     notes: [{ text: String, createdAt: { type: Date, default: Date.now } }],
+    department: {
+      type: String,
+      enum: ['migraine', 'piles'],
+      default: null,
+    },
     cnpCount: { type: Number, default: 1 },
     lastCnpAt: { type: Date, default: Date.now },
     cnpHistory: [{ clickedAt: { type: Date, default: Date.now } }],

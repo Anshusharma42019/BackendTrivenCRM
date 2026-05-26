@@ -1,13 +1,21 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
 import requireCheckedIn from '../../middleware/requireCheckedIn.js';
+import departmentFilter from '../../middleware/departmentFilter.js';
 import Cnp from './cnp.model.js';
 
 const router = express.Router();
 
-router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const query = {};
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        query.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      query.department = req.query.department;
+    }
     const { filter } = req.query;
     if (filter) {
       const now = new Date();
@@ -27,7 +35,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     }
     const records = await Cnp.find(query)
       .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode notes follow_ups next_follow_up')
+      .populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode notes follow_ups next_follow_up department')
       .sort({ createdAt: -1 });
     res.json({ status: 200, data: records });
   } catch (e) {
@@ -35,7 +43,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.patch('/:id/increment', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.patch('/:id/increment', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     const existing = await Cnp.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Not found' });
@@ -44,14 +52,14 @@ router.patch('/:id/increment', auth('admin', 'manager', 'sales'), requireChecked
       req.params.id,
       { $inc: { cnpCount: 1 }, lastCnpAt: new Date(), $push: { cnpHistory: { clickedAt: new Date() } } },
       { new: true }
-    ).populate('assignedTo', 'name email').populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode');
+    ).populate('assignedTo', 'name email').populate('lead', 'name phone status problem address houseNo cityVillage postOffice landmark district state pincode department');
     res.json({ status: 200, data: record });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }
 });
 
-router.delete('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.delete('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     await Cnp.findByIdAndDelete(req.params.id);
     res.json({ status: 200, message: 'Deleted' });

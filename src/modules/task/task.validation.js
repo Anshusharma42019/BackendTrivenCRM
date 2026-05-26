@@ -29,6 +29,7 @@ export const createTask = {
     otherProblems: z.string().optional(),
     problemDuration: z.string().optional(),
     price: z.coerce.number().optional(),
+    department: z.enum(['migraine', 'piles']).optional().or(z.literal('')),
   }),
 };
 
@@ -57,6 +58,7 @@ export const updateTask = {
     otherProblems: z.string().optional(),
     problemDuration: z.string().optional(),
     price: z.coerce.number().optional(),
+    department: z.enum(['migraine', 'piles']).optional().or(z.literal('')),
   }),
 };
 

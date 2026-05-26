@@ -1,5 +1,6 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
+import departmentFilter from '../../middleware/departmentFilter.js';
 import * as c from './shiprocket.controller.js';
 
 const router = express.Router();
@@ -19,8 +20,8 @@ router.get('/orders', auth(), c.getOrders);
 router.get('/orders/delivered', auth(), c.getDeliveredOrders);
 router.get('/orders/delivered-schema', auth(), c.getDeliveredOrdersFromSchema);
 router.get('/orders/in-transit-schema', auth(), c.getInTransitOrdersFromSchema);
-router.get('/orders/with-followups', auth(), c.getOrdersWithFollowUps);
-router.get('/orders/completed-followups', auth(), c.getCompletedFollowUps);
+router.get('/orders/with-followups', auth(), departmentFilter, c.getOrdersWithFollowUps);
+router.get('/orders/completed-followups', auth(), departmentFilter, c.getCompletedFollowUps);
 router.get('/orders/delivered-live', auth(), c.getDeliveredOrdersLive);
 router.get('/orders/delivered-stats', auth(), c.getDeliveredStats);
 router.get('/orders/status-details', auth(), c.getStatusOrders);

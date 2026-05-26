@@ -4,27 +4,27 @@ import ApiResponse from '../../utils/ApiResponse.js';
 import * as taskService from './task.service.js';
 
 const createTask = catchAsync(async (req, res) => {
-  const task = await taskService.createTask(req.body, req.user._id, req.user.role);
+  const task = await taskService.createTask(req.body, req.user._id, req.user.role, req.userDepartments);
   res.status(httpStatus.CREATED).json(new ApiResponse(httpStatus.CREATED, task, 'Task created'));
 });
 
 const getTasks = catchAsync(async (req, res) => {
-  const tasks = await taskService.getTasks(req.query, req.user.role, req.user._id);
+  const tasks = await taskService.getTasks(req.query, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, tasks, 'Tasks fetched'));
 });
 
 const getDailyTasks = catchAsync(async (req, res) => {
-  const tasks = await taskService.getDailyTasks(req.user._id, req.user.role);
+  const tasks = await taskService.getDailyTasks(req.user._id, req.user.role, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, tasks, "Today's tasks fetched"));
 });
 
 const getTask = catchAsync(async (req, res) => {
-  const task = await taskService.getTaskById(req.params.taskId, req.user.role, req.user._id);
+  const task = await taskService.getTaskById(req.params.taskId, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, task, 'Task fetched'));
 });
 
 const updateTask = catchAsync(async (req, res) => {
-  const task = await taskService.updateTask(req.params.taskId, req.body, req.user.role, req.user._id);
+  const task = await taskService.updateTask(req.params.taskId, req.body, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, task, 'Task updated'));
 });
 
@@ -34,7 +34,7 @@ const deleteTask = catchAsync(async (req, res) => {
 });
 
 const addNote = catchAsync(async (req, res) => {
-  const task = await taskService.getTaskById(req.params.taskId, req.user.role, req.user._id);
+  const task = await taskService.getTaskById(req.params.taskId, req.user.role, req.user._id, req.userDepartments);
   task.notes.push({ text: req.body.text });
   await task.save();
   res.json(new ApiResponse(httpStatus.OK, task, 'Note added'));

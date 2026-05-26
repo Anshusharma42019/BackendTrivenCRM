@@ -17,13 +17,25 @@ const notifyAdmins = async (data) => {
 const hiddenTaskStatuses = ['verification', 'cnp', 'cancel_call', 'ready_to_shipment', 'interested', 'on_hold', 'closed_lost'];
 const hiddenTaskLeadStatuses = ['closed_lost', 'on_hold', 'follow_up'];
 
-export const createTask = async (data, createdBy, creatorRole) => {
+export const createTask = async (data, createdBy, creatorRole, userDepartments = []) => {
+  // inherit department from lead if provided
+  if (data.lead) {
+    const leadObj = await Lead.findById(data.lead).select('department').lean();
+    if (leadObj && leadObj.department) {
+      data.department = leadObj.department;
+    }
+  }
+  
+  if (!data.department && creatorRole === 'sales' && userDepartments.length > 0) {
+    data.department = userDepartments[0];
+  }
+
   // Sales staff can only assign tasks to themselves
   if (creatorRole === 'sales') {
     data.assignedTo = createdBy;
   } else if (!data.assignedTo) {
     const { getNextSalesUser } = await import('../lead/lead.service.js');
-    data.assignedTo = await getNextSalesUser();
+    data.assignedTo = await getNextSalesUser(data.department);
   }
 
   const task = await Task.create({ ...data, createdBy });
@@ -39,13 +51,17 @@ export const createTask = async (data, createdBy, creatorRole) => {
   return task;
 };
 
-export const getTasks = async (filter, userRole, userId) => {
+export const getTasks = async (filter, userRole, userId, userDepartments = []) => {
   const query = { isDeleted: false };
   // Sales staff always see only their own tasks — cannot be overridden
   if (userRole === 'sales') {
     query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+    if (userDepartments && userDepartments.length > 0) {
+      query.department = { $in: userDepartments };
+    }
   } else {
     if (filter.assignedTo) query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
+    if (filter.department) query.department = filter.department;
   }
   if (filter.status) {
     query.status = filter.status;
@@ -80,19 +96,24 @@ export const getTasks = async (filter, userRole, userId) => {
     .sort({ createdAt: -1 });
 };
 
-export const getTaskById = async (id, userRole, userId) => {
+export const getTaskById = async (id, userRole, userId, userDepartments = []) => {
   const task = await Task.findOne({ _id: id, isDeleted: false })
     .populate('assignedTo', 'name email')
     .populate('lead', 'name phone');
   if (!task) throw new ApiError(httpStatus.NOT_FOUND, 'Task not found');
-  if (userRole === 'sales' && String(task.assignedTo?._id) !== String(userId)) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+  if (userRole === 'sales') {
+    if (String(task.assignedTo?._id) !== String(userId)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+    }
+    if (task.department && userDepartments.length > 0 && !userDepartments.includes(task.department)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
+    }
   }
   return task;
 };
 
-export const updateTask = async (id, data, userRole, userId) => {
-  const task = await getTaskById(id, userRole, userId);
+export const updateTask = async (id, data, userRole, userId, userDepartments = []) => {
+  const task = await getTaskById(id, userRole, userId, userDepartments);
   // Sales staff cannot reassign tasks to other users
   if (userRole === 'sales') delete data.assignedTo;
   Object.assign(task, data);
@@ -103,6 +124,7 @@ export const updateTask = async (id, data, userRole, userId) => {
     task: task._id,
     title: task.title,
     assignedTo: task.assignedTo?._id || task.assignedTo,
+    department: task.department,
     changedBy: userId,
     lead: task.lead?._id || task.lead,
     dueDate: task.dueDate,
@@ -154,7 +176,7 @@ export const deleteTask = async (id) => {
   await task.save();
 };
 
-export const getDailyTasks = async (userId, userRole) => {
+export const getDailyTasks = async (userId, userRole, userDepartments = []) => {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const end = new Date();
@@ -165,7 +187,12 @@ export const getDailyTasks = async (userId, userRole) => {
     dueDate: { $gte: start, $lte: end },
     status: { $nin: hiddenTaskStatuses },
   };
-  if (userRole === 'sales') query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+  if (userRole === 'sales') {
+    query.assignedTo = new mongoose.Types.ObjectId(String(userId));
+    if (userDepartments && userDepartments.length > 0) {
+      query.department = { $in: userDepartments };
+    }
+  }
   const hiddenLeadIds = await Lead.distinct('_id', { status: { $in: hiddenTaskLeadStatuses }, isDeleted: { $ne: true } });
   if (hiddenLeadIds.length) query.lead = { $nin: hiddenLeadIds };
 

@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 
 const todayDateStr = () => new Date().toISOString().slice(0, 10);
 
-export const getStaffStats = async (userId, targetDate, from, to) => {
+export const getStaffStats = async (userId, targetDate, from, to, userDepartments = []) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   let start, end;
   const target = targetDate ? new Date(targetDate) : new Date();
@@ -27,6 +27,11 @@ export const getStaffStats = async (userId, targetDate, from, to) => {
   const uid = new mongoose.Types.ObjectId(userId);
   const dateStr = target.toISOString().slice(0, 10);
 
+  const filter = { assignedTo: uid };
+  if (userDepartments && userDepartments.length > 0) {
+    filter.department = { $in: userDepartments };
+  }
+
   const [
     todayVerifications, 
     monthVerifications, 
@@ -41,18 +46,18 @@ export const getStaffStats = async (userId, targetDate, from, to) => {
     onHoldCount,
     todayClosedLost
   ] = await Promise.all([
-    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: end } }),
-    Task.countDocuments({ assignedTo: uid, status: 'pending', isDeleted: false }),
+    Verification.countDocuments({ ...filter, createdAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ ...filter, createdAt: { $gte: monthStart, $lte: end } }),
+    Task.countDocuments({ ...filter, status: 'pending', isDeleted: false }),
     StaffTarget.findOne({ user: uid, date: dateStr }),
-    Cnp.countDocuments({ assignedTo: uid, updatedAt: { $gte: start, $lte: end } }),
-    CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ assignedTo: uid, status: 'on_hold', updatedAt: { $gte: start, $lte: end } }),
-    Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
+    Cnp.countDocuments({ ...filter, updatedAt: { $gte: start, $lte: end } }),
+    CallAgain.countDocuments({ ...filter, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ ...filter, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ ...filter, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Lead.countDocuments({ ...filter, createdAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ ...filter, status: 'verified', updatedAt: { $gte: start, $lte: end } }),
+    Verification.countDocuments({ ...filter, status: 'on_hold', updatedAt: { $gte: start, $lte: end } }),
+    Lead.countDocuments({ ...filter, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
   ]);
 
   return {
@@ -86,7 +91,7 @@ export const setStaffTarget = async (userId, target) => {
   return { todayTarget: doc.target };
 };
 
-export const getStaffTodayLists = async (userRole, userId, targetDate, targetStaffId, from, to) => {
+export const getStaffTodayLists = async (userRole, userId, targetDate, targetStaffId, from, to, userDepartments = []) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   let start, end;
 
@@ -115,6 +120,12 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
     updateFilter.assignedTo = sid;
     taskFilter.assignedTo = sid;
   }
+  
+  if (userDepartments && userDepartments.length > 0) {
+    filter.department = { $in: userDepartments };
+    updateFilter.department = { $in: userDepartments };
+    taskFilter.department = { $in: userDepartments };
+  }
 
   const [cnpList, callAgainList, interestedList, notInterestedList, onHoldList] = await Promise.all([
     Cnp.find(updateFilter)
@@ -125,7 +136,7 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
     Task.find({ ...taskFilter, status: 'cancel_call' })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
-    Verification.find({ ...(sid ? { assignedTo: sid } : {}), status: 'on_hold', updatedAt: { $gte: start, $lte: end } })
+    Verification.find({ ...filter, status: 'on_hold', updatedAt: { $gte: start, $lte: end } })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
   ]);
 
@@ -305,15 +316,20 @@ export const getAllStaffStats = async (targetDate) => {
   return stats;
 };
 
-export const getDashboardStats = async (userRole, userId, targetDate, from, to) => {
-  // For countDocuments â€” plugin auto-adds isDeleted:false
+export const getDashboardStats = async (userRole, userId, targetDate, from, to, userDepartments = []) => {
+  // For countDocuments - plugin auto-adds isDeleted:false
   const countFilter = {};
-  // For aggregate â€” plugin does NOT apply, must be explicit
+  // For aggregate - plugin does NOT apply, must be explicit
   const aggMatch = { isDeleted: false };
 
   if (userRole === 'sales') {
     countFilter.assignedTo = userId;
     aggMatch.assignedTo = userId;
+  }
+  
+  if (userDepartments && userDepartments.length > 0) {
+    countFilter.department = { $in: userDepartments };
+    aggMatch.department = { $in: userDepartments };
   }
 
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
@@ -355,6 +371,7 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to) 
     Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
 
     Task.countDocuments({ 
+      ...countFilter,
       status: 'ready_to_shipment', 
       isDeleted: false
     }),
@@ -377,23 +394,27 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to) 
     ]),
 
     Task.countDocuments({
+      ...countFilter,
       status: 'pending',
-      ...(userRole === 'sales' ? { assignedTo: userId } : {}),
     }),
 
     Task.countDocuments({
+      ...countFilter,
       status: 'overdue',
-      ...(userRole === 'sales' ? { assignedTo: userId } : {}),
     }),
 
-    Attendance.find({ date: { $gte: start, $lte: end }, isDeleted: false }).lean(),
+    Attendance.find({ date: { $gte: start, $lte: end }, isDeleted: false }).populate('user', 'departments').lean(),
 
-    User.countDocuments({ role: { $in: ['sales', 'manager'] }, isDeleted: false }),
+    User.countDocuments({ 
+      role: { $in: ['sales', 'manager'] }, 
+      isDeleted: false,
+      ...(userDepartments?.length > 0 ? { departments: { $in: userDepartments } } : {})
+    }),
 
-    Cnp.countDocuments({ updatedAt: { $gte: start, $lte: end } }),
-    CallAgain.countDocuments({ updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Cnp.countDocuments({ ...countFilter, updatedAt: { $gte: start, $lte: end } }),
+    CallAgain.countDocuments({ ...countFilter, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ ...countFilter, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Task.countDocuments({ ...countFilter, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
   ]);
 
   const stageOrder = ['new', 'contacted', 'interested', 'follow_up', 'closed_won', 'closed_lost'];
@@ -406,10 +427,14 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to) 
     percentage: totalLeads ? Math.round((s.count / totalLeads) * 100) : 0,
   }));
 
+  const filteredAttendance = userDepartments?.length > 0 
+    ? attendanceToday.filter(a => a.user?.departments?.some(d => userDepartments.includes(d)))
+    : attendanceToday;
+
   const attendanceStats = {
-    present: attendanceToday.filter(a => a.checkIn).length,
-    checkedOut: attendanceToday.filter(a => a.checkOut).length,
-    absent: Math.max(0, totalStaffCount - attendanceToday.filter(a => a.checkIn).length),
+    present: filteredAttendance.filter(a => a.checkIn).length,
+    checkedOut: filteredAttendance.filter(a => a.checkOut).length,
+    absent: Math.max(0, totalStaffCount - filteredAttendance.filter(a => a.checkIn).length),
     totalStaff: totalStaffCount
   };
 
@@ -418,7 +443,7 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to) 
     todayCallAgain,
     todayInterested,
     todayNotInterested,
-    todayClosedLost: await Lead.countDocuments({ status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
+    todayClosedLost: await Lead.countDocuments({ ...countFilter, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
   };
 
   return {

@@ -1,14 +1,23 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
+import departmentFilter from '../../middleware/departmentFilter.js';
 import ReadyToShipment from './readytoshipment.model.js';
 import Task from '../task/task.model.js';
 
 const router = express.Router();
 
 // Fast fetch — filter at DB level, no JS filtering
-router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/', auth('admin', 'manager', 'sales', 'logistics'), departmentFilter, async (req, res) => {
   try {
-    const validTaskIds = await Task.distinct('_id', { status: 'ready_to_shipment', isDeleted: false });
+    const taskQuery = { status: 'ready_to_shipment', isDeleted: false };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        taskQuery.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      taskQuery.department = req.query.department;
+    }
+    const validTaskIds = await Task.distinct('_id', taskQuery);
 
     const records = await ReadyToShipment.find({
       sentToShiprocket: { $ne: true },
@@ -16,6 +25,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
+      .populate('task', 'department')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -26,13 +36,22 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
 });
 
 // Manual sync — only called when user clicks "Sync Verified"
-router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.post('/sync', auth('admin', 'manager', 'sales', 'logistics'), departmentFilter, async (req, res) => {
   try {
     const Verification = (await import('../verification/verification.model.js')).default;
 
+    const taskQuery = { status: 'ready_to_shipment', isDeleted: false };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        taskQuery.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      taskQuery.department = req.query.department;
+    }
+
     const [verifiedStuck, tasks] = await Promise.all([
       Verification.find({ status: 'verified' }).populate('assignedTo', 'name email').populate('lead', 'name phone'),
-      Task.find({ status: 'ready_to_shipment', isDeleted: false }).populate('assignedTo', 'name email').populate('lead', 'name phone status'),
+      Task.find(taskQuery).populate('assignedTo', 'name email').populate('lead', 'name phone status'),
     ]);
 
     await Promise.all([
@@ -58,7 +77,7 @@ router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
     const records = await ReadyToShipment.find({ sentToShiprocket: { $ne: true } })
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status')
-      .populate('task', 'status isDeleted')
+      .populate('task', 'status isDeleted department')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -69,7 +88,7 @@ router.post('/sync', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.get('/for-shipment', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/for-shipment', auth('admin', 'manager', 'sales', 'logistics'), async (req, res) => {
   try {
     const records = await ReadyToShipment.find({ sentToShiprocket: { $ne: true } })
       .populate('lead', 'name phone email address')
@@ -98,7 +117,7 @@ router.get('/by-user/:userId', auth('admin', 'manager'), async (req, res) => {
   }
 });
 
-router.patch('/:id/sent', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.patch('/:id/sent', auth('admin', 'manager', 'sales', 'logistics'), async (req, res) => {
   try {
     await ReadyToShipment.findByIdAndUpdate(req.params.id, { sentToShiprocket: true });
     res.json({ status: 200, message: 'Marked as sent' });

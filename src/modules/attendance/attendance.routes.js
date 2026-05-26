@@ -6,33 +6,33 @@ import attendanceController from './attendance.controller.js';
 
 const router = express.Router();
 
-// Staff + Doctor: clock in
+// Staff + Doctor + Support + Logistics: clock in
 router.post(
   '/check-in',
-  auth('admin', 'manager', 'sales', 'doctor'),
+  auth('admin', 'manager', 'sales', 'doctor', 'support', 'logistics'),
   validate(attendanceValidation.checkIn),
   attendanceController.checkIn
 );
 
-// Staff + Doctor: clock out
+// Staff + Doctor + Support + Logistics: clock out
 router.post(
   '/check-out',
-  auth('admin', 'manager', 'sales', 'doctor'),
+  auth('admin', 'manager', 'sales', 'doctor', 'support', 'logistics'),
   validate(attendanceValidation.checkOut),
   attendanceController.checkOut
 );
 
-// Staff + Doctor: today's status
+// Staff + Doctor + Support + Logistics: today's status
 router.get(
   '/today',
-  auth('admin', 'manager', 'sales', 'doctor'),
+  auth('admin', 'manager', 'sales', 'doctor', 'support', 'logistics'),
   attendanceController.getTodayStatus
 );
 
-// Staff + Doctor: my attendance history
+// Staff + Doctor + Support + Logistics: my attendance history
 router.get(
   '/me',
-  auth('admin', 'manager', 'sales', 'doctor'),
+  auth('admin', 'manager', 'sales', 'doctor', 'support', 'logistics'),
   validate(attendanceValidation.getMyAttendance),
   attendanceController.getMyAttendance
 );

@@ -1,15 +1,25 @@
 import express from 'express';
 import auth from '../../middleware/auth.js';
 import requireCheckedIn from '../../middleware/requireCheckedIn.js';
+import departmentFilter from '../../middleware/departmentFilter.js';
 import Verification from './verification.model.js';
 
 const router = express.Router();
 
-router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
-    const records = await Verification.find({ status: { $nin: ['verified', 'on_hold'] }, isDeleted: { $ne: true } })
+    const query = { status: { $nin: ['verified', 'on_hold'] }, isDeleted: { $ne: true } };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        query.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      query.department = req.query.department;
+    }
+    const records = await Verification.find(query)
       .populate('assignedTo', 'name email')
-      .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
+      .populate('lead', 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department')
+      .populate('task', 'department')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -17,7 +27,7 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
     try {
       const missing = records.filter(r => r.relief_percentage == null && r.lead);
       if (missing.length > 0) {
-        const Order = (await import('../shiprocket/models/order.model.js')).default;
+        const { Order } = (await import('../shiprocket/models/order.model.js'));
         const Followup = (await import('../shiprocket/models/followup.model.js')).default;
         const leadIds = missing.map(r => r.lead?._id || r.lead).filter(Boolean);
         const orders = await Order.find({ lead_id: { $in: leadIds } }).select('_id lead_id').lean();
@@ -44,12 +54,53 @@ router.get('/', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
+router.get('/repair-dept', async (req, res) => {
+  const User = (await import('../user/user.model.js')).default;
+  const Task = (await import('../task/task.model.js')).default;
+  const Lead = (await import('../lead/lead.model.js')).default;
+  const records = await Verification.find({ department: null }).populate('assignedTo');
+  let fixed = 0;
+  for (const r of records) {
+    if (r.assignedTo && r.assignedTo.departments && r.assignedTo.departments.length > 0) {
+       const dept = r.assignedTo.departments[0];
+       await Verification.updateOne({ _id: r._id }, { $set: { department: dept } });
+       if (r.task) await Task.updateOne({ _id: r.task }, { $set: { department: dept } });
+       if (r.lead) await Lead.updateOne({ _id: r.lead }, { $set: { department: dept } });
+       fixed++;
+    }
+  }
+  res.json({ message: `Fixed ${fixed} records completely` });
+});
+
+router.get('/test-data', async (req, res) => {
+  const Task = (await import('../task/task.model.js')).default;
+  const Lead = (await import('../lead/lead.model.js')).default;
+  const records = await Verification.find().sort({ createdAt: -1 }).limit(20).populate('task').populate('lead').populate('assignedTo');
+  
+  let fixed = 0;
+  for (const r of records) {
+    if (!r.department) {
+      let dept = 'migraine'; // aggressive fallback
+      if (r.assignedTo && r.assignedTo.departments && r.assignedTo.departments.length > 0) {
+        dept = r.assignedTo.departments[0];
+      }
+      await Verification.updateOne({ _id: r._id }, { $set: { department: dept } });
+      if (r.task) await Task.updateOne({ _id: r.task._id || r.task }, { $set: { department: dept } });
+      if (r.lead) await Lead.updateOne({ _id: r.lead._id || r.lead }, { $set: { department: dept } });
+      fixed++;
+    }
+  }
+
+  const updatedRecords = await Verification.find().sort({ createdAt: -1 }).limit(10).populate('task').populate('lead').lean();
+  res.json({ fixed, data: updatedRecords.map(r => ({ title: r.title, dept: r.department, leadDept: r.lead?.department, taskDept: r.task?.department })) });
+});
+
 // Sync tasks with status 'verification' into Verification collection
-router.post('/sync', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.post('/sync', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     const Task = (await import('../task/task.model.js')).default;
 
-    const verificationTasks = await Task.find({ status: 'verification', isDeleted: false }, '_id title assignedTo lead dueDate description cityVillageType cityVillage houseNo postOffice district landmark pincode state reminderAt notes problem age weight height otherProblems problemDuration price');
+    const verificationTasks = await Task.find({ status: 'verification', isDeleted: false }, '_id title assignedTo lead dueDate description cityVillageType cityVillage houseNo postOffice district landmark pincode state reminderAt notes problem age weight height otherProblems problemDuration price department');
     const existingTaskIds = await Verification.distinct('task');
     const existingSet = new Set(existingTaskIds.map(id => id.toString()));
     const newTasks = verificationTasks.filter(t => !existingSet.has(t._id.toString()));
@@ -66,6 +117,7 @@ router.post('/sync', auth('admin', 'manager', 'sales'), requireCheckedIn, async 
             reminderAt: task.reminderAt, notes: task.notes,
             problem: task.problem, age: task.age, weight: task.weight, height: task.height,
             otherProblems: task.otherProblems, problemDuration: task.problemDuration, price: task.price,
+            department: task.department,
           })),
           { ordered: false }
         );
@@ -80,17 +132,17 @@ router.post('/sync', auth('admin', 'manager', 'sales'), requireCheckedIn, async 
       const ops = existingTasks.map(task => ({
         updateOne: {
           filter: { task: task._id },
-          update: { 
-            $set: { 
+          update: {
+            $set: {
               title: task.title, assignedTo: task.assignedTo, lead: task.lead,
-              age: task.age, weight: task.weight, height: task.height, price: task.price, 
-              problem: task.problem, otherProblems: task.otherProblems, 
-              problemDuration: task.problemDuration, description: task.description, 
-              cityVillageType: task.cityVillageType, cityVillage: task.cityVillage, 
-              houseNo: task.houseNo, postOffice: task.postOffice, district: task.district, 
-              landmark: task.landmark, pincode: task.pincode, state: task.state, 
-              reminderAt: task.reminderAt 
-            } 
+              age: task.age, weight: task.weight, height: task.height, price: task.price,
+              problem: task.problem, otherProblems: task.otherProblems,
+              problemDuration: task.problemDuration, description: task.description,
+              cityVillageType: task.cityVillageType, cityVillage: task.cityVillage,
+              houseNo: task.houseNo, postOffice: task.postOffice, district: task.district,
+              landmark: task.landmark, pincode: task.pincode, state: task.state,
+              reminderAt: task.reminderAt, department: task.department
+            }
           }
         }
       }));
@@ -104,7 +156,7 @@ router.post('/sync', auth('admin', 'manager', 'sales'), requireCheckedIn, async 
 });
 
 // MUST be before /:id routes
-router.post('/repair', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.post('/repair', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     const Task = (await import('../task/task.model.js')).default;
     const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
@@ -160,12 +212,21 @@ router.post('/repair', auth('admin', 'manager', 'sales'), requireCheckedIn, asyn
   }
 });
 
-router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const Lead = (await import('../lead/lead.model.js')).default;
 
+    const query = { status: 'on_hold', isDeleted: { $ne: true } };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        query.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      query.department = req.query.department;
+    }
+
     // Get verification on-hold records
-    const verificationRecords = await Verification.find({ status: 'on_hold', isDeleted: { $ne: true } })
+    const verificationRecords = await Verification.find(query)
       .populate('assignedTo', 'name email')
       .populate('lead', 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem')
       .sort({ onHoldUntil: 1 })
@@ -177,12 +238,20 @@ router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
     );
 
     const mongoose = (await import('mongoose')).default;
-    // Get pipeline on-hold leads NOT in verification
-    const pipelineOnHoldLeads = await Lead.find({
+    const leadQuery = {
       status: 'on_hold',
       isDeleted: false,
       _id: { $nin: [...verificationLeadIds].map(id => new mongoose.Types.ObjectId(id)) },
-    })
+    };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        leadQuery.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      leadQuery.department = req.query.department;
+    }
+    // Get pipeline on-hold leads NOT in verification
+    const pipelineOnHoldLeads = await Lead.find(leadQuery)
       .populate('assignedTo', 'name email')
       .sort({ onHoldUntil: 1 })
       .lean();
@@ -206,7 +275,7 @@ router.get('/on-hold', auth('admin', 'manager', 'sales'), async (req, res) => {
   }
 });
 
-router.get('/by-task/:taskId', auth('admin', 'manager', 'sales'), async (req, res) => {
+router.get('/by-task/:taskId', auth('admin', 'manager', 'sales', 'support'), departmentFilter, async (req, res) => {
   try {
     const record = await Verification.findOne({ task: req.params.taskId, isDeleted: { $ne: true } }).select('_id status').lean();
     if (!record) return res.status(404).json({ status: 404, message: 'Not found' });
@@ -216,7 +285,7 @@ router.get('/by-task/:taskId', auth('admin', 'manager', 'sales'), async (req, re
   }
 });
 
-router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
     const update = { ...taskFields };
@@ -300,19 +369,19 @@ router.patch('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async 
   }
 });
 
-router.delete('/:id', auth('admin', 'manager', 'sales'), requireCheckedIn, async (req, res) => {
+router.delete('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
     const Lead = (await import('../lead/lead.model.js')).default;
     const Task = (await import('../task/task.model.js')).default;
     const leadService = await import('../lead/lead.service.js');
 
     const record = await Verification.findByIdAndUpdate(req.params.id, { isDeleted: true, deletedAt: new Date() }, { returnDocument: 'after' });
-    
+
     if (record) {
       if (record.lead) {
-        await leadService.deleteLead(record.lead).catch(() => {});
+        await leadService.deleteLead(record.lead).catch(() => { });
       } else if (record.task) {
-        await Task.findByIdAndUpdate(record.task, { isDeleted: true, deletedAt: new Date() }).catch(() => {});
+        await Task.findByIdAndUpdate(record.task, { isDeleted: true, deletedAt: new Date() }).catch(() => { });
       }
       return res.json({ message: 'Verification record and associated lead soft deleted' });
     }

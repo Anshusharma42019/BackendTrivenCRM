@@ -4,8 +4,9 @@ import ApiResponse from '../../utils/ApiResponse.js';
 import * as dashboardService from './dashboard.service.js';
 
 const getStats = catchAsync(async (req, res) => {
-  const { date, from, to } = req.query;
-  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id, date, from, to);
+  const { date, from, to, department } = req.query;
+  const userDepts = ['sales', 'support', 'logistics'].includes(req.user.role) ? req.userDepartments : (department ? [department] : []);
+  const stats = await dashboardService.getDashboardStats(req.user.role, req.user._id, date, from, to, userDepts);
   res.json(new ApiResponse(httpStatus.OK, stats, 'Dashboard stats fetched'));
 });
 
@@ -15,9 +16,10 @@ const getRevenueChart = catchAsync(async (req, res) => {
 });
 
 const getStaffStats = catchAsync(async (req, res) => {
-  const { date, staffId, from, to } = req.query;
+  const { date, staffId, from, to, department } = req.query;
   const targetId = (req.user.role === 'manager' || req.user.role === 'admin') && staffId ? staffId : req.user._id;
-  const data = await dashboardService.getStaffStats(targetId, date, from, to);
+  const userDepts = ['sales', 'support', 'logistics'].includes(req.user.role) ? req.userDepartments : (department ? [department] : []);
+  const data = await dashboardService.getStaffStats(targetId, date, from, to, userDepts);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff stats fetched'));
 });
 
@@ -36,8 +38,9 @@ const getStaffVerifications = catchAsync(async (req, res) => {
 });
 
 const getStaffTodayLists = catchAsync(async (req, res) => {
-  const { date, staffId, from, to } = req.query;
-  const data = await dashboardService.getStaffTodayLists(req.user.role, req.user._id, date, staffId, from, to);
+  const { date, staffId, from, to, department } = req.query;
+  const userDepts = ['sales', 'support', 'logistics'].includes(req.user.role) ? req.userDepartments : (department ? [department] : []);
+  const data = await dashboardService.getStaffTodayLists(req.user.role, req.user._id, date, staffId, from, to, userDepts);
   res.json(new ApiResponse(httpStatus.OK, data, 'Staff today lists fetched'));
 });
 

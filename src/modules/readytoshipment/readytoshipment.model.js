@@ -25,6 +25,11 @@ const readyToShipmentSchema = new mongoose.Schema(
     price: { type: Number },
     reminderAt: { type: Date },
     notes: [{ text: String, createdAt: { type: Date, default: Date.now } }],
+    department: {
+      type: String,
+      enum: ['migraine', 'piles'],
+      default: null,
+    },
     sentToShiprocket: { type: Boolean, default: false },
   },
   { timestamps: true }

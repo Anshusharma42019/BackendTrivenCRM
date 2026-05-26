@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'manager', 'sales', 'doctor', 'staff'],
+      enum: ['admin', 'manager', 'sales', 'doctor', 'staff', 'logistics', 'support'],
       default: 'admin',
     },
     specialization: {
@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema(
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+    departments: {
+      type: [String],
+      enum: ['migraine', 'piles'],
+      default: [],
     },
     baseSalary: {
       type: Number,

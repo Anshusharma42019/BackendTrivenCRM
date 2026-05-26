@@ -15,8 +15,12 @@ const notifyAdmins = async (data) => {
 };
 
 // True equal distribution — assign to sales user with fewest active leads
-export const getNextSalesUser = async () => {
-  const salesUsers = await User.find({ role: 'sales', isDeleted: false }).sort({ createdAt: 1 });
+export const getNextSalesUser = async (department = null) => {
+  const query = { role: 'sales', isDeleted: false };
+  if (department) {
+    query.departments = department;
+  }
+  const salesUsers = await User.find(query).sort({ createdAt: 1 });
   if (!salesUsers.length) return null;
 
   // Count active leads per sales user
@@ -40,7 +44,7 @@ export const getNextSalesUser = async () => {
   return minUser._id;
 };
 
-export const createLead = async (data, createdBy, creatorRole) => {
+export const createLead = async (data, createdBy, creatorRole, userDepartments = []) => {
   const existingLead = await Lead.findOne({ phone: data.phone?.trim(), isDeleted: false });
   if (existingLead) throw new ApiError(httpStatus.CONFLICT, 'A lead with this phone number already exists');
 
@@ -48,11 +52,15 @@ export const createLead = async (data, createdBy, creatorRole) => {
     // If a sales staff manually adds a lead, assign it to themselves
     if (creatorRole === 'sales' && createdBy) {
       data.assignedTo = createdBy;
+      data.department = userDepartments[0] || null;
     } else {
-      data.assignedTo = await getNextSalesUser();
+      data.assignedTo = await getNextSalesUser(data.department);
     }
+  } else if (creatorRole === 'sales') {
+    data.department = userDepartments[0] || null;
   }
 
+  if (!data.department) delete data.department;
   const payload = { ...data };
   if (createdBy) payload.createdBy = createdBy;
 
@@ -83,6 +91,7 @@ export const createLead = async (data, createdBy, creatorRole) => {
         lead: lead._id,
         assignedTo: assignedToId,
         createdBy: taskCreatedBy,
+        department: lead.department,
         dueDate,
         priority: 'high',
         status: 'pending',
@@ -97,27 +106,40 @@ export const createLead = async (data, createdBy, creatorRole) => {
   return lead;
 };
 
-export const getLeads = async (filter, options, userRole, userId) => {
+export const getLeads = async (filter, options, userRole, userId, userDepartments = []) => {
   const query = { isDeleted: false };
 
   // Sales can see all leads for shared statuses (interested, closed_lost, on_hold)
   const sharedStatuses = ['interested', 'closed_lost', 'on_hold'];
   const isSharedStatus = filter.status && sharedStatuses.includes(filter.status);
-  if (userRole === 'sales' && !isSharedStatus) query.assignedTo = userId;
+  
+  if (userRole === 'sales') {
+    if (!isSharedStatus) query.assignedTo = userId;
+    if (userDepartments && userDepartments.length > 0) {
+      query.department = { $in: userDepartments };
+    }
+  } else if (filter.department) {
+    query.department = filter.department;
+  }
 
-  if (!filter.cnp) query.cnp = { $ne: true };
+  // Export mode: skip all status/pipeline filters, return everything
+  const isExport = filter.export === 'true';
 
-  if (filter.status) {
-    query.status = filter.status;
-  } else if (!filter.cnp) {
-    query.status = { $nin: ['closed_won', 'closed_lost', 'interested', 'follow_up', 'on_hold'] };
+  if (!isExport) {
+    if (!filter.cnp) query.cnp = { $ne: true };
+
+    if (filter.status) {
+      query.status = filter.status;
+    } else if (!filter.cnp) {
+      query.status = { $nin: ['closed_won', 'closed_lost', 'interested', 'follow_up', 'on_hold'] };
+    }
   }
   if (filter.source) query.source = filter.source;
   if (filter.assignedTo && userRole !== 'sales') query.assignedTo = filter.assignedTo;
   if (filter.cnp === 'true') query.cnp = true;
 
-  // Always exclude leads that are in verification/shipment pipeline (unless fetching CNP list)
-  if (!filter.cnp) {
+  // Always exclude leads that are in verification/shipment pipeline (unless fetching CNP list or exporting)
+  if (!filter.cnp && !isExport) {
     const isOnHold = filter.status === 'on_hold';
     const isInterested = filter.status === 'interested';
 
@@ -187,7 +209,7 @@ export const getLeads = async (filter, options, userRole, userId) => {
   return { leads, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
-export const getLeadById = async (id, userRole, userId) => {
+export const getLeadById = async (id, userRole, userId, userDepartments = []) => {
   const lead = await Lead.findOne({ _id: id, isDeleted: false })
     .populate('assignedTo', 'name email role')
     .populate('createdBy', 'name email')
@@ -195,23 +217,36 @@ export const getLeadById = async (id, userRole, userId) => {
   if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   // Sales can view shared-status leads (interested, closed_lost, on_hold) from all staff
   const sharedStatuses = ['interested', 'closed_lost', 'on_hold'];
-  if (userRole === 'sales' && !sharedStatuses.includes(lead.status) && String(lead.assignedTo?._id) !== String(userId)) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+  
+  if (userRole === 'sales') {
+    if (lead.department && userDepartments.length > 0 && !userDepartments.includes(lead.department)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
+    }
+    if (!sharedStatuses.includes(lead.status) && String(lead.assignedTo?._id) !== String(userId)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+    }
   }
   return lead;
 };
 
-export const updateLead = async (id, data, userRole, userId) => {
+export const updateLead = async (id, data, userRole, userId, userDepartments = []) => {
   const lead = await Lead.findOne({ _id: id, isDeleted: false })
     .populate('assignedTo', 'name email role');
   if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
-  if (userRole === 'sales' && !['closed_lost', 'interested', 'on_hold'].includes(data.status) && String(lead.assignedTo?._id) !== String(userId)) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+  
+  if (userRole === 'sales') {
+    if (lead.department && userDepartments.length > 0 && !userDepartments.includes(lead.department)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
+    }
+    if (!['closed_lost', 'interested', 'on_hold'].includes(data.status) && String(lead.assignedTo?._id) !== String(userId)) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+    }
   }
   // Normalize assignedTo — accept object {_id} or string
   if (data.assignedTo && typeof data.assignedTo === 'object') {
     data.assignedTo = data.assignedTo._id;
   }
+  if (data.department === '') delete data.department;
   // Sales users can only assign to themselves
   if (userRole === 'sales') {
     data.assignedTo = new mongoose.Types.ObjectId(String(userId));
@@ -347,6 +382,7 @@ export const markCNP = async (leadId, userRole, userId) => {
       lead: leadId,
       assignedTo: lead.assignedTo,
       createdBy: lead.assignedTo,
+      department: lead.department,
       dueDate: new Date(),
       status: 'cnp',
       isDeleted: false,
@@ -415,6 +451,7 @@ export const assignLead = async (leadId, assignedTo) => {
     lead: lead._id,
     assignedTo,
     createdBy: assignedTo,
+    department: lead.department,
     dueDate,
     priority: 'high',
     status: 'pending',

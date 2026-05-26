@@ -982,27 +982,6 @@ export const setNextFollowUp = catchAsync(async (req, res) => {
 export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
   const settings = getFollowupSettings();
   const totalFollowups = Number(settings.total_followups) || DEFAULT_FOLLOWUP_TOTAL;
-  // ---- AUTO MARK EXPIRED FOLLOW-UPS AS COMPLETED ----
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiredFollowups = await Followup.find({ scheduled_date: { $lt: today }, completed: false }).lean();
-  if (expiredFollowups.length > 0) {
-    const expiredIds = expiredFollowups.map(f => f._id);
-    await Followup.updateMany(
-      { _id: { $in: expiredIds } },
-      { $set: { completed: true, completed_at: new Date(), followup_date: new Date(), status: 'missed', note: 'Auto-marked missed call', notes: 'Auto-marked missed call' } }
-    );
-    
-    // Update next_follow_up for affected orders
-    const orderIds = [...new Set(expiredFollowups.map(f => String(f.order_id)))];
-    for (const oid of orderIds) {
-      const next = await Followup.findOne({ order_id: oid, completed: false }).sort({ followup_number: 1 });
-      const update = { next_follow_up: next ? next.scheduled_date : null };
-      if (!next) update.followup_done = true;
-      await Order.findByIdAndUpdate(oid, update);
-    }
-    console.log(`[FollowUp] Auto-marked ${expiredIds.length} expired follow-ups.`);
-  }
 
   // Backfill: flag orders where all configured followups are done but followup_done not set
   const unflagged = await Order.find({
@@ -1022,14 +1001,34 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
     }
   }
 
-  const delivered = await Order.find({ 
+  // --- Department Filtering Logic ---
+  let leadQuery = { isDeleted: { $ne: true } };
+  if (['sales', 'support', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
+    leadQuery.department = { $in: req.userDepartments };
+  } else if (req.query.department) {
+    leadQuery.department = req.query.department;
+  }
+  let validLeadIds = null;
+  if (leadQuery.department) {
+    const Lead = (await import('../lead/lead.model.js')).default;
+    const leads = await Lead.find(leadQuery).select('_id').lean();
+    validLeadIds = leads.map(l => l._id);
+  }
+  // ----------------------------------
+
+  const query = { 
     status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
     followup_done: { $ne: true },
     sent_to_verification: { $ne: true },
-  })
+  };
+  if (validLeadIds !== null) {
+    query.lead_id = { $in: validLeadIds };
+  }
+
+  const delivered = await Order.find(query)
     .populate({
       path: 'lead_id',
-      select: 'createdBy assignedTo',
+      select: 'createdBy assignedTo department',
       populate: [
         { path: 'createdBy', select: 'name role' },
         { path: 'assignedTo', select: 'name role' }
@@ -1082,10 +1081,28 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
 
 export const getCompletedFollowUps = catchAsync(async (req, res) => {
   const { search, page = 1, per_page = 20 } = req.query;
+  // --- Department Filtering Logic ---
+  let leadQuery = { isDeleted: { $ne: true } };
+  if (['sales', 'support', 'logistics'].includes(req.user.role) && req.userDepartments && req.userDepartments.length > 0) {
+    leadQuery.department = { $in: req.userDepartments };
+  } else if (req.query.department) {
+    leadQuery.department = req.query.department;
+  }
+  let validLeadIds = null;
+  if (leadQuery.department) {
+    const Lead = (await import('../lead/lead.model.js')).default;
+    const leads = await Lead.find(leadQuery).select('_id').lean();
+    validLeadIds = leads.map(l => l._id);
+  }
+  // ----------------------------------
+
   const match = {
     status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
     followup_done: true,
   };
+  if (validLeadIds !== null) {
+    match.lead_id = { $in: validLeadIds };
+  }
   if (search) {
     match.$or = [
       { billing_customer_name: { $regex: search, $options: 'i' } },
@@ -1100,7 +1117,7 @@ export const getCompletedFollowUps = catchAsync(async (req, res) => {
     Order.find(match)
       .populate({
         path: 'lead_id',
-        select: 'createdBy assignedTo',
+        select: 'createdBy assignedTo department',
         populate: [
           { path: 'createdBy', select: 'name role' },
           { path: 'assignedTo', select: 'name role' },

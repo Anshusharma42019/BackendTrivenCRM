@@ -6,7 +6,7 @@ import ApiError from '../../utils/ApiError.js';
 import * as leadService from './lead.service.js';
 
 const createLead = catchAsync(async (req, res) => {
-  const lead = await leadService.createLead(req.body, req.user._id, req.user.role);
+  const lead = await leadService.createLead(req.body, req.user._id, req.user.role, req.userDepartments);
   res.status(httpStatus.CREATED).json(new ApiResponse(httpStatus.CREATED, lead, 'Lead created'));
 });
 
@@ -17,17 +17,17 @@ const submitLead = catchAsync(async (req, res) => {
 });
 
 const getLeads = catchAsync(async (req, res) => {
-  const result = await leadService.getLeads(req.query, req.query, req.user.role, req.user._id);
+  const result = await leadService.getLeads(req.query, req.query, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, result, 'Leads fetched'));
 });
 
 const getLead = catchAsync(async (req, res) => {
-  const lead = await leadService.getLeadById(req.params.leadId, req.user.role, req.user._id);
+  const lead = await leadService.getLeadById(req.params.leadId, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, lead, 'Lead fetched'));
 });
 
 const updateLead = catchAsync(async (req, res) => {
-  const lead = await leadService.updateLead(req.params.leadId, req.body, req.user.role, req.user._id);
+  const lead = await leadService.updateLead(req.params.leadId, req.body, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, lead, 'Lead updated'));
 });
 
@@ -121,4 +121,19 @@ const searchByPhone = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, leads, 'Search results'));
 });
 
-export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone };
+const exportLeads = catchAsync(async (req, res) => {
+  const { from, to } = req.query;
+  const query = { isDeleted: false };
+  if (from || to) {
+    query.createdAt = {};
+    if (from) query.createdAt.$gte = new Date(from);
+    if (to) { const d = new Date(to); d.setHours(23,59,59,999); query.createdAt.$lte = d; }
+  }
+  const leads = await Lead.find(query)
+    .populate('assignedTo', 'name')
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json(new ApiResponse(httpStatus.OK, leads, 'Leads exported'));
+});
+
+export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone, exportLeads };

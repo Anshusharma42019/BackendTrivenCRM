@@ -45,6 +45,11 @@ const taskSchema = new mongoose.Schema(
       text: { type: String, required: true },
       createdAt: { type: Date, default: Date.now },
     }],
+    department: {
+      type: String,
+      enum: ['migraine', 'piles'],
+      default: null,
+    },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }

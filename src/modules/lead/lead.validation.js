@@ -17,6 +17,7 @@ export const createLead = {
     problem: z.string().optional(),
     revenue: z.number().optional(),
     assignedTo: z.string().optional(),
+    department: z.enum(['migraine', 'piles']).optional().or(z.literal('')),
   }),
 };
 
@@ -34,6 +35,7 @@ export const updateLead = {
     revenue: z.number().optional(),
     assignedTo: z.string().optional(),
     cnp: z.boolean().optional(),
+    department: z.enum(['migraine', 'piles']).optional().or(z.literal('')),
   }),
 };
 
@@ -55,5 +57,6 @@ export const getLeads = {
     cnp: z.string().optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
+    department: z.string().optional(),
   }),
 };
