@@ -201,12 +201,6 @@ router.post('/repair', auth('admin', 'manager', 'sales', 'support'), departmentF
     for (const record of verifiedRecords) {
       if (!record.task) continue;
       let rtsAssignedTo = record.assignedTo?._id || record.assignedTo;
-      if (record.lead) {
-        const isOldLead = record.lead.status === 'old' || record.lead.pending_reorder_source;
-        if (!isOldLead) {
-          rtsAssignedTo = record.lead.createdBy || record.lead.assignedTo || rtsAssignedTo;
-        }
-      }
       await Task.findByIdAndUpdate(record.task, { status: 'ready_to_shipment', assignedTo: rtsAssignedTo });
       await ReadyToShipment.findOneAndUpdate(
         { task: record.task },
@@ -330,12 +324,19 @@ router.get('/by-task/:taskId', auth('admin', 'manager', 'sales', 'support'), dep
 
 router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, async (req, res) => {
   try {
+    const recordBefore = await Verification.findById(req.params.id);
+    if (!recordBefore) return res.status(404).json({ message: 'Not found' });
+
     const { status, onHoldUntil, onHoldReason, ...taskFields } = req.body;
     const update = { ...taskFields };
     if (status) {
       update.status = status;
       if (!update.assignedTo) {
-        update.assignedTo = req.user._id;
+        if (['admin', 'manager'].includes(req.user.role) && recordBefore.assignedTo) {
+          // Do not overwrite if admin is verifying on someone's behalf
+        } else {
+          update.assignedTo = req.user._id;
+        }
       }
     }
     if (onHoldUntil) update.onHoldUntil = onHoldUntil;
@@ -379,12 +380,6 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
 
     if (status === 'verified' && record.task) {
       let rtsAssignedTo = record.assignedTo?._id || record.assignedTo;
-      if (record.lead) {
-        const isOldLead = record.lead.status === 'old' || record.lead.pending_reorder_source;
-        if (!isOldLead) {
-          rtsAssignedTo = record.lead.createdBy || record.lead.assignedTo || rtsAssignedTo;
-        }
-      }
 
       const taskUpdate = await Task.findByIdAndUpdate(
         record.task,

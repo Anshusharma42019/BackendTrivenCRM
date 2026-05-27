@@ -6,6 +6,7 @@ import Cnp from '../cnp/cnp.model.js';
 import Verification from '../verification/verification.model.js';
 import CallAgain from '../callagain/callagain.model.js';
 import User from '../user/user.model.js';
+import Attendance from '../attendance/attendance.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
 
@@ -23,9 +24,29 @@ export const getNextSalesUser = async (department = null) => {
   const salesUsers = await User.find(query).sort({ createdAt: 1 });
   if (!salesUsers.length) return null;
 
-  // Count active leads per sales user
+  // Find users who are checked in and not checked out today
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const activeAttendances = await Attendance.find({
+    user: { $in: salesUsers.map(u => u._id) },
+    date: { $gte: startOfDay, $lte: endOfDay },
+    checkIn: { $ne: null },
+    checkOut: null,
+    isDeleted: false
+  });
+
+  const activeUserIds = activeAttendances.map(a => a.user.toString());
+  const activeSalesUsers = salesUsers.filter(u => activeUserIds.includes(u._id.toString()));
+
+  // If no one is checked in, fallback to all sales users
+  const eligibleUsers = activeSalesUsers.length > 0 ? activeSalesUsers : salesUsers;
+
+  // Count active leads per eligible user
   const counts = await Lead.aggregate([
-    { $match: { isDeleted: false, assignedTo: { $in: salesUsers.map(u => u._id) } } },
+    { $match: { isDeleted: false, assignedTo: { $in: eligibleUsers.map(u => u._id) } } },
     { $group: { _id: '$assignedTo', count: { $sum: 1 } } },
   ]);
 
@@ -33,10 +54,10 @@ export const getNextSalesUser = async (department = null) => {
   counts.forEach(c => { countMap[String(c._id)] = c.count; });
 
   // Pick user with fewest leads (ties broken by earliest created)
-  let minUser = salesUsers[0];
-  let minCount = countMap[String(salesUsers[0]._id)] ?? 0;
+  let minUser = eligibleUsers[0];
+  let minCount = countMap[String(eligibleUsers[0]._id)] ?? 0;
 
-  for (const u of salesUsers) {
+  for (const u of eligibleUsers) {
     const c = countMap[String(u._id)] ?? 0;
     if (c < minCount) { minCount = c; minUser = u; }
   }

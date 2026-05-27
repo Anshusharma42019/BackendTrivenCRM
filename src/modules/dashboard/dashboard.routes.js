@@ -10,6 +10,7 @@ router.get('/stats', auth('admin', 'manager', 'sales', 'support', 'logistics'), 
 router.get('/revenue-chart', auth('admin', 'manager'), departmentFilter, dashboardController.getRevenueChart);
 router.get('/staff-stats', auth('admin', 'manager', 'sales', 'support', 'logistics'), departmentFilter, dashboardController.getStaffStats);
 router.post('/staff-target', auth('admin', 'manager', 'sales', 'support', 'logistics'), dashboardController.setStaffTarget);
+router.get('/target-history', auth('admin', 'manager', 'sales', 'support', 'logistics'), dashboardController.getTargetHistory);
 router.get('/staff-verifications', auth('admin', 'manager', 'sales', 'support', 'logistics'), departmentFilter, dashboardController.getStaffVerifications);
 router.get('/staff-today-lists', auth('admin', 'manager', 'sales', 'support', 'logistics'), departmentFilter, dashboardController.getStaffTodayLists);
 router.get('/staff-monthly-chart', auth('admin', 'manager', 'sales', 'support', 'logistics'), departmentFilter, dashboardController.getStaffMonthlyChart);

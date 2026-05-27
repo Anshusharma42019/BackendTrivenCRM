@@ -57,12 +57,6 @@ router.post('/sync', auth('admin', 'manager', 'sales', 'logistics'), departmentF
     await Promise.all([
       ...verifiedStuck.filter(v => v.task).map(v => {
         let rtsAssignedTo = v.assignedTo?._id || v.assignedTo;
-        if (v.lead) {
-          const isOldLead = v.lead.status === 'old' || v.lead.pending_reorder_source;
-          if (!isOldLead) {
-            rtsAssignedTo = v.lead.createdBy || v.lead.assignedTo || rtsAssignedTo;
-          }
-        }
         return Promise.all([
           Task.findByIdAndUpdate(v.task, { status: 'ready_to_shipment', assignedTo: rtsAssignedTo }),
           ReadyToShipment.findOneAndUpdate(

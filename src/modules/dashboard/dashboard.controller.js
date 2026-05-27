@@ -24,12 +24,22 @@ const getStaffStats = catchAsync(async (req, res) => {
 });
 
 const setStaffTarget = catchAsync(async (req, res) => {
-  const { target } = req.body;
+  const { target, userId, date } = req.body;
   if (!target || Number(target) < 1) {
     return res.status(400).json({ status: 400, message: 'Invalid target value' });
   }
-  const data = await dashboardService.setStaffTarget(req.user._id, target);
+  // Admin/Manager can set target for any user on any date
+  const targetUserId = (req.user.role === 'admin' || req.user.role === 'manager') && userId ? userId : req.user._id;
+  const data = await dashboardService.setStaffTarget(targetUserId, target, date || undefined);
   res.json(new ApiResponse(httpStatus.OK, data, 'Target saved'));
+});
+
+const getTargetHistory = catchAsync(async (req, res) => {
+  const { userId, month, year, days } = req.query;
+  // Admin/Manager can view any user's history; others see their own
+  const targetUserId = (req.user.role === 'admin' || req.user.role === 'manager') && userId ? userId : req.user._id;
+  const data = await dashboardService.getTargetHistory(targetUserId, month, year, days);
+  res.json(new ApiResponse(httpStatus.OK, data, 'Target history fetched'));
 });
 
 const getStaffVerifications = catchAsync(async (req, res) => {
@@ -73,4 +83,4 @@ const saveCommissionOverride = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, data, 'Commission override saved'));
 });
 
-export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats, getStaffCommission, getAllStaffCommissions, saveCommissionOverride };
+export default { getStats, getRevenueChart, getStaffStats, setStaffTarget, getTargetHistory, getStaffVerifications, getStaffTodayLists, getStaffMonthlyChart, getAllStaffStats, getStaffCommission, getAllStaffCommissions, saveCommissionOverride };

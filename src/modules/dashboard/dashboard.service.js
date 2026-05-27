@@ -77,18 +77,82 @@ export const getStaffStats = async (userId, targetDate, from, to, userDepartment
   };
 };
 
-export const setStaffTarget = async (userId, target) => {
-  const date = todayDateStr();
-  // console.log('[setStaffTarget] userId:', userId, 'date:', date, 'target:', target);
-  let doc = await StaffTarget.findOne({ user: userId, date });
+export const setStaffTarget = async (userId, target, date) => {
+  const targetDate = date || todayDateStr();
+  let doc = await StaffTarget.findOne({ user: userId, date: targetDate });
   if (doc) {
     doc.target = Number(target);
     await doc.save();
   } else {
-    doc = await StaffTarget.create({ user: userId, date, target: Number(target) });
+    doc = await StaffTarget.create({ user: userId, date: targetDate, target: Number(target) });
   }
-  // console.log('[setStaffTarget] saved:', doc);
-  return { todayTarget: doc.target };
+  return { todayTarget: doc.target, date: targetDate };
+};
+
+export const getTargetHistory = async (userId, month, year, days) => {
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  const uid = new mongoose.Types.ObjectId(userId);
+  const now = new Date();
+  
+  let startDateStr, endDateStr, periodStart, periodEnd;
+  const dateList = [];
+
+  if (days) {
+    const numDays = Number(days);
+    for (let i = 0; i < numDays; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      dateList.push({
+        dateStr: d.toISOString().slice(0, 10),
+        start: new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - IST_OFFSET),
+        end: new Date(new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - IST_OFFSET).getTime() + 24 * 60 * 60 * 1000 - 1)
+      });
+    }
+    startDateStr = dateList[dateList.length - 1].dateStr;
+    endDateStr = dateList[0].dateStr;
+    periodStart = dateList[dateList.length - 1].start;
+    periodEnd = dateList[0].end;
+  } else {
+    const m = month !== undefined ? Number(month) : now.getMonth();
+    const y = year !== undefined ? Number(year) : now.getFullYear();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    periodStart = new Date(Date.UTC(y, m, 1) - IST_OFFSET);
+    periodEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59, 999) - IST_OFFSET);
+    startDateStr = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    endDateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+    
+    const isCurrentMonth = m === now.getMonth() && y === now.getFullYear();
+    const maxDay = isCurrentMonth ? now.getDate() : daysInMonth;
+    
+    for (let day = maxDay; day >= 1; day--) {
+      dateList.push({
+        dateStr: `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      });
+    }
+  }
+
+  const [targets, verifications] = await Promise.all([
+    StaffTarget.find({ user: uid, date: { $gte: startDateStr, $lte: endDateStr } }).lean(),
+    Verification.aggregate([
+      { $match: { assignedTo: uid, status: 'verified', updatedAt: { $gte: periodStart, $lte: periodEnd } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$updatedAt', timezone: '+05:30' } }, count: { $sum: 1 } } }
+    ])
+  ]);
+
+  const targetMap = {};
+  targets.forEach(t => { targetMap[t.date] = t.target; });
+  const verifiedMap = {};
+  verifications.forEach(v => { verifiedMap[v._id] = v.count; });
+
+  return dateList.map(item => {
+    const tgt = targetMap[item.dateStr] || 0;
+    const done = verifiedMap[item.dateStr] || 0;
+    return {
+      date: item.dateStr,
+      target: tgt,
+      completed: done,
+      achieved: tgt > 0 ? done >= tgt : false,
+    };
+  });
 };
 
 export const getStaffTodayLists = async (userRole, userId, targetDate, targetStaffId, from, to, userDepartments = []) => {
@@ -111,7 +175,7 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
   let sid = null;
   if (userRole === 'manager' || userRole === 'admin') {
     if (targetStaffId) sid = new mongoose.Types.ObjectId(targetStaffId);
-  } else {
+  } else if (userRole === 'sales') {
     sid = new mongoose.Types.ObjectId(userId);
   }
 
@@ -191,7 +255,7 @@ export const getAllStaffStats = async (targetDate) => {
 
   const User = (await import('../user/user.model.js')).default;
   const Appointment = (await import('../appointment/appointment.model.js')).default;
-  const allUsers = await User.find({ role: { $in: ['sales', 'manager', 'doctor'] }, isDeleted: false }).select('_id name phone role').lean();
+  const allUsers = await User.find({ role: { $in: ['sales', 'manager', 'doctor', 'support'] }, isDeleted: false }).select('_id name phone role').lean();
 
   const stats = await Promise.all(allUsers.map(async (u) => {
     const uid = new mongoose.Types.ObjectId(u._id);
@@ -406,7 +470,7 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     Attendance.find({ date: { $gte: start, $lte: end }, isDeleted: false }).populate('user', 'departments').lean(),
 
     User.countDocuments({ 
-      role: { $in: ['sales', 'manager'] }, 
+      role: { $in: ['sales', 'manager', 'support'] }, 
       isDeleted: false,
       ...(userDepartments?.length > 0 ? { departments: { $in: userDepartments } } : {})
     }),
