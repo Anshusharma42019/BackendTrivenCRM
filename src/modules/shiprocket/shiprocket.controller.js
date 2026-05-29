@@ -1841,3 +1841,57 @@ export const sendToVerification = catchAsync(async (req, res) => {
 
   res.json(new ApiResponse(200, task, 'Order sent to verification successfully'));
 });
+export const createManualFollowup = catchAsync(async (req, res) => {
+  const { name, phone, city, state, medicine, delivered_date, amount, department, order_id, courier_name, payment_method, pincode, address, problem } = req.body;
+  if (!name || !phone || !medicine || !delivered_date) {
+    return res.status(400).json({ status: 400, message: 'Missing required fields' });
+  }
+
+  const mockOrderId = order_id ? `${order_id}-M${Date.now()}` : `MANUAL-${Date.now()}`;
+  const d = new Date(delivered_date);
+
+  const newOrder = await Order.create({
+    order_id: mockOrderId,
+    shiprocket_order_id: Date.now(),
+    status: 'DELIVERED',
+    delivered_at: d,
+    billing_customer_name: name,
+    billing_phone: phone,
+    billing_city: city,
+    billing_state: state,
+    sub_total: Number(amount) || 0,
+    order_items: [{ name: medicine }],
+    courier_name: courier_name || '',
+    payment_method: payment_method || '',
+    billing_pincode: pincode || '',
+    billing_address: address || '',
+    problem: problem || '',
+    created_by: req.user._id,
+    auto_followups_set: true,
+  });
+
+  const settings = getFollowupSettings();
+  const total = Number(settings.total_followups) || 5;
+  const gap = Number(settings.followup_gap_days) || 6;
+
+  const followups = [];
+  let baseDate = new Date(); // Start from today for manual followups
+  for (let i = 1; i <= total; i++) {
+    if (i === 1) {
+      // 1st call is due immediately
+    } else {
+      baseDate.setDate(baseDate.getDate() + gap);
+    }
+    followups.push({
+      order_id: newOrder._id,
+      followup_number: i,
+      scheduled_date: new Date(baseDate),
+      status: 'scheduled',
+      note: (i === 1 && problem) ? problem : ''
+    });
+  }
+
+  await Followup.insertMany(followups);
+
+  res.json({ status: 200, message: 'Manual followup added successfully', data: newOrder });
+});

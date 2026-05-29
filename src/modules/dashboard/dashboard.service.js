@@ -243,22 +243,40 @@ export const getStaffVerifications = async (userId) => {
     .lean();
 };
 
-export const getAllStaffStats = async (targetDate) => {
+export const getAllStaffStats = async (targetDate, fromDate, toDate) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  let startOfDay, endOfDay;
   const target = targetDate ? new Date(targetDate) : new Date();
-  
-  const startOfDay = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
-  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+  if (fromDate && toDate) {
+    startOfDay = new Date(`${fromDate}T00:00:00.000+05:30`);
+    endOfDay = new Date(`${toDate}T23:59:59.999+05:30`);
+  } else {
+    startOfDay = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+  }
+
   const monthStart = new Date(Date.UTC(target.getFullYear(), target.getMonth(), 1) - IST_OFFSET);
   const monthEnd = new Date(Date.UTC(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59, 999) - IST_OFFSET);
   const dateStr = target.toISOString().slice(0, 10);
 
   const User = (await import('../user/user.model.js')).default;
   const Appointment = (await import('../appointment/appointment.model.js')).default;
+  const Attendance = (await import('../attendance/attendance.model.js')).default;
   const allUsers = await User.find({ role: { $in: ['sales', 'manager', 'doctor', 'support'] }, isDeleted: false }).select('_id name phone role').lean();
 
   const stats = await Promise.all(allUsers.map(async (u) => {
     const uid = new mongoose.Types.ObjectId(u._id);
+    const attendances = await Attendance.find({ user: uid, date: { $gte: startOfDay, $lte: endOfDay }, isDeleted: false }).select('checkIn checkOut workingHours').lean();
+    const workingHours = attendances.reduce((acc, curr) => {
+      let liveHours = 0;
+      if (curr.checkIn && !curr.checkOut) {
+        liveHours = (Date.now() - new Date(curr.checkIn).getTime()) / (1000 * 60 * 60);
+      }
+      return acc + (curr.workingHours || 0) + liveHours;
+    }, 0);
+    const expectedHours = 9 * Math.max(attendances.length, 1);
+    const workingPercentage = Math.min(Math.round((workingHours / expectedHours) * 100), 100);
 
     if (u.role === 'doctor') {
       const docRegex = new RegExp(u.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i');
@@ -286,15 +304,20 @@ export const getAllStaffStats = async (targetDate) => {
         rtoCount: 0,
         totalAppointments,
         completedAppointments,
-        cancelledAppointments
+        cancelledAppointments,
+        workingHours,
+        workingPercentage
       };
     }
     
     // For delivered orders, we need lead IDs assigned to this staff
     const staffLeads = await Lead.find({ assignedTo: uid, isDeleted: { $ne: true } }).distinct('_id');
-    // console.log(`[getAllStaffStats] Staff: ${u.name}, Leads: ${staffLeads.length}`);
-
-    const [
+    // For verification metrics on sales, we only want leads added in the current period
+    const staffLeadsPeriod = await Lead.find({ 
+      assignedTo: uid, 
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
+      isDeleted: { $ne: true } 
+    }).distinct('_id');    const [
       todayVerifications, 
       monthVerifications, 
       pendingTasks, 
@@ -310,50 +333,68 @@ export const getAllStaffStats = async (targetDate) => {
       readyToShipmentCount,
       deliveredCount,
       rtoCount,
+      monthDispatchedCount,
+      monthDeliveredCount,
+      monthRtoCount,
       assignedVerifications
     ] = await Promise.all([
       Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
       Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: monthEnd } }),
       Task.countDocuments({ assignedTo: uid, status: 'pending', isDeleted: false }),
-      StaffTarget.findOne({ user: uid, date: dateStr }).lean(),
+      StaffTarget.find({ user: uid, date: { $gte: fromDate || dateStr, $lte: toDate || dateStr } }).lean(),
       Cnp.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
       Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Verification.countDocuments({ assignedTo: uid, status: 'verified', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
+      // VR: verifications this person completed today (they are set as assignedTo when they verify)
       Verification.countDocuments({ 
-        assignedTo: uid, 
-        status: 'on_hold',
-        $or: [
-          { onHoldAt: { $gte: startOfDay, $lte: endOfDay } },
-          { onHoldAt: null, updatedAt: { $gte: startOfDay, $lte: endOfDay } }
-        ]
+        assignedTo: uid,
+        status: 'verified',
+        updatedAt: { $gte: startOfDay, $lte: endOfDay }
       }),
-      Task.countDocuments({ assignedTo: uid, status: 'ready_to_shipment', isDeleted: false, updatedAt: { $gte: monthStart, $lte: monthEnd } }),
+      Verification.countDocuments({ 
+        assignedTo: uid,
+        status: 'on_hold',
+        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+      }),
+      // DR denominator: total shiprocket orders for this person's leads in the period (dispatched)
+      Order.countDocuments({ 
+        lead_id: { $in: staffLeads },
+        status: { $not: /^(new|pending|cancelled)$/i },
+        createdAt: { $gte: startOfDay, $lte: endOfDay }
+      }),
+      // Daily actuals: how many were delivered TODAY
       Order.countDocuments({ 
         lead_id: { $in: staffLeads }, 
         status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
-        $or: [
-          { delivered_at: { $gte: monthStart, $lte: monthEnd } },
-          { delivered_at: null, status_updated_at: { $gte: monthStart, $lte: monthEnd } },
-          { delivered_at: null, status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
-        ],
+        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+      }),
+      // Daily actuals: how many were RTO TODAY
+      Order.countDocuments({
+        lead_id: { $in: staffLeads },
+        status: { $regex: /^rto/i },
+        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+      }),
+      // Monthly cohort for DR/RTO always
+      Order.countDocuments({ 
+        lead_id: { $in: staffLeads },
+        status: { $not: /^(new|pending|cancelled)$/i },
+        createdAt: { $gte: monthStart, $lte: monthEnd }
+      }),
+      Order.countDocuments({ 
+        lead_id: { $in: staffLeads }, 
+        status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+        createdAt: { $gte: monthStart, $lte: monthEnd }
       }),
       Order.countDocuments({
         lead_id: { $in: staffLeads },
         status: { $regex: /^rto/i },
-        $or: [
-          { status_updated_at: { $gte: monthStart, $lte: monthEnd } },
-          { status_updated_at: null, createdAt: { $gte: monthStart, $lte: monthEnd } },
-        ],
+        createdAt: { $gte: monthStart, $lte: monthEnd }
       }),
-      Verification.countDocuments({ 
-        assignedTo: uid, 
-        createdAt: { $gte: startOfDay, $lte: endOfDay }, 
-        isDeleted: { $ne: true } 
-      })
+      // For Support: total verifications ever assigned to them (their queue)
+      Verification.countDocuments({ assignedTo: uid, isDeleted: { $ne: true } })
     ]);
     // console.log(`[getAllStaffStats] Staff: ${u.name}, Ready: ${readyToShipmentCount}, Delivered: ${deliveredCount}`);
     return {
@@ -361,7 +402,7 @@ export const getAllStaffStats = async (targetDate) => {
       todayVerifications,
       monthVerifications,
       pendingTasks,
-      todayTarget: targetDoc?.target || 0,
+      todayTarget: Array.isArray(targetDoc) ? targetDoc.reduce((sum, t) => sum + (t.target || 0), 0) : 0,
       todayCnp,
       todayCallAgain,
       todayInterested,
@@ -373,7 +414,12 @@ export const getAllStaffStats = async (targetDate) => {
       readyToShipmentCount,
       deliveredCount,
       rtoCount,
-      assignedVerifications
+      monthDispatchedCount,
+      monthDeliveredCount,
+      monthRtoCount,
+      assignedVerifications,
+      workingHours,
+      workingPercentage
     };
   }));
 

@@ -61,8 +61,8 @@ const getStaffMonthlyChart = catchAsync(async (req, res) => {
 });
 
 const getAllStaffStats = catchAsync(async (req, res) => {
-  const { date } = req.query;
-  const data = await dashboardService.getAllStaffStats(date);
+  const { date, from, to } = req.query;
+  const data = await dashboardService.getAllStaffStats(date, from, to);
   res.json(new ApiResponse(httpStatus.OK, data, 'All staff stats fetched'));
 });
 

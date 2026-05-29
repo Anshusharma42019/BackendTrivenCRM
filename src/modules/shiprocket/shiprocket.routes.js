@@ -39,6 +39,7 @@ router.patch('/orders/:id/notes', auth(), c.saveOrderNote);
 router.patch('/orders/:id/contact', auth(), c.updateOrderContact);
 router.get('/orders/:id/activity', auth(), c.getOrderActivity);
 router.post('/orders/:id/send-to-verification', auth(), c.sendToVerification);
+router.post('/orders/manual-followup', auth(), c.createManualFollowup);
 
 // ── Courier ───────────────────────────────────────────────────────────────────
 router.get('/courier/serviceability', auth(), c.checkServiceability);
@@ -73,6 +74,7 @@ router.get('/wallet/transactions', auth(), c.getWalletTransactions);
 // ── NDR ───────────────────────────────────────────────────────────────────────
 router.get('/ndr', auth(), c.getNDR);
 router.post('/ndr/action', auth(), c.ndrAction);
+
 
 // ── Legacy aliases ────────────────────────────────────────────────────────────
 router.post('/login', auth(), c.login);

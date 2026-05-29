@@ -48,6 +48,7 @@ const orderSchema = new mongoose.Schema({
   next_follow_up: Date,
   delivered_at: { type: Date, index: true },
   auto_followups_set: { type: Boolean, default: false },
+  problem: { type: String, default: '' },
   notes: { type: String, default: '' },
   comments: [{
     text: { type: String, required: true },

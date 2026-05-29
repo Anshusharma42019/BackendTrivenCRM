@@ -332,9 +332,7 @@ router.patch('/:id', auth('admin', 'manager', 'sales', 'support'), departmentFil
     if (status) {
       update.status = status;
       if (!update.assignedTo) {
-        if (['admin', 'manager'].includes(req.user.role) && recordBefore.assignedTo) {
-          // Do not overwrite if admin is verifying on someone's behalf
-        } else {
+        if (!recordBefore.assignedTo) {
           update.assignedTo = req.user._id;
         }
       }
