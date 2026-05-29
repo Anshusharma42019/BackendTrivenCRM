@@ -81,6 +81,30 @@ export const setStaffTarget = async (userId, target, date) => {
   const targetDate = date || todayDateStr();
   let doc = await StaffTarget.findOne({ user: userId, date: targetDate });
   if (doc) {
+    if (Number(target) < doc.target) {
+      const ApiError = (await import('../../utils/ApiError.js')).default;
+      throw new ApiError(400, 'You cannot decrease your target once set. You can only increase it.');
+    }
+    
+    if (Number(target) > doc.target) {
+      const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+      const tDate = new Date(targetDate);
+      const startOfDay = new Date(Date.UTC(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()) - IST_OFFSET);
+      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+      
+      const Verification = (await import('../verification/verification.model.js')).default;
+      const completedCount = await Verification.countDocuments({
+        assignedTo: userId,
+        status: 'verified',
+        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+      });
+      
+      if (completedCount < doc.target) {
+        const ApiError = (await import('../../utils/ApiError.js')).default;
+        throw new ApiError(400, `You cannot increase your target until you achieve your current target of ${doc.target}. (Currently achieved: ${completedCount})`);
+      }
+    }
+
     doc.target = Number(target);
     await doc.save();
   } else {
