@@ -33,10 +33,12 @@ const requireCheckedIn = catchAsync(async (req, res, next) => {
   }
 
   // Check target
-  const todayStr = getTodayDateStr();
-  const target = await StaffTarget.findOne({ user: req.user._id, date: todayStr });
-  if (!target || target.target < 1) {
-    throw new ApiError(403, 'You must set today\'s target before performing this action');
+  if (!['manager', 'logistics', 'logistic', 'admin'].includes(req.user.role)) {
+    const todayStr = getTodayDateStr();
+    const target = await StaffTarget.findOne({ user: req.user._id, date: todayStr });
+    if (!target || target.target < 1) {
+      throw new ApiError(403, 'You must set today\'s target before performing this action');
+    }
   }
 
   next();
