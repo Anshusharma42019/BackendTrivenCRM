@@ -1086,6 +1086,25 @@ export const getOrdersWithFollowUps = catchAsync(async (req, res) => {
     if (!lead && o.billing_pincode) lead = byPin[String(o.billing_pincode).trim()];
     return { ...o, lead_id: o.lead_id || lead, billing_phone: lead?.phone || o.billing_phone, followups };
   });
+
+  const leadIds = enriched.map(o => o.lead_id?._id || o.lead_id).filter(Boolean);
+  const allOrdersForLeads = await Order.find({ lead_id: { $in: leadIds } })
+    .select('_id lead_id createdAt')
+    .sort({ createdAt: 1 })
+    .lean();
+
+  const seqMap = {};
+  const leadOrderCount = {};
+  for (const oc of allOrdersForLeads) {
+    const lId = String(oc.lead_id);
+    if (!leadOrderCount[lId]) leadOrderCount[lId] = 0;
+    leadOrderCount[lId]++;
+    seqMap[String(oc._id)] = leadOrderCount[lId];
+  }
+
+  enriched.forEach(o => {
+    o.kit_number = seqMap[String(o._id)] || 1;
+  });
   res.json(new ApiResponse(200, enriched, 'Orders with follow-ups fetched'));
 });
 
@@ -1179,6 +1198,25 @@ export const getCompletedFollowUps = catchAsync(async (req, res) => {
     }
     if (!lead && o.billing_pincode) lead = byPin[String(o.billing_pincode).trim()];
     return { ...o, lead_id: o.lead_id || lead, billing_phone: lead?.phone || o.billing_phone, followups };
+  });
+
+  const leadIds = enriched.map(o => o.lead_id?._id || o.lead_id).filter(Boolean);
+  const allOrdersForLeads = await Order.find({ lead_id: { $in: leadIds } })
+    .select('_id lead_id createdAt')
+    .sort({ createdAt: 1 })
+    .lean();
+
+  const seqMap = {};
+  const leadOrderCount = {};
+  for (const oc of allOrdersForLeads) {
+    const lId = String(oc.lead_id);
+    if (!leadOrderCount[lId]) leadOrderCount[lId] = 0;
+    leadOrderCount[lId]++;
+    seqMap[String(oc._id)] = leadOrderCount[lId];
+  }
+
+  enriched.forEach(o => {
+    o.kit_number = seqMap[String(o._id)] || 1;
   });
 
   res.json(new ApiResponse(200, { data: enriched, total, page: Number(page), per_page: Number(per_page) }, 'Completed follow-ups fetched'));

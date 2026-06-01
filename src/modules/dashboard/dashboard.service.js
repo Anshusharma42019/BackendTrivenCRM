@@ -15,7 +15,11 @@ export const getStaffStats = async (userId, targetDate, from, to, userDepartment
   let start, end;
   const target = targetDate ? new Date(targetDate) : new Date();
 
-  if (from && to) {
+  const isAllTime = from === 'all' || to === 'all';
+  if (isAllTime) {
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  } else if (from && to) {
     start = new Date(`${from}T00:00:00.000+05:30`);
     end = new Date(`${to}T23:59:59.999+05:30`);
   } else {
@@ -32,6 +36,10 @@ export const getStaffStats = async (userId, targetDate, from, to, userDepartment
     filter.department = { $in: userDepartments };
   }
 
+  const dateFilter = isAllTime ? {} : { createdAt: { $gte: start, $lte: end } };
+  const updateDateFilter = isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } };
+  const monthDateFilter = isAllTime ? {} : { createdAt: { $gte: monthStart, $lte: end } };
+
   const [
     todayVerifications, 
     monthVerifications, 
@@ -46,18 +54,18 @@ export const getStaffStats = async (userId, targetDate, from, to, userDepartment
     onHoldCount,
     todayClosedLost
   ] = await Promise.all([
-    Verification.countDocuments({ ...filter, createdAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ ...filter, createdAt: { $gte: monthStart, $lte: end } }),
+    Verification.countDocuments({ ...filter, ...dateFilter }),
+    Verification.countDocuments({ ...filter, ...monthDateFilter }),
     Task.countDocuments({ ...filter, status: 'pending', isDeleted: false }),
     StaffTarget.findOne({ user: uid, date: dateStr }),
-    Cnp.countDocuments({ ...filter, updatedAt: { $gte: start, $lte: end } }),
-    CallAgain.countDocuments({ ...filter, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ ...filter, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ ...filter, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Lead.countDocuments({ ...filter, createdAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ ...filter, status: 'verified', updatedAt: { $gte: start, $lte: end } }),
-    Verification.countDocuments({ ...filter, status: 'on_hold', updatedAt: { $gte: start, $lte: end } }),
-    Lead.countDocuments({ ...filter, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
+    Cnp.countDocuments({ ...filter, ...updateDateFilter }),
+    CallAgain.countDocuments({ ...filter, ...updateDateFilter }),
+    Task.countDocuments({ ...filter, status: 'interested', isDeleted: false, ...updateDateFilter }),
+    Task.countDocuments({ ...filter, status: 'cancel_call', isDeleted: false, ...updateDateFilter }),
+    Lead.countDocuments({ ...filter, ...dateFilter }),
+    Verification.countDocuments({ ...filter, status: 'verified', ...updateDateFilter }),
+    Verification.countDocuments({ ...filter, status: 'on_hold', ...updateDateFilter }),
+    Lead.countDocuments({ ...filter, status: 'closed_lost', ...updateDateFilter }),
   ]);
 
   return {
@@ -183,7 +191,12 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   let start, end;
 
-  if (from && to) {
+  const isAllTime = from === 'all' || to === 'all';
+  if (isAllTime) {
+    const target = targetDate ? new Date(targetDate) : new Date();
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  } else if (from && to) {
     start = new Date(`${from}T00:00:00.000+05:30`);
     end = new Date(`${to}T23:59:59.999+05:30`);
   } else {
@@ -192,9 +205,9 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
     end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
   }
 
-  const filter = { createdAt: { $gte: start, $lte: end } };
-  const updateFilter = { updatedAt: { $gte: start, $lte: end } };
-  const taskFilter = { isDeleted: false, updatedAt: { $gte: start, $lte: end } };
+  const filter = isAllTime ? {} : { createdAt: { $gte: start, $lte: end } };
+  const updateFilter = isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } };
+  const taskFilter = { isDeleted: false, ...(isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } }) };
 
   let sid = null;
   if (userRole === 'manager' || userRole === 'admin') {
@@ -224,7 +237,7 @@ export const getStaffTodayLists = async (userRole, userId, targetDate, targetSta
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
     Task.find({ ...taskFilter, status: 'cancel_call' })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
-    Verification.find({ ...filter, status: 'on_hold', updatedAt: { $gte: start, $lte: end } })
+    Verification.find({ ...filter, status: 'on_hold', ...(isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } }) })
       .populate('lead', 'name phone').sort({ updatedAt: -1 }).limit(100).lean(),
   ]);
 
@@ -272,7 +285,11 @@ export const getAllStaffStats = async (targetDate, fromDate, toDate) => {
   let startOfDay, endOfDay;
   const target = targetDate ? new Date(targetDate) : new Date();
 
-  if (fromDate && toDate) {
+  const isAllTime = fromDate === 'all' || toDate === 'all';
+  if (isAllTime) {
+    startOfDay = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+  } else if (fromDate && toDate) {
     startOfDay = new Date(`${fromDate}T00:00:00.000+05:30`);
     endOfDay = new Date(`${toDate}T23:59:59.999+05:30`);
   } else {
@@ -339,9 +356,11 @@ export const getAllStaffStats = async (targetDate, fromDate, toDate) => {
     // For verification metrics on sales, we only want leads added in the current period
     const staffLeadsPeriod = await Lead.find({ 
       assignedTo: uid, 
-      createdAt: { $gte: startOfDay, $lte: endOfDay },
+      ...(isAllTime ? {} : { createdAt: { $gte: startOfDay, $lte: endOfDay } }),
       isDeleted: { $ne: true } 
-    }).distinct('_id');    const [
+    }).distinct('_id');
+
+    const [
       todayVerifications, 
       monthVerifications, 
       pendingTasks, 
@@ -362,44 +381,44 @@ export const getAllStaffStats = async (targetDate, fromDate, toDate) => {
       monthRtoCount,
       assignedVerifications
     ] = await Promise.all([
-      Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Verification.countDocuments({ assignedTo: uid, createdAt: { $gte: monthStart, $lte: monthEnd } }),
+      Verification.countDocuments({ assignedTo: uid, ...(isAllTime ? {} : { createdAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      Verification.countDocuments({ assignedTo: uid, ...(isAllTime ? {} : { createdAt: { $gte: monthStart, $lte: monthEnd } }) }),
       Task.countDocuments({ assignedTo: uid, status: 'pending', isDeleted: false }),
       StaffTarget.find({ user: uid, date: { $gte: fromDate || dateStr, $lte: toDate || dateStr } }).lean(),
-      Cnp.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      CallAgain.countDocuments({ assignedTo: uid, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', updatedAt: { $gte: startOfDay, $lte: endOfDay } }),
-      Lead.countDocuments({ assignedTo: uid, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
+      Cnp.countDocuments({ assignedTo: uid, ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      CallAgain.countDocuments({ assignedTo: uid, ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      Task.countDocuments({ assignedTo: uid, status: 'interested', isDeleted: false, ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      Task.countDocuments({ assignedTo: uid, status: 'cancel_call', isDeleted: false, ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      Lead.countDocuments({ assignedTo: uid, status: 'closed_lost', ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } }) }),
+      Lead.countDocuments({ assignedTo: uid, ...(isAllTime ? {} : { createdAt: { $gte: startOfDay, $lte: endOfDay } }) }),
       // VR: verifications this person completed today (they are set as assignedTo when they verify)
       Verification.countDocuments({ 
         assignedTo: uid,
         status: 'verified',
-        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+        ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } })
       }),
       Verification.countDocuments({ 
         assignedTo: uid,
         status: 'on_hold',
-        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+        ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } })
       }),
       // DR denominator: total shiprocket orders for this person's leads in the period (dispatched)
       Order.countDocuments({ 
         lead_id: { $in: staffLeads },
         status: { $not: /^(new|pending|cancelled)$/i },
-        createdAt: { $gte: startOfDay, $lte: endOfDay }
+        ...(isAllTime ? {} : { createdAt: { $gte: startOfDay, $lte: endOfDay } })
       }),
       // Daily actuals: how many were delivered TODAY
       Order.countDocuments({ 
         lead_id: { $in: staffLeads }, 
         status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
-        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+        ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } })
       }),
       // Daily actuals: how many were RTO TODAY
       Order.countDocuments({
         lead_id: { $in: staffLeads },
         status: { $regex: /^rto/i },
-        updatedAt: { $gte: startOfDay, $lte: endOfDay }
+        ...(isAllTime ? {} : { updatedAt: { $gte: startOfDay, $lte: endOfDay } })
       }),
       // Monthly cohort for DR/RTO always
       Order.countDocuments({ 
@@ -466,10 +485,23 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     aggMatch.department = { $in: userDepartments };
   }
 
+  const rtsAggMatch = {};
+  if (userRole === 'sales') {
+    rtsAggMatch.assignedTo = userId;
+  }
+  if (userDepartments && userDepartments.length > 0) {
+    rtsAggMatch.department = { $in: userDepartments };
+  }
+
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   let start, end;
 
-  if (from && to) {
+  const isAllTime = from === 'all' || to === 'all';
+  if (isAllTime) {
+    const target = targetDate ? new Date(targetDate) : new Date();
+    start = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - IST_OFFSET);
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+  } else if (from && to) {
     start = new Date(`${from}T00:00:00.000+05:30`);
     end = new Date(`${to}T23:59:59.999+05:30`);
   } else {
@@ -480,12 +512,17 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
 
   const Attendance = (await import('../attendance/attendance.model.js')).default;
   const User = (await import('../user/user.model.js')).default;
+  const ReadyToShipment = (await import('../readytoshipment/readytoshipment.model.js')).default;
+
+  const dateFilter = isAllTime ? {} : { createdAt: { $gte: start, $lte: end } };
+  const updateDateFilter = isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } };
 
   const [
     totalLeads,
     newLeadsToday,
     convertedLeads,
     readyToShipmentCount,
+    readyToShipBreakdown,
     revenueResult,
     funnelData,
     sourceData,
@@ -500,18 +537,43 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
   ] = await Promise.all([
     Lead.countDocuments(countFilter),
 
-    Lead.countDocuments({ ...countFilter, createdAt: { $gte: start, $lte: end } }),
+    Lead.countDocuments({ ...countFilter, ...dateFilter }),
 
     Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
 
-    Task.countDocuments({ 
+    ReadyToShipment.countDocuments({ 
       ...countFilter,
-      status: 'ready_to_shipment', 
-      isDeleted: false
+      sentToShiprocket: { $ne: true },
+      ...(isAllTime ? {} : { createdAt: { $gte: start, $lte: end } })
     }),
+    
+    ReadyToShipment.aggregate([
+      { $match: { ...rtsAggMatch, sentToShiprocket: { $ne: true }, ...(isAllTime ? {} : { createdAt: { $gte: start, $lte: end } }) } },
+      {
+        $lookup: {
+          from: 'leads',
+          localField: 'lead',
+          foreignField: '_id',
+          as: 'leadDoc'
+        }
+      },
+      { $unwind: '$leadDoc' },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $or: [{ $eq: ['$leadDoc.status', 'old'] }, { $ifNull: ['$leadDoc.pending_reorder_source', false] }] },
+              'old',
+              'new'
+            ]
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]),
 
     Lead.aggregate([
-      { $match: { ...aggMatch, status: 'closed_won', updatedAt: { $gte: start, $lte: end } } },
+      { $match: { ...aggMatch, status: 'closed_won', ...(isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } }) } },
       { $group: { _id: null, total: { $sum: '$revenue' } } },
     ]),
 
@@ -545,11 +607,14 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
       ...(userDepartments?.length > 0 ? { departments: { $in: userDepartments } } : {})
     }),
 
-    Cnp.countDocuments({ ...countFilter, updatedAt: { $gte: start, $lte: end } }),
-    CallAgain.countDocuments({ ...countFilter, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ ...countFilter, status: 'interested', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
-    Task.countDocuments({ ...countFilter, status: 'cancel_call', isDeleted: false, updatedAt: { $gte: start, $lte: end } }),
+    Cnp.countDocuments({ ...countFilter, ...updateDateFilter }),
+    CallAgain.countDocuments({ ...countFilter, ...updateDateFilter }),
+    Task.countDocuments({ ...countFilter, status: 'interested', isDeleted: false, ...updateDateFilter }),
+    Task.countDocuments({ ...countFilter, status: 'cancel_call', isDeleted: false, ...updateDateFilter }),
   ]);
+
+  const newReadyToShipCount = readyToShipBreakdown?.find(b => b._id === 'new')?.count || 0;
+  const oldReadyToShipCount = readyToShipBreakdown?.find(b => b._id === 'old')?.count || 0;
 
   const stageOrder = ['new', 'contacted', 'interested', 'follow_up', 'closed_won', 'closed_lost'];
   const funnelMap = Object.fromEntries(funnelData.map((f) => [f._id, f.count]));
@@ -577,14 +642,111 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     todayCallAgain,
     todayInterested,
     todayNotInterested,
-    todayClosedLost: await Lead.countDocuments({ ...countFilter, status: 'closed_lost', updatedAt: { $gte: start, $lte: end } }),
+    todayClosedLost: await Lead.countDocuments({ ...countFilter, status: 'closed_lost', ...updateDateFilter }),
   };
+
+  const staffLeads = await Lead.find(countFilter).distinct('_id');
+
+  // New/Old Orders: count ALL orders created in the period (not just delivered)
+  const allOrderFilter = isAllTime ? {} : {
+    createdAt: { $gte: start, $lte: end }
+  };
+  if (userRole === 'sales' || (userDepartments && userDepartments.length > 0)) {
+    allOrderFilter.lead_id = { $in: staffLeads };
+  }
+
+  // Delivered stats: count orders delivered in the period
+  const deliveredFilter = {
+    status: { $in: ['DELIVERED', 'Delivered', 'delivered'] },
+    ...(isAllTime ? {} : {
+      $or: [
+        { delivered_at: { $gte: start, $lte: end } },
+        { delivered_at: null, status_updated_at: { $gte: start, $lte: end } },
+        { delivered_at: null, status_updated_at: null, createdAt: { $gte: start, $lte: end } },
+      ]
+    })
+  };
+  if (userRole === 'sales' || (userDepartments && userDepartments.length > 0)) {
+    deliveredFilter.lead_id = { $in: staffLeads };
+  }
+
+  const [orderBreakdown, deliveredBreakdown, deliveredRevenueResult] = await Promise.all([
+    Order.aggregate([
+      { $match: allOrderFilter },
+      {
+        $lookup: {
+          from: 'leads',
+          localField: 'lead_id',
+          foreignField: '_id',
+          as: 'leadDoc'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              {
+                $or: [
+                  { $ifNull: ['$source_order_id', false] },
+                  { $eq: [{ $arrayElemAt: ['$leadDoc.status', 0] }, 'old'] }
+                ]
+              },
+              'old',
+              'new'
+            ]
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]),
+    Order.aggregate([
+      { $match: deliveredFilter },
+      {
+        $lookup: {
+          from: 'leads',
+          localField: 'lead_id',
+          foreignField: '_id',
+          as: 'leadDoc'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              {
+                $or: [
+                  { $ifNull: ['$source_order_id', false] },
+                  { $eq: [{ $arrayElemAt: ['$leadDoc.status', 0] }, 'old'] }
+                ]
+              },
+              'old',
+              'new'
+            ]
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]),
+    Order.aggregate([
+      { $match: deliveredFilter },
+      { $group: { _id: null, total: { $sum: '$sub_total' } } },
+    ]),
+  ]);
+
+  const newOrdersCount = orderBreakdown.find(o => o._id === 'new')?.count || 0;
+  const oldOrdersCount = orderBreakdown.find(o => o._id === 'old')?.count || 0;
+
+  const newDeliveredCount = deliveredBreakdown.find(o => o._id === 'new')?.count || 0;
+  const oldDeliveredCount = deliveredBreakdown.find(o => o._id === 'old')?.count || 0;
+  const deliveredCount = newDeliveredCount + oldDeliveredCount;
 
   return {
     totalLeads,
     newLeadsToday,
     convertedLeads,
     readyToShipmentCount,
+    newReadyToShipCount,
+    oldReadyToShipCount,
     revenue: revenueResult[0]?.total || 0,
     conversionRate: totalLeads ? Math.round((convertedLeads / totalLeads) * 100) : 0,
     salesFunnel,
@@ -592,6 +754,12 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     tasks: { pending: pendingTasks, overdue: overdueTasks },
     attendance: attendanceStats,
     activity: activityStats,
+    newOrdersCount,
+    oldOrdersCount,
+    deliveredCount,
+    newDeliveredCount,
+    oldDeliveredCount,
+    deliveredRevenue: deliveredRevenueResult[0]?.total || 0,
   };
 };
 

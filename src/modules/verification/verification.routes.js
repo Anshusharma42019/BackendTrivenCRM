@@ -25,7 +25,7 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
       .populate('assignedTo', 'name email departments')
       .populate({
         path: 'lead',
-        select: 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department createdBy',
+        select: 'name phone status address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem department createdBy pending_reorder_source',
         populate: { path: 'createdBy', select: 'name role' }
       })
       .populate('task', 'department')
@@ -66,6 +66,20 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
     } catch (backfillErr) {
       console.error('[Verification] backfill relief_percentage error:', backfillErr.message);
     }
+
+    const leadIds = records.map(r => r.lead?._id || r.lead).filter(Boolean);
+    const { Order } = (await import('../shiprocket/models/order.model.js'));
+    const orderCounts = await Order.aggregate([
+      { $match: { lead_id: { $in: leadIds } } },
+      { $group: { _id: '$lead_id', count: { $sum: 1 } } }
+    ]);
+    const countMap = {};
+    for (const oc of orderCounts) countMap[String(oc._id)] = oc.count;
+
+    records.forEach(r => {
+      const lId = String(r.lead?._id || r.lead);
+      r.kit_number = (countMap[lId] || 0) + 1;
+    });
 
     res.json({ status: 200, data: records });
   } catch (e) {
@@ -253,7 +267,7 @@ router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentF
       .populate('assignedTo', 'name email departments')
       .populate({
         path: 'lead',
-        select: 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem createdBy',
+        select: 'name phone status onHoldReason onHoldUntil address houseNo cityVillage cityVillageType postOffice landmark district state pincode problem createdBy pending_reorder_source',
         populate: { path: 'createdBy', select: 'name role' }
       })
       .sort({ onHoldUntil: 1 })
@@ -306,7 +320,22 @@ router.get('/on-hold', auth('admin', 'manager', 'sales', 'support'), departmentF
       _isPipelineOnly: true,
     }));
 
-    res.json({ status: 200, data: [...verificationRecords, ...pipelineRecords] });
+    const allRecords = [...verificationRecords, ...pipelineRecords];
+    const { Order } = (await import('../shiprocket/models/order.model.js'));
+    const leadIds = allRecords.map(r => r.lead?._id || r.lead).filter(Boolean);
+    const orderCounts = await Order.aggregate([
+      { $match: { lead_id: { $in: leadIds } } },
+      { $group: { _id: '$lead_id', count: { $sum: 1 } } }
+    ]);
+    const countMap = {};
+    for (const oc of orderCounts) countMap[String(oc._id)] = oc.count;
+
+    allRecords.forEach(r => {
+      const lId = String(r.lead?._id || r.lead);
+      r.kit_number = (countMap[lId] || 0) + 1;
+    });
+
+    res.json({ status: 200, data: allRecords });
   } catch (e) {
     res.status(500).json({ status: 500, message: e.message });
   }
