@@ -47,7 +47,7 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
     const deptUpdates = records.filter(r => !r.department);
     if (deptUpdates.length > 0) {
       await Promise.all(deptUpdates.map(r => {
-        const dept = r.assignedTo?.departments?.[0] || r.lead?.department || 'migraine';
+        const dept = r.lead?.department || r.assignedTo?.departments?.[0] || null;
         r.department = dept;
         return Cnp.updateOne({ _id: r._id }, { $set: { department: dept } });
       }));

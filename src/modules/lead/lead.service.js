@@ -91,14 +91,26 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
     // If regular staff (sales/support) manually adds a lead, assign it to themselves.
     if (createdBy && creatorRole !== 'admin' && creatorRole !== 'manager') {
       data.assignedTo = createdBy;
-      if (userDepartments && userDepartments.length > 0) {
+      // Only override department if the user didn't explicitly select one in the form
+      if (!data.department && userDepartments && userDepartments.length > 0) {
         data.department = userDepartments[0] || null;
       }
     } else {
       data.assignedTo = await getNextSalesUser(data.department);
+      // Fallback: If no sales user is available for this department
+      if (!data.assignedTo) {
+        if (createdBy) {
+          data.assignedTo = createdBy; // Fallback to creator
+        } else {
+          // If createdBy is null (e.g. from website form), fallback to an admin
+          const defaultAdmin = await User.findOne({ role: 'admin', isDeleted: false }).select('_id').lean();
+          if (defaultAdmin) data.assignedTo = defaultAdmin._id;
+        }
+      }
     }
   } else if (creatorRole === 'sales' && userDepartments && userDepartments.length > 0) {
-    data.department = userDepartments[0] || null;
+    // Only fall back to user's department if not provided in form
+    if (!data.department) data.department = userDepartments[0] || null;
   }
 
   if (!data.department) delete data.department;
@@ -408,6 +420,7 @@ export const markCNP = async (leadId, userRole, userId) => {
         assignedTo: task.assignedTo,
         lead: leadId,
         dueDate: task.dueDate,
+        department: lead.department || task.department || null,
         cnpCount: 1,
         lastCnpAt: new Date(),
       },
@@ -435,6 +448,7 @@ export const markCNP = async (leadId, userRole, userId) => {
         title: lead.name,
         assignedTo: lead.assignedTo,
         lead: leadId,
+        department: lead.department || null,
         cnpCount: 1,
         lastCnpAt: new Date(),
       },
