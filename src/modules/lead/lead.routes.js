@@ -11,6 +11,9 @@ const router = express.Router();
 // Public route — no token required (website inquiry form)
 router.post('/submit', validate(leadValidation.createLead), leadController.submitLead);
 
+// Public route — department-specific (piles / migraine website forms)
+router.post('/submit/:department', validate(leadValidation.createLead), leadController.submitLeadForDepartment);
+
 router.get('/test-verifications', async (req, res) => {
   try {
     const Verification = (await import('../../modules/verification/verification.model.js')).default;

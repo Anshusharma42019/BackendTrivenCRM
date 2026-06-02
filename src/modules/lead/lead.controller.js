@@ -16,6 +16,18 @@ const submitLead = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).json(new ApiResponse(httpStatus.CREATED, lead, 'Inquiry submitted successfully'));
 });
 
+// Public route — department-specific form (e.g. /submit/piles or /submit/migraine)
+const submitLeadForDepartment = catchAsync(async (req, res) => {
+  const { department } = req.params;
+  const allowedDepts = ['migraine', 'piles'];
+  if (!allowedDepts.includes(department)) {
+    return res.status(400).json({ message: 'Invalid department' });
+  }
+  const body = { ...req.body, department }; // force department from URL
+  const lead = await leadService.createLead(body, null);
+  res.status(httpStatus.CREATED).json(new ApiResponse(httpStatus.CREATED, lead, 'Inquiry submitted successfully'));
+});
+
 const getLeads = catchAsync(async (req, res) => {
   const result = await leadService.getLeads(req.query, req.query, req.user.role, req.user._id, req.userDepartments);
   res.json(new ApiResponse(httpStatus.OK, result, 'Leads fetched'));
@@ -136,4 +148,4 @@ const exportLeads = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, leads, 'Leads exported'));
 });
 
-export default { createLead, submitLead, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone, exportLeads };
+export default { createLead, submitLead, submitLeadForDepartment, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone, exportLeads };

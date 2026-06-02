@@ -15,7 +15,18 @@ const notifyAdmins = async (data) => {
   await Promise.all(admins.map(a => createNotification({ ...data, user: a._id }).catch(() => {})));
 };
 
-// True equal distribution — assign to sales user with fewest active leads
+// Auto-detect department from the problem description text
+const detectDepartmentFromProblem = (problem) => {
+  if (!problem) return null;
+  const text = problem.toLowerCase();
+  const migraineKeywords = ['migraine', 'माइग्रेन', 'migrain', 'headache', 'sir dard', 'sir me dard', 'sar dard', 'aadha sir'];
+  const pilesKeywords = ['piles', 'बवासीर', 'bawasir', 'bavasir', 'hemorrhoid', 'bleeding piles', 'fissure', 'fistula', 'bhagander'];
+  if (migraineKeywords.some(kw => text.includes(kw))) return 'migraine';
+  if (pilesKeywords.some(kw => text.includes(kw))) return 'piles';
+  return null;
+};
+
+// TRUE Round Robin — assigns to the user who was assigned a lead least recently
 export const getNextSalesUser = async (department = null) => {
   const query = { role: 'sales', isDeleted: false };
   if (department) {
@@ -32,10 +43,13 @@ export const getNextSalesUser = async (department = null) => {
 
   const activeAttendances = await Attendance.find({
     user: { $in: salesUsers.map(u => u._id) },
-    date: { $gte: startOfDay, $lte: endOfDay },
     checkIn: { $ne: null },
     checkOut: null,
-    isDeleted: false
+    isDeleted: false,
+    $or: [
+      { date: { $gte: startOfDay, $lte: endOfDay } },
+      { checkIn: { $gte: startOfDay } },
+    ],
   });
 
   const activeUserIds = activeAttendances.map(a => a.user.toString());
@@ -44,25 +58,22 @@ export const getNextSalesUser = async (department = null) => {
   // If no one is checked in, fallback to all sales users
   const eligibleUsers = activeSalesUsers.length > 0 ? activeSalesUsers : salesUsers;
 
-  // Count active leads per eligible user
-  const counts = await Lead.aggregate([
-    { $match: { isDeleted: false, assignedTo: { $in: eligibleUsers.map(u => u._id) } } },
-    { $group: { _id: '$assignedTo', count: { $sum: 1 } } },
-  ]);
-
-  const countMap = {};
-  counts.forEach(c => { countMap[String(c._id)] = c.count; });
-
-  // Pick user with fewest leads (ties broken by earliest created)
-  let minUser = eligibleUsers[0];
-  let minCount = countMap[String(eligibleUsers[0]._id)] ?? 0;
-
-  for (const u of eligibleUsers) {
-    const c = countMap[String(u._id)] ?? 0;
-    if (c < minCount) { minCount = c; minUser = u; }
+  // Round Robin: pick user with oldest (or null) lastLeadAssignedAt
+  // null = never assigned → highest priority (-Infinity)
+  let selectedUser = eligibleUsers[0];
+  for (let i = 1; i < eligibleUsers.length; i++) {
+    const u = eligibleUsers[i];
+    const selectedTime = selectedUser.lastLeadAssignedAt ? selectedUser.lastLeadAssignedAt.getTime() : -Infinity;
+    const uTime = u.lastLeadAssignedAt ? u.lastLeadAssignedAt.getTime() : -Infinity;
+    if (uTime < selectedTime) {
+      selectedUser = u;
+    }
   }
 
-  return minUser._id;
+  // Stamp this user immediately so next call rotates to next person
+  await User.findByIdAndUpdate(selectedUser._id, { lastLeadAssignedAt: new Date() });
+
+  return selectedUser._id;
 };
 
 export const createLead = async (data, createdBy, creatorRole, userDepartments = []) => {
@@ -70,6 +81,12 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
   if (existingLead) throw new ApiError(httpStatus.CONFLICT, 'A lead with this phone number already exists');
 
   if (!data.assignedTo) {
+    // Auto-detect department from problem field if not already set
+    if (!data.department && data.problem) {
+      const detected = detectDepartmentFromProblem(data.problem);
+      if (detected) data.department = detected;
+    }
+
     // If Admin/Manager adds a lead, auto-distribute it.
     // If regular staff (sales/support) manually adds a lead, assign it to themselves.
     if (createdBy && creatorRole !== 'admin' && creatorRole !== 'manager') {
