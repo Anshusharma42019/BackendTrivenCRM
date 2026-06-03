@@ -516,10 +516,18 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
 
   const dateFilter = isAllTime ? {} : { createdAt: { $gte: start, $lte: end } };
   const updateDateFilter = isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } };
+  const departmentCountFilter = (department) => {
+    if (countFilter.department?.$in && !countFilter.department.$in.includes(department)) {
+      return { ...countFilter, department: '__none__' };
+    }
+    return { ...countFilter, department };
+  };
 
   const [
     totalLeads,
     newLeadsToday,
+    migraineLeadCount,
+    pilesLeadCount,
     convertedLeads,
     readyToShipmentCount,
     readyToShipBreakdown,
@@ -538,6 +546,10 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     Lead.countDocuments(countFilter),
 
     Lead.countDocuments({ ...countFilter, ...dateFilter }),
+
+    Lead.countDocuments(departmentCountFilter('migraine')),
+
+    Lead.countDocuments(departmentCountFilter('piles')),
 
     Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
 
@@ -739,10 +751,16 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
   const newDeliveredCount = deliveredBreakdown.find(o => o._id === 'new')?.count || 0;
   const oldDeliveredCount = deliveredBreakdown.find(o => o._id === 'old')?.count || 0;
   const deliveredCount = newDeliveredCount + oldDeliveredCount;
+  const departmentLeads = {
+    migraine: migraineLeadCount,
+    piles: pilesLeadCount,
+    total: migraineLeadCount + pilesLeadCount,
+  };
 
   return {
     totalLeads,
     newLeadsToday,
+    departmentLeads,
     convertedLeads,
     readyToShipmentCount,
     newReadyToShipCount,

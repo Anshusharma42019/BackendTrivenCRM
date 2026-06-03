@@ -82,6 +82,8 @@ const addFollowUp = catchAsync(async (req, res) => {
     },
     { returnDocument: 'after' }
   ).select('follow_ups next_follow_up').lean();
+  const fullLead = await Lead.findById(req.params.leadId);
+  await leadService.syncPilesLead(fullLead);
   res.json(new ApiResponse(httpStatus.OK, lead, 'Follow up added'));
 });
 
@@ -92,6 +94,8 @@ const setNextFollowUp = catchAsync(async (req, res) => {
     { next_follow_up: next_follow_up ? new Date(next_follow_up) : null },
     { returnDocument: 'after' }
   ).select('follow_ups next_follow_up').lean();
+  const fullLead = await Lead.findById(req.params.leadId);
+  await leadService.syncPilesLead(fullLead);
   res.json(new ApiResponse(httpStatus.OK, lead, 'Next follow up set'));
 });
 

@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import Lead from './lead.model.js';
+import PilesLead from './pilesLead.model.js';
 import Task from '../task/task.model.js';
 import Cnp from '../cnp/cnp.model.js';
 import Verification from '../verification/verification.model.js';
@@ -13,6 +14,54 @@ import { createNotification } from '../notification/notification.service.js';
 const notifyAdmins = async (data) => {
   const admins = await User.find({ role: { $in: ['admin', 'manager'] }, isDeleted: false }, '_id');
   await Promise.all(admins.map(a => createNotification({ ...data, user: a._id }).catch(() => {})));
+};
+
+const toPilesLeadPayload = (lead) => ({
+  lead: lead._id,
+  name: lead.name,
+  phone: lead.phone,
+  email: lead.email,
+  address: lead.address,
+  houseNo: lead.houseNo,
+  cityVillage: lead.cityVillage,
+  cityVillageType: lead.cityVillageType,
+  postOffice: lead.postOffice,
+  landmark: lead.landmark,
+  district: lead.district,
+  state: lead.state,
+  pincode: lead.pincode,
+  source: lead.source,
+  status: lead.status,
+  note: lead.note,
+  problem: lead.problem,
+  type: lead.type,
+  revenue: lead.revenue,
+  cnp: lead.cnp,
+  cnpCount: lead.cnpCount,
+  cnpAt: lead.cnpAt,
+  next_follow_up: lead.next_follow_up,
+  onHoldReason: lead.onHoldReason,
+  onHoldUntil: lead.onHoldUntil,
+  assignedTo: lead.assignedTo?._id || lead.assignedTo,
+  createdBy: lead.createdBy?._id || lead.createdBy,
+  isDeleted: lead.isDeleted,
+  deletedAt: lead.deletedAt,
+});
+
+export const syncPilesLead = async (lead) => {
+  if (!lead?._id) return;
+  if (lead.department === 'piles') {
+    await PilesLead.findOneAndUpdate(
+      { lead: lead._id },
+      { $set: toPilesLeadPayload(lead) },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  } else {
+    await PilesLead.findOneAndUpdate(
+      { lead: lead._id },
+      { $set: { isDeleted: true, deletedAt: new Date() } }
+    );
+  }
 };
 
 // Auto-detect department from the problem description text
@@ -118,6 +167,7 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
   if (createdBy) payload.createdBy = createdBy;
 
   const lead = await Lead.create(payload);
+  await syncPilesLead(lead);
 
   if (lead.assignedTo) {
     // Notify assigned sales person
@@ -326,6 +376,7 @@ export const updateLead = async (id, data, userRole, userId, userDepartments = [
 
   Object.assign(lead, data);
   await lead.save();
+  await syncPilesLead(lead);
 
   // When moving out of on_hold back to active (new/interested), sync verification record
   if (data.status && ['new', 'interested'].includes(data.status) && oldStatus === 'on_hold') {
@@ -399,6 +450,7 @@ export const markCNP = async (leadId, userRole, userId) => {
   lead.cnpCount = (lead.cnpCount || 0) + 1;
   lead.cnpAt = new Date();
   await lead.save();
+  await syncPilesLead(lead);
 
   // Mark any pending/overdue tasks for this lead as cnp
   const tasks = await Task.find(
@@ -463,6 +515,7 @@ export const unmarkCNP = async (leadId, userRole, userId) => {
   const lead = await getLeadById(leadId, userRole, userId);
   lead.cnp = false;
   await lead.save();
+  await syncPilesLead(lead);
   return lead;
 };
 
@@ -472,6 +525,7 @@ export const deleteLead = async (id) => {
   lead.isDeleted = true;
   lead.deletedAt = new Date();
   await lead.save();
+  await syncPilesLead(lead);
 
   // Cascading soft-delete associated records
   const leadObjId = new mongoose.Types.ObjectId(String(id));
@@ -488,6 +542,7 @@ export const assignLead = async (leadId, assignedTo) => {
   if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   lead.assignedTo = assignedTo;
   await lead.save();
+  await syncPilesLead(lead);
 
   await createNotification({
     user: assignedTo,
