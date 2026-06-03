@@ -6,6 +6,148 @@ import Task from '../task/task.model.js';
 
 const router = express.Router();
 
+// Stats — pincode & state wise aggregation of ready-to-ship orders
+// Supports drill-down via ?filterState=<state> or ?filterPincode=<pincode>
+router.get('/stats', auth('admin', 'manager', 'sales', 'logistics'), departmentFilter, async (req, res) => {
+  try {
+    const taskQuery = { status: 'ready_to_shipment', isDeleted: false };
+    if (['sales', 'support', 'logistics'].includes(req.user.role)) {
+      if (req.userDepartments && req.userDepartments.length > 0) {
+        taskQuery.department = { $in: req.userDepartments };
+      }
+    } else if (req.query.department) {
+      taskQuery.department = req.query.department;
+    }
+    const validTaskIds = await Task.distinct('_id', taskQuery);
+
+    const { filterState, filterPincode, filterMonth } = req.query;
+
+    // Drill-down extra filter (state or pincode)
+    const drillFilter = {};
+    if (filterState) drillFilter.state = { $regex: new RegExp(`^${filterState}$`, 'i') };
+    if (filterPincode) drillFilter.pincode = filterPincode;
+
+    // Month filter for state/pincode column: filterMonth = 'YYYY-MM'
+    const monthFilter = {};
+    if (filterMonth && /^\d{4}-\d{2}$/.test(filterMonth)) {
+      const [yr, mo] = filterMonth.split('-').map(Number);
+      monthFilter.createdAt = { $gte: new Date(yr, mo - 1, 1), $lt: new Date(yr, mo, 1) };
+    }
+
+    const allMatch        = { task: { $in: validTaskIds }, ...drillFilter, ...monthFilter };
+    const baseMatch       = { sentToShiprocket: { $ne: true }, task: { $in: validTaskIds }, ...monthFilter };
+    const drillBase       = { sentToShiprocket: { $ne: true }, task: { $in: validTaskIds }, ...drillFilter, ...monthFilter };
+    const stateMatch      = baseMatch;
+    const drillStateMatch = drillBase;
+
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    eightWeeksAgo.setHours(0, 0, 0, 0);
+
+    // Always fetch all months for the dropdown (unfiltered by month)
+    const allMonthsAgg = filterMonth ? ReadyToShipment.aggregate([
+      { $match: { task: { $in: validTaskIds }, ...drillFilter, createdAt: { $gte: twelveMonthsAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt', timezone: 'Asia/Kolkata' } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+      { $project: { month: '$_id', count: 1, _id: 0 } },
+    ]) : Promise.resolve(null);
+
+    const [byPincode, byState, byMonth, byWeek, total, drillTotal, allMonths] = await Promise.all([
+      // Pincodes — if state is filtered, show pincodes for that state; else top-20 overall
+      ReadyToShipment.aggregate([
+        { $match: filterState ? drillStateMatch : stateMatch },
+        { $group: { _id: '$pincode', count: { $sum: 1 }, states: { $addToSet: '$state' } } },
+        { $match: { _id: { $ne: null, $ne: '' } } },
+        { $sort: { count: -1 } },
+        { $limit: 30 },
+        { $project: { pincode: '$_id', count: 1, states: 1, _id: 0 } },
+      ]),
+      // States — filtered by month if provided
+      ReadyToShipment.aggregate([
+        { $match: stateMatch },
+        { $group: { _id: '$state', count: { $sum: 1 }, pincodes: { $addToSet: '$pincode' } } },
+        { $match: { _id: { $ne: null, $ne: '' } } },
+        { $sort: { count: -1 } },
+        { $project: { state: '$_id', count: 1, pincodes: 1, _id: 0 } },
+      ]),
+      // Monthly — filtered if drill-down or month active
+      ReadyToShipment.aggregate([
+        { $match: filterMonth ? allMatch : { ...allMatch, createdAt: { $gte: twelveMonthsAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$createdAt', timezone: 'Asia/Kolkata' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $project: { month: '$_id', count: 1, _id: 0 } },
+      ]),
+      // Weekly — day-wise when month filtered, else ISO-week grouped
+      ReadyToShipment.aggregate(
+        filterMonth
+          ? [
+              { $match: allMatch },
+              {
+                $group: {
+                  _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Asia/Kolkata' } },
+                  count: { $sum: 1 },
+                  weekStart: { $min: '$createdAt' },
+                },
+              },
+              { $sort: { _id: 1 } },
+              { $project: { week: '$_id', count: 1, weekStart: 1, _id: 0 } },
+            ]
+          : [
+              { $match: { ...allMatch, createdAt: { $gte: eightWeeksAgo } } },
+              {
+                $group: {
+                  _id: {
+                    year: { $isoWeekYear: '$createdAt' },
+                    week: { $isoWeek: '$createdAt' },
+                  },
+                  count: { $sum: 1 },
+                  weekStart: { $min: '$createdAt' },
+                },
+              },
+              { $sort: { '_id.year': 1, '_id.week': 1 } },
+              {
+                $project: {
+                  week: { $concat: [{ $toString: '$_id.year' }, '-W', { $toString: '$_id.week' }] },
+                  count: 1,
+                  weekStart: 1,
+                  _id: 0,
+                },
+              },
+            ]
+      ),
+      // Overall pending count (no drill filter)
+      ReadyToShipment.countDocuments(baseMatch),
+      // Drill-down pending count (with filter)
+      (filterState || filterPincode) ? ReadyToShipment.countDocuments(drillBase) : Promise.resolve(null),
+      allMonthsAgg,
+    ]);
+
+    res.json({
+      status: 200,
+      data: {
+        byPincode, byState, byMonth, byWeek, total,
+        drillTotal: drillTotal ?? total,
+        filterState: filterState || null,
+        filterPincode: filterPincode || null,
+        filterMonth: filterMonth || null,
+        allMonths: allMonths || null,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ status: 500, message: e.message });
+  }
+});
+
 // Fast fetch — filter at DB level, no JS filtering
 router.get('/', auth('admin', 'manager', 'sales', 'logistics'), departmentFilter, async (req, res) => {
   try {
