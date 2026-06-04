@@ -23,6 +23,32 @@ const DEFAULT_FOLLOWUP_GAP_DAYS = 6;
 const getFollowupSettings = () => ({ total_followups: DEFAULT_FOLLOWUP_TOTAL, followup_gap_days: DEFAULT_FOLLOWUP_GAP_DAYS });
 const logOrderActivity = async () => null;
 
+const parseAmount = (value) => {
+  if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const cleaned = String(value).replace(/[^\d.-]/g, '');
+  const amount = Number(cleaned);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const getOrderAmount = (order = {}, itemsTotal = 0) => {
+  const moneyFields = [
+    order.sub_total,
+    order.order_total,
+    order.amount,
+    order.price,
+    order.total_amount,
+    order.total_price,
+    order.grand_total,
+  ].map(parseAmount);
+
+  const moneyAmount = moneyFields.find(amount => amount > 0);
+  if (moneyAmount) return moneyAmount;
+
+  // Shiprocket's `total` can be a count-like field in some responses, so use it only as a last resort.
+  return itemsTotal || parseAmount(order.total) || 0;
+};
+
 // Cleanup: Remove pending commissions if order is no longer delivered
 const cleanupReorderCommissions = async () => {
   try {
@@ -423,7 +449,7 @@ const syncAllToLocal = async () => {
       const itemsTotal = (o.products || o.order_items || []).reduce((sum, p) => {
         return sum + (Number(p.selling_price || p.price) || 0) * (Number(p.units || p.quantity) || 1);
       }, 0);
-      const sub_total = Number(o.total) || Number(o.sub_total) || Number(o.order_total) || itemsTotal || 0;
+      const sub_total = getOrderAmount(o, itemsTotal);
 
       // Auto-sort generic undelivered statuses into specific attempt categories for accuracy
       let finalStatus = status;
@@ -1289,7 +1315,10 @@ export const getDeliveredStats = catchAsync(async (req, res) => {
   const deliveredDateMatch = buildDeliveredDateMatch({ filterType, year, month, from, to });
   const statusDateMatch = buildStatusDateMatch({ filterType, year, month, from, to });
   const [result, statusBreakdown] = await Promise.all([
-    Order.aggregate([{ $match: { status: /^delivered$/i, ...deliveredDateMatch } }, { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$sub_total' } } }]),
+    Order.aggregate([
+      { $match: { status: /^delivered$/i, ...deliveredDateMatch } },
+      { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: { $convert: { input: '$sub_total', to: 'double', onError: 0, onNull: 0 } } } } },
+    ]),
     Order.aggregate([{ $match: { status: { $not: /^delivered$/i }, ...statusDateMatch } }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
   ]);
   const { count = 0, revenue = 0 } = result[0] || {};
@@ -1435,17 +1464,15 @@ export const backfillDeliveredAt = catchAsync(async (req, res) => {
     { $set: { status: 'IN_TRANSIT' } }
   );
 
-  // Fix sub_total = 0 by recalculating from order_items
-  const zeroOrders = await Order.find({ sub_total: { $in: [0, null] }, 'order_items.0': { $exists: true } })
+  // Fix missing or count-like sub_total values by recalculating from raw money fields/order_items.
+  const zeroOrders = await Order.find({ sub_total: { $in: [0, 1, null] }, 'order_items.0': { $exists: true } })
     .select('_id order_items raw_response').lean();
   let r2 = 0;
   await Promise.all(zeroOrders.map(async (o) => {
     const raw = o.raw_response || {};
-    const rawTotal = Number(raw.total) || Number(raw.sub_total) || Number(raw.order_total) ||
-      Number(raw.price) || Number(raw.amount) || 0;
     const itemsTotal = (o.order_items || []).reduce((sum, item) =>
       sum + (Number(item.selling_price) || 0) * (Number(item.units) || 1), 0);
-    const total = rawTotal || itemsTotal;
+    const total = getOrderAmount(raw, itemsTotal);
     if (total > 0) {
       await Order.updateOne({ _id: o._id }, { $set: { sub_total: total } });
       r2++;

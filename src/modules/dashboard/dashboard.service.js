@@ -9,6 +9,7 @@ import ReorderCommission from '../commission/reorderCommission.model.js';
 import mongoose from 'mongoose';
 
 const todayDateStr = () => new Date().toISOString().slice(0, 10);
+const SUB_TOTAL_AMOUNT = { $convert: { input: '$sub_total', to: 'double', onError: 0, onNull: 0 } };
 
 export const getStaffStats = async (userId, targetDate, from, to, userDepartments = []) => {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
@@ -741,7 +742,7 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     ]),
     Order.aggregate([
       { $match: deliveredFilter },
-      { $group: { _id: null, total: { $sum: '$sub_total' } } },
+      { $group: { _id: null, total: { $sum: SUB_TOTAL_AMOUNT } } },
     ]),
   ]);
 
@@ -831,7 +832,7 @@ export const getStaffCommission = async (userId, month, year) => {
         ],
       },
     },
-    { $group: { _id: null, total: { $sum: '$sub_total' } } },
+    { $group: { _id: null, total: { $sum: SUB_TOTAL_AMOUNT } } },
   ]);
 
   const totalRevenue = revenueResult[0]?.total || 0;
@@ -887,7 +888,7 @@ export const getAllStaffCommissions = async (month, year) => {
         ],
       },
     },
-    { $group: { _id: null, total: { $sum: '$sub_total' } } },
+    { $group: { _id: null, total: { $sum: SUB_TOTAL_AMOUNT } } },
   ]);
 
   const grandTotalRevenue = totalRevenueResult[0]?.total || 0;
@@ -928,7 +929,7 @@ export const getRevenueChart = async (userRole, userId, period = 'monthly') => {
 
   return Order.aggregate([
     { $match: { status: 'DELIVERED', sub_total: { $gt: 0 } } },
-    { $group: { _id: groupBy, revenue: { $sum: '$sub_total' }, count: { $sum: 1 } } },
+    { $group: { _id: groupBy, revenue: { $sum: SUB_TOTAL_AMOUNT }, count: { $sum: 1 } } },
     { $sort: sortBy },
     { $limit: 12 },
   ]);
