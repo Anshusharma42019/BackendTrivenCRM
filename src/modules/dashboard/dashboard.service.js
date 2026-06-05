@@ -517,11 +517,12 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
 
   const dateFilter = isAllTime ? {} : { createdAt: { $gte: start, $lte: end } };
   const updateDateFilter = isAllTime ? {} : { updatedAt: { $gte: start, $lte: end } };
+  // departmentCountFilter always includes the date range so migraine/piles counts are period-accurate
   const departmentCountFilter = (department) => {
     if (countFilter.department?.$in && !countFilter.department.$in.includes(department)) {
-      return { ...countFilter, department: '__none__' };
+      return { ...countFilter, department: '__none__', ...dateFilter };
     }
-    return { ...countFilter, department };
+    return { ...countFilter, department, ...dateFilter };
   };
 
   const [
@@ -552,7 +553,8 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
 
     Lead.countDocuments(departmentCountFilter('piles')),
 
-    Lead.countDocuments({ ...countFilter, status: 'closed_won' }),
+    // verified: count Verification records marked 'verified' in the period (this IS the conversion)
+    Verification.countDocuments({ ...countFilter, status: 'verified', isDeleted: false, ...updateDateFilter }),
 
     ReadyToShipment.countDocuments({ 
       ...countFilter,
@@ -758,6 +760,23 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     total: migraineLeadCount + pilesLeadCount,
   };
 
+  // Per-department conversion: Verification records marked 'verified' for each department in the period
+  const verifDeptFilter = (dept) => {
+    if (countFilter.department && countFilter.department['$in'] && !countFilter.department['$in'].includes(dept)) {
+      return { ...countFilter, department: '__none__', status: 'verified', isDeleted: false, ...updateDateFilter };
+    }
+    return { ...countFilter, department: dept, status: 'verified', isDeleted: false, ...updateDateFilter };
+  };
+  const [migraineConverted, pilesConverted] = await Promise.all([
+    Verification.countDocuments(verifDeptFilter('migraine')),
+    Verification.countDocuments(verifDeptFilter('piles')),
+  ]);
+  const migraineConversionRate = migraineLeadCount > 0 ? Math.round((migraineConverted / migraineLeadCount) * 100) : 0;
+  const pilesConversionRate = pilesLeadCount > 0 ? Math.round((pilesConverted / pilesLeadCount) * 100) : 0;
+
+  // Overall conversion rate: verified / new leads in selected period
+  const conversionRate = newLeadsToday > 0 ? Math.round((convertedLeads / newLeadsToday) * 100) : 0;
+
   return {
     totalLeads,
     newLeadsToday,
@@ -767,7 +786,11 @@ export const getDashboardStats = async (userRole, userId, targetDate, from, to, 
     newReadyToShipCount,
     oldReadyToShipCount,
     revenue: revenueResult[0]?.total || 0,
-    conversionRate: totalLeads ? Math.round((convertedLeads / totalLeads) * 100) : 0,
+    conversionRate,
+    migraineConversionRate,
+    pilesConversionRate,
+    migraineConverted,
+    pilesConverted,
     salesFunnel,
     sourcePerformance,
     tasks: { pending: pendingTasks, overdue: overdueTasks },
