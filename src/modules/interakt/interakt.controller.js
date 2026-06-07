@@ -65,13 +65,12 @@ const handleWebhook = catchAsync(async (req, res) => {
         const migraineNumbers = (process.env.INTERAKT_MIGRAINE_NUMBERS || "").split(",");
         const haircareNumbers = (process.env.INTERAKT_HAIRCARE_NUMBERS || "").split(",");
         
-        if (businessPhone && migraineNumbers.some(num => businessPhone.includes(num))) {
+        targetDepartment = null; // Unassigned by default
+        
+        if (businessPhone && migraineNumbers.some(num => num.trim() !== "" && businessPhone.includes(num.trim()))) {
             targetDepartment = 'migraine';
-        } else if (businessPhone && haircareNumbers.some(num => businessPhone.includes(num))) {
+        } else if (businessPhone && haircareNumbers.some(num => num.trim() !== "" && businessPhone.includes(num.trim()))) {
             targetDepartment = 'haircare';
-        } else {
-            // Default if we aren't sure, or if they only have 1 department set up right now
-            targetDepartment = 'migraine'; 
         }
         
       } else {
