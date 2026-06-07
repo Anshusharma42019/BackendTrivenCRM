@@ -33,7 +33,7 @@ const handleWebhook = catchAsync(async (req, res) => {
     const isMessage = payload.entityType === 'USER_MESSAGE' || payload.type === 'message_received';
     
     if (isMessage) {
-      let phone, messageText, customerName;
+      let phone, messageText, customerName, targetDepartment = 'migraine';
       
       if (payload.type === 'message_received' && payload.data) {
         phone = payload.data.customer?.phone_number || payload.data.customer?.phone;
@@ -58,13 +58,29 @@ const handleWebhook = catchAsync(async (req, res) => {
         }
 
         messageText = extractedText ? (extractedText + referralText) : (msgObj ? JSON.stringify(msgObj) : "New message received");
+        // Extract business phone number to route to the correct department
+        let businessPhone = payload.data?.customer?.channel_phone_number || "";
+        
+        // Determine department based on business phone number
+        const migraineNumbers = (process.env.INTERAKT_MIGRAINE_NUMBERS || "").split(",");
+        const haircareNumbers = (process.env.INTERAKT_HAIRCARE_NUMBERS || "").split(",");
+        
+        if (businessPhone && migraineNumbers.some(num => businessPhone.includes(num))) {
+            targetDepartment = 'migraine';
+        } else if (businessPhone && haircareNumbers.some(num => businessPhone.includes(num))) {
+            targetDepartment = 'haircare';
+        } else {
+            // Default if we aren't sure, or if they only have 1 department set up right now
+            targetDepartment = 'migraine'; 
+        }
+        
       } else {
         phone = payload.userPhoneNumber;
         customerName = `WhatsApp Lead (${phone})`;
         messageText = payload.message?.text || payload.entity?.text || payload.entity?.suggestionResponse?.postBack?.data || "New message received";
       }
 
-      console.log(`User ${customerName} (${phone}) sent message: ${messageText}`);
+      console.log(`User ${customerName} (${phone}) sent message: ${messageText} to department ${targetDepartment}`);
       
       // Save this as a note to the corresponding Lead using the phone number
       if (phone && messageText) {
@@ -84,7 +100,7 @@ const handleWebhook = catchAsync(async (req, res) => {
             source: 'social_media',
             problem: `[Interakt Message] ${messageText}`,
             status: 'new',
-            department: 'migraine'
+            department: targetDepartment
           };
           lead = await leadService.createLead(newLeadData, defaultAdmin ? defaultAdmin._id : null, 'admin');
         } else {
