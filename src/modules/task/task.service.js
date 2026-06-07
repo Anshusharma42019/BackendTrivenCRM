@@ -53,12 +53,10 @@ export const createTask = async (data, createdBy, creatorRole, userDepartments =
 
 export const getTasks = async (filter, userRole, userId, userDepartments = []) => {
   const query = { isDeleted: false };
-  // Sales staff always see only their own tasks — cannot be overridden
+  // Sales staff always see only their own tasks
   if (userRole === 'sales') {
     query.assignedTo = new mongoose.Types.ObjectId(String(userId));
-    if (userDepartments && userDepartments.length > 0) {
-      query.department = { $in: userDepartments };
-    }
+    // Removed department filter here so they can see tasks assigned to them even if department is null
   } else {
     if (filter.assignedTo) query.assignedTo = new mongoose.Types.ObjectId(String(filter.assignedTo));
     if (filter.department) query.department = filter.department;
@@ -105,9 +103,7 @@ export const getTaskById = async (id, userRole, userId, userDepartments = []) =>
     if (String(task.assignedTo?._id) !== String(userId)) {
       throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
     }
-    if (task.department && userDepartments.length > 0 && !userDepartments.includes(task.department)) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
-    }
+    // Removed department mismatch error so they can view tasks explicitly assigned to them
   }
   return task;
 };
@@ -189,9 +185,7 @@ export const getDailyTasks = async (userId, userRole, userDepartments = []) => {
   };
   if (userRole === 'sales') {
     query.assignedTo = new mongoose.Types.ObjectId(String(userId));
-    if (userDepartments && userDepartments.length > 0) {
-      query.department = { $in: userDepartments };
-    }
+    // Removed department filter here so they can see tasks assigned to them even if department is null
   }
   const hiddenLeadIds = await Lead.distinct('_id', { status: { $in: hiddenTaskLeadStatuses }, isDeleted: { $ne: true } });
   if (hiddenLeadIds.length) query.lead = { $nin: hiddenLeadIds };

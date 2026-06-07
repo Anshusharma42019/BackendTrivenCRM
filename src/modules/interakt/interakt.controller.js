@@ -62,7 +62,8 @@ const handleWebhook = catchAsync(async (req, res) => {
         let businessPhone = payload.data?.customer?.channel_phone_number || "";
         
         // Determine department based on business phone number
-        const migraineNumbers = (process.env.INTERAKT_MIGRAINE_NUMBERS || "").split(",");
+        const fallbackMigraine = "7309523829,917309523829,916376776399,6376776399";
+        const migraineNumbers = (process.env.INTERAKT_MIGRAINE_NUMBERS || fallbackMigraine).split(",");
         const haircareNumbers = (process.env.INTERAKT_HAIRCARE_NUMBERS || "").split(",");
         
         targetDepartment = null; // Unassigned by default

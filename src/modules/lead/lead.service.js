@@ -222,9 +222,7 @@ export const getLeads = async (filter, options, userRole, userId, userDepartment
   
   if (userRole === 'sales') {
     if (!isSharedStatus) query.assignedTo = userId;
-    if (userDepartments && userDepartments.length > 0) {
-      query.department = { $in: userDepartments };
-    }
+    // Removed department filter here so sales can always see leads assigned to them even if department is null
   } else if (filter.department) {
     query.department = filter.department;
   }
@@ -326,9 +324,7 @@ export const getLeadById = async (id, userRole, userId, userDepartments = []) =>
   const sharedStatuses = ['interested', 'closed_lost', 'on_hold'];
   
   if (userRole === 'sales') {
-    if (lead.department && userDepartments.length > 0 && !userDepartments.includes(lead.department)) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
-    }
+    // Removed department restriction so sales can view leads assigned to them
     if (!sharedStatuses.includes(lead.status) && String(lead.assignedTo?._id) !== String(userId)) {
       throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
     }
@@ -342,9 +338,7 @@ export const updateLead = async (id, data, userRole, userId, userDepartments = [
   if (!lead) throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   
   if (userRole === 'sales') {
-    if (lead.department && userDepartments.length > 0 && !userDepartments.includes(lead.department)) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied: Department mismatch');
-    }
+    // Removed department restriction so sales can edit leads assigned to them
     if (!['closed_lost', 'interested', 'on_hold'].includes(data.status) && String(lead.assignedTo?._id) !== String(userId)) {
       throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
     }
