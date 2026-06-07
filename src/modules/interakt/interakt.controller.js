@@ -89,5 +89,9 @@ export default {
     } else {
       res.status(200).json({ success: true, message: "Lead ALREADY EXISTS", lead });
     }
+  }),
+  latestLeads: catchAsync(async (req, res) => {
+    const leads = await Lead.find({ source: 'social_media' }).sort({ createdAt: -1 }).limit(10).lean();
+    res.status(200).json({ success: true, leads });
   })
 };
