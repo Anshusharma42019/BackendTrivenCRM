@@ -98,9 +98,13 @@ const handleWebhook = catchAsync(async (req, res) => {
             phone: phone,
             source: 'social_media',
             problem: `[Interakt Message] ${messageText}`,
-            status: 'new',
-            department: targetDepartment
+            status: 'new'
           };
+          
+          if (targetDepartment) {
+              newLeadData.department = targetDepartment;
+          }
+          
           lead = await leadService.createLead(newLeadData, defaultAdmin ? defaultAdmin._id : null, 'admin');
         } else {
             // If lead already exists, just add note
