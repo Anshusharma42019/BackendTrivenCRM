@@ -4,6 +4,7 @@ import catchAsync from '../../utils/catchAsync.js';
 import ApiResponse from '../../utils/ApiResponse.js';
 import ApiError from '../../utils/ApiError.js';
 import * as leadService from './lead.service.js';
+import * as interaktService from '../interakt/interakt.service.js';
 
 const createLead = catchAsync(async (req, res) => {
   const lead = await leadService.createLead(req.body, req.user._id, req.user.role, req.userDepartments);
@@ -59,6 +60,9 @@ const addNote = catchAsync(async (req, res) => {
   lead.notes.push({ text: req.body.text, createdBy: req.user._id });
   await lead.save();
   await lead.populate('notes.createdBy', 'name');
+
+  interaktService.trackEvent(lead._id, 'Lead Note Added', { note: req.body.text }).catch(e => console.error(e));
+
   res.json(new ApiResponse(httpStatus.OK, lead, 'Note added'));
 });
 
@@ -84,6 +88,9 @@ const addFollowUp = catchAsync(async (req, res) => {
   ).select('follow_ups next_follow_up').lean();
   const fullLead = await Lead.findById(req.params.leadId);
   await leadService.syncPilesLead(fullLead);
+
+  interaktService.trackEvent(req.params.leadId, 'Lead Follow Up Added', { note, next_date }).catch(e => console.error(e));
+
   res.json(new ApiResponse(httpStatus.OK, lead, 'Follow up added'));
 });
 

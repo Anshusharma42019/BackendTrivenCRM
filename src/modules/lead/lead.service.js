@@ -10,6 +10,7 @@ import User from '../user/user.model.js';
 import Attendance from '../attendance/attendance.model.js';
 import ApiError from '../../utils/ApiError.js';
 import { createNotification } from '../notification/notification.service.js';
+import * as interaktService from '../interakt/interakt.service.js';
 
 const notifyAdmins = async (data) => {
   const admins = await User.find({ role: { $in: ['admin', 'manager'] }, isDeleted: false }, '_id');
@@ -168,6 +169,9 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
 
   const lead = await Lead.create(payload);
   await syncPilesLead(lead);
+
+  // Track the user in Interakt when a new lead is created
+  interaktService.trackUser(lead).catch(err => console.error('Failed to track user in Interakt', err));
 
   if (lead.assignedTo) {
     // Notify assigned sales person
@@ -378,6 +382,13 @@ export const updateLead = async (id, data, userRole, userId, userDepartments = [
   await lead.save();
   await syncPilesLead(lead);
 
+  // Track the update event in Interakt
+  interaktService.trackEvent(lead._id, 'Lead Updated', {
+    status: lead.status,
+    department: lead.department,
+    ...data
+  }).catch(err => console.error('Failed to track event in Interakt', err));
+
   // When moving out of on_hold back to active (new/interested), sync verification record
   if (data.status && ['new', 'interested'].includes(data.status) && oldStatus === 'on_hold') {
     const leadObjId = new mongoose.Types.ObjectId(String(id));
@@ -451,6 +462,11 @@ export const markCNP = async (leadId, userRole, userId) => {
   lead.cnpAt = new Date();
   await lead.save();
   await syncPilesLead(lead);
+
+  // Track CNP marked event in Interakt
+  interaktService.trackEvent(lead._id, 'Lead Marked CNP', {
+    cnpCount: lead.cnpCount
+  }).catch(err => console.error('Failed to track event in Interakt', err));
 
   // Mark any pending/overdue tasks for this lead as cnp
   const tasks = await Task.find(
@@ -543,6 +559,11 @@ export const assignLead = async (leadId, assignedTo) => {
   lead.assignedTo = assignedTo;
   await lead.save();
   await syncPilesLead(lead);
+
+  // Track assigned event in Interakt
+  interaktService.trackEvent(lead._id, 'Lead Assigned', {
+    assignedTo: assignedTo
+  }).catch(err => console.error('Failed to track event in Interakt', err));
 
   await createNotification({
     user: assignedTo,

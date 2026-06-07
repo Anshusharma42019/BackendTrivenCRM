@@ -14,6 +14,7 @@ import attendanceRoute from '../modules/attendance/attendance.routes.js';
 import appointmentRoute from '../modules/appointment/appointment.routes.js';
 import searchRoute from '../modules/search/search.routes.js';
 import commissionRoute from '../modules/commission/commission.routes.js';
+import interaktRoute from '../modules/interakt/interakt.routes.js';
 
 const router = express.Router();
 // Define all the routes for the application
@@ -34,6 +35,7 @@ const defaultRoutes = [
   { path: '/appointments', route: appointmentRoute },
   { path: '/search', route: searchRoute },
   { path: '/commission', route: commissionRoute },
+  { path: '/interakt', route: interaktRoute },
 ];
  
 defaultRoutes.forEach((route) => {
