@@ -83,7 +83,8 @@ const handleWebhook = catchAsync(async (req, res) => {
             phone: phone,
             source: 'social_media',
             problem: `[Interakt Message] ${messageText}`,
-            status: 'new'
+            status: 'new',
+            department: 'migraine'
           };
           lead = await leadService.createLead(newLeadData, defaultAdmin ? defaultAdmin._id : null, 'admin');
         } else {
