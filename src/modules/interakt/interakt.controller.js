@@ -41,7 +41,23 @@ const handleWebhook = catchAsync(async (req, res) => {
         
         // Try to extract text. If not found, stringify the message object so we can see what's inside
         const msgObj = payload.data.message;
-        messageText = msgObj?.message?.text || msgObj?.text || (msgObj ? JSON.stringify(msgObj) : "New message received");
+        let extractedText = "";
+        
+        if (typeof msgObj?.message === 'string') {
+          extractedText = msgObj.message;
+        } else if (msgObj?.message?.text) {
+          extractedText = msgObj.message.text;
+        } else if (msgObj?.text) {
+          extractedText = msgObj.text;
+        }
+
+        // Check if there's a Facebook Ad referral
+        let referralText = "";
+        if (msgObj?.referral?.headline) {
+          referralText = `\n[Clicked Ad: ${msgObj.referral.headline}]`;
+        }
+
+        messageText = extractedText ? (extractedText + referralText) : (msgObj ? JSON.stringify(msgObj) : "New message received");
       } else {
         phone = payload.userPhoneNumber;
         customerName = `WhatsApp Lead (${phone})`;
