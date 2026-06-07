@@ -74,6 +74,9 @@ const handleWebhook = catchAsync(async (req, res) => {
     } else {
       console.log(`[Interakt Webhook] Received unhandled event: ${payload.entityType || payload.type}`);
     }
+  } catch (error) {
+    console.error(`[Interakt Webhook Error]`, error);
+  }
 
   // Always return 200 OK to acknowledge receipt of the webhook to Interakt
   res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, null, 'Webhook received successfully'));
