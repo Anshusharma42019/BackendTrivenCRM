@@ -36,6 +36,7 @@ router.post('/:leadId/notes', auth('admin', 'manager', 'sales', 'support'), depa
 router.post('/:leadId/follow-up', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, leadController.addFollowUp);
 router.patch('/:leadId/next-follow-up', auth('admin', 'manager', 'sales', 'support'), departmentFilter, requireCheckedIn, leadController.setNextFollowUp);
 router.get('/export', auth('admin', 'manager'), departmentFilter, leadController.exportLeads);
+router.post('/distribute-unassigned', auth('admin', 'manager'), leadController.distributeUnassigned);
 router.get('/search-phone', auth('admin', 'manager', 'sales', 'support'), departmentFilter, leadController.searchByPhone);
 router.get('/follow-up/list', auth('admin', 'manager', 'sales', 'support'), departmentFilter, leadController.getFollowUpLeads);
 

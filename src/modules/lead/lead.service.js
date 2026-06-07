@@ -105,8 +105,11 @@ export const getNextSalesUser = async (department = null) => {
   const activeUserIds = activeAttendances.map(a => a.user.toString());
   const activeSalesUsers = salesUsers.filter(u => activeUserIds.includes(u._id.toString()));
 
-  // If no one is checked in, fallback to all sales users
-  const eligibleUsers = activeSalesUsers.length > 0 ? activeSalesUsers : salesUsers;
+  // If no one is checked in, return null so the lead remains unassigned
+  if (activeSalesUsers.length === 0) {
+    return null;
+  }
+  const eligibleUsers = activeSalesUsers;
 
   // Round Robin: pick user with oldest (or null) lastLeadAssignedAt
   // null = never assigned → highest priority (-Infinity)
@@ -211,6 +214,49 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
   }
 
   return lead;
+};
+
+export const distributeUnassignedLeads = async (adminId) => {
+  // Find all unassigned leads that are "new" and not deleted
+  const unassignedLeads = await Lead.find({ assignedTo: null, status: 'new', isDeleted: false }).sort({ createdAt: 1 });
+  let distributedCount = 0;
+
+  for (const lead of unassignedLeads) {
+    const assignedToId = await getNextSalesUser(lead.department);
+    if (assignedToId) {
+      // Assign lead
+      lead.assignedTo = assignedToId;
+      await lead.save();
+
+      // Create a Call Task for the assigned user
+      const dueDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const task = await Task.create({
+        title: `Call ${lead.name}`,
+        description: `Phone: ${lead.phone}${lead.problem ? ' | ' + lead.problem : ''}`,
+        type: 'call',
+        lead: lead._id,
+        assignedTo: assignedToId,
+        createdBy: adminId || assignedToId,
+        department: lead.department,
+        dueDate,
+        priority: 'high',
+        status: 'pending',
+        isDeleted: false,
+      });
+
+      // Send notification
+      await createNotification({
+        user: assignedToId,
+        title: 'New Lead Assigned (Night Distribution)',
+        message: `You have been assigned a pending lead: ${lead.name}`,
+        type: 'task',
+        link: `/tasks/${task._id}`,
+      });
+
+      distributedCount++;
+    }
+  }
+  return { success: true, message: `Successfully distributed ${distributedCount} leads.` };
 };
 
 export const getLeads = async (filter, options, userRole, userId, userDepartments = []) => {

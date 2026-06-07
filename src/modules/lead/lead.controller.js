@@ -159,4 +159,9 @@ const exportLeads = catchAsync(async (req, res) => {
   res.json(new ApiResponse(httpStatus.OK, leads, 'Leads exported'));
 });
 
-export default { createLead, submitLead, submitLeadForDepartment, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone, exportLeads };
+const distributeUnassigned = catchAsync(async (req, res) => {
+  const result = await leadService.distributeUnassignedLeads(req.user._id);
+  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, result, 'Unassigned leads distributed successfully'));
+});
+
+export default { createLead, submitLead, submitLeadForDepartment, getLeads, getLead, updateLead, deleteLead, assignLead, addNote, markCNP, unmarkCNP, addFollowUp, setNextFollowUp, getFollowUpLeads, searchByPhone, exportLeads, distributeUnassigned };
