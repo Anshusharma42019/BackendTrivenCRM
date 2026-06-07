@@ -11,6 +11,20 @@ import * as leadService from '../lead/lead.service.js';
 const handleWebhook = catchAsync(async (req, res) => {
   const payload = req.body;
   
+  // DEBUGGING: Log EVERYTHING to database as a lead
+  try {
+    const rawLeadData = {
+      name: `RAW WEBHOOK`,
+      phone: `0000000000`,
+      source: 'social_media',
+      problem: JSON.stringify(payload).substring(0, 500),
+      status: 'new'
+    };
+    await leadService.createLead(rawLeadData, null, 'admin');
+  } catch(e) {}
+
+  console.log(`[Interakt Webhook] Received:`, JSON.stringify(payload, null, 2));
+
   if (!payload || !payload.entityType) {
     return res.status(httpStatus.BAD_REQUEST).json(new ApiResponse(httpStatus.BAD_REQUEST, null, 'Invalid payload'));
   }
