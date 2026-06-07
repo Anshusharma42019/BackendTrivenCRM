@@ -33,17 +33,22 @@ const handleWebhook = catchAsync(async (req, res) => {
     const isMessage = payload.entityType === 'USER_MESSAGE' || payload.type === 'message_received';
     
     if (isMessage) {
-      let phone, messageText;
+      let phone, messageText, customerName;
       
       if (payload.type === 'message_received' && payload.data) {
         phone = payload.data.customer?.phone_number || payload.data.customer?.phone;
-        messageText = payload.data.message?.message?.text || "New message received";
+        customerName = payload.data.customer?.traits?.name || `WhatsApp Lead (${phone})`;
+        
+        // Try to extract text. If not found, stringify the message object so we can see what's inside
+        const msgObj = payload.data.message;
+        messageText = msgObj?.message?.text || msgObj?.text || (msgObj ? JSON.stringify(msgObj) : "New message received");
       } else {
         phone = payload.userPhoneNumber;
+        customerName = `WhatsApp Lead (${phone})`;
         messageText = payload.message?.text || payload.entity?.text || payload.entity?.suggestionResponse?.postBack?.data || "New message received";
       }
 
-      console.log(`User ${phone} sent message: ${messageText}`);
+      console.log(`User ${customerName} (${phone}) sent message: ${messageText}`);
       
       // Save this as a note to the corresponding Lead using the phone number
       if (phone && messageText) {
@@ -58,7 +63,7 @@ const handleWebhook = catchAsync(async (req, res) => {
           // Auto-create a lead if it doesn't exist
           console.log(`[Interakt Webhook] Auto-creating new lead for phone ${phone}`);
           const newLeadData = {
-            name: `WhatsApp Lead (${phone})`,
+            name: customerName,
             phone: phone,
             source: 'social_media',
             problem: `[Interakt Message] ${messageText}`,
@@ -67,6 +72,10 @@ const handleWebhook = catchAsync(async (req, res) => {
           lead = await leadService.createLead(newLeadData, defaultAdmin ? defaultAdmin._id : null, 'admin');
         } else {
             // If lead already exists, just add note
+            // If we now have a real name, optionally update the lead's name if it was generic
+            if (customerName && customerName !== `WhatsApp Lead (${phone})` && lead.name.startsWith('WhatsApp Lead')) {
+               lead.name = customerName;
+            }
             lead.notes.push({ text: `[Interakt Message] ${messageText}`, createdBy: defaultAdmin ? defaultAdmin._id : null });
             await lead.save();
         }
