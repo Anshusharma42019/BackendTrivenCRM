@@ -185,7 +185,14 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
       type: 'lead_assigned',
       relatedLead: lead._id,
     }).catch(() => {});
+    
     await notifyAdmins({ title: 'New Lead Created', message: `Lead "${lead.name}" was created and assigned.`, type: 'lead_assigned', relatedLead: lead._id });
+  } else {
+    // Notify admins that a new UNASSIGNED lead arrived
+    await notifyAdmins({ title: 'New Unassigned Lead', message: `Lead "${lead.name}" was created but is unassigned.`, type: 'lead_assigned', relatedLead: lead._id });
+  }
+
+  if (lead.assignedTo) {
 
     // Auto-create a CALL task due in 2 hours for the assigned sales person
     const assignedToId = lead.assignedTo._id ?? lead.assignedTo;
