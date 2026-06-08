@@ -45,7 +45,7 @@ router.get('/', auth('admin', 'manager', 'sales', 'support'), departmentFilter, 
 // POST create a call-again record from a lead
 router.post('/', auth('admin', 'manager', 'sales', 'support'), requireCheckedIn, async (req, res) => {
   try {
-    const { leadId } = req.body;
+    const { leadId, notes } = req.body;
     if (!leadId) return res.status(400).json({ message: 'leadId is required' });
 
     const lead = await Lead.findById(leadId);
@@ -61,10 +61,21 @@ router.post('/', auth('admin', 'manager', 'sales', 'support'), requireCheckedIn,
       { status: 'cancel_call' }
     );
 
+    const updatePayload = { 
+      lead: leadId, 
+      assignedTo: lead.assignedTo?._id || lead.assignedTo, 
+      department: lead.department, 
+      status: 'pending', 
+      createdBy: req.user._id 
+    };
+    if (notes && Array.isArray(notes)) {
+      updatePayload.notes = notes;
+    }
+
     // Upsert — one record per lead
     const record = await CallAgain.findOneAndUpdate(
       { lead: leadId },
-      { lead: leadId, assignedTo: lead.assignedTo?._id || lead.assignedTo, department: lead.department, status: 'pending', createdBy: req.user._id },
+      updatePayload,
       { upsert: true, new: true }
     ).populate('lead', 'name phone problem department').populate('assignedTo', 'name email').populate('createdBy', 'name email');
 
