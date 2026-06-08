@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import fs from 'fs';
 import httpStatus from 'http-status'; // Note: I should install http-status for better handling
 import { config } from '../config/config.js';
 import ApiError from '../utils/ApiError.js';
@@ -45,6 +46,7 @@ const errorHandler = (err, req, res, next) => {
 
   if (config.env === 'development') {
     console.error(err);
+    fs.appendFileSync('error.log', new Date().toISOString() + ' ' + err.stack + '\n\n');
   }
 
   res.status(statusCode).send(response);

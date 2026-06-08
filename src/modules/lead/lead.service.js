@@ -150,16 +150,7 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
       }
     } else {
       data.assignedTo = await getNextSalesUser(data.department);
-      // Fallback: If no sales user is available for this department
-      if (!data.assignedTo) {
-        if (createdBy) {
-          data.assignedTo = createdBy; // Fallback to creator
-        } else {
-          // If createdBy is null (e.g. from website form), fallback to an admin
-          const defaultAdmin = await User.findOne({ role: 'admin', isDeleted: false }).select('_id').lean();
-          if (defaultAdmin) data.assignedTo = defaultAdmin._id;
-        }
-      }
+      // Removed fallback to Admin/Creator so night leads stay unassigned.
     }
   } else if (creatorRole === 'sales' && userDepartments && userDepartments.length > 0) {
     // Only fall back to user's department if not provided in form
@@ -224,8 +215,8 @@ export const createLead = async (data, createdBy, creatorRole, userDepartments =
 };
 
 export const distributeUnassignedLeads = async (adminId) => {
-  // Find all unassigned leads that are "new" and not deleted
-  const unassignedLeads = await Lead.find({ assignedTo: null, status: 'new', isDeleted: false }).sort({ createdAt: 1 });
+  // Find all unassigned leads that are "new" and not deleted, OR leads assigned to the admin
+  const unassignedLeads = await Lead.find({ assignedTo: { $in: [null, adminId] }, status: 'new', isDeleted: false }).sort({ createdAt: 1 });
   let distributedCount = 0;
 
   for (const lead of unassignedLeads) {
@@ -256,8 +247,9 @@ export const distributeUnassignedLeads = async (adminId) => {
         user: assignedToId,
         title: 'New Lead Assigned (Night Distribution)',
         message: `You have been assigned a pending lead: ${lead.name}`,
-        type: 'task',
-        link: `/tasks/${task._id}`,
+        type: 'lead_assigned',
+        relatedLead: lead._id,
+        relatedTask: task._id,
       });
 
       distributedCount++;
