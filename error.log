@@ -196,3 +196,243 @@
     at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
     at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
 
+2026-06-08T10:29:20.448Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.570Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.734Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.778Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.799Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.844Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.864Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.976Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:20.996Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.015Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.031Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.044Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.062Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.076Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.086Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.132Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.147Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.160Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.173Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-08T10:29:21.182Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+

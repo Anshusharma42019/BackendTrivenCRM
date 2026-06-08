@@ -9,7 +9,9 @@ import ApiError from '../utils/ApiError.js';
  */
 const errorConverter = (err, req, res, next) => {
   let error = err;
-  if (!(error instanceof ApiError)) {
+  
+  // On Vercel (or when bundled), instanceof check might fail. Check if it already has isOperational flag.
+  if (!(error instanceof ApiError) && typeof error.isOperational === 'undefined') {
     let statusCode = error.statusCode || httpStatus.INTERNAL_SERVER_ERROR;
     let message = error.message || httpStatus[statusCode];
     let isOperational = false;
@@ -46,7 +48,11 @@ const errorHandler = (err, req, res, next) => {
 
   if (config.env === 'development') {
     console.error(err);
-    fs.appendFileSync('error.log', new Date().toISOString() + ' ' + err.stack + '\n\n');
+    try {
+      fs.appendFileSync('error.log', new Date().toISOString() + ' ' + err.stack + '\n\n');
+    } catch (fsError) {
+      console.error('Could not write to error.log (read-only file system?):', fsError.message);
+    }
   }
 
   res.status(statusCode).send(response);
