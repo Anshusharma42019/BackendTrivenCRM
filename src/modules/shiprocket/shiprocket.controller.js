@@ -1701,6 +1701,53 @@ export const getWalletTransactions = catchAsync(async (req, res) => {
 export const getNDR = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.getNDR(req.query), 'NDR fetched')); });
 export const ndrAction = catchAsync(async (req, res) => { res.json(new ApiResponse(200, await sr.ndrAction(req.body), 'NDR action submitted')); });
 
+// ── NDR Notes (DB) ────────────────────────────────────────────────────────────
+import { NdrNote } from './models/ndrNote.model.js';
+
+export const getNdrNotes = catchAsync(async (req, res) => {
+  const { date, search } = req.query;
+  const match = {};
+  if (date) {
+    match.createdAt = {
+      $gte: new Date(date + 'T00:00:00.000+05:30'),
+      $lte: new Date(date + 'T23:59:59.999+05:30'),
+    };
+  }
+  if (search) {
+    match.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { phone_number: { $regex: search, $options: 'i' } },
+      { awb_number: { $regex: search, $options: 'i' } },
+    ];
+  }
+  const notes = await NdrNote.find(match).sort({ createdAt: -1 }).populate('createdBy', 'name role').lean();
+  res.json(new ApiResponse(200, notes, 'NDR notes fetched'));
+});
+
+export const createNdrNote = catchAsync(async (req, res) => {
+  const { name, phone_number, reason, awb_number } = req.body;
+  if (!name || !phone_number || !reason || !awb_number)
+    return res.status(400).json(new ApiResponse(400, null, 'name, phone_number, reason, awb_number required'));
+  const note = await NdrNote.create({ name, phone_number, reason, awb_number, createdBy: req.user._id });
+  res.json(new ApiResponse(200, note, 'NDR note created'));
+});
+
+export const updateNdrNote = catchAsync(async (req, res) => {
+  const note = await NdrNote.findByIdAndUpdate(
+    req.params.id,
+    { $set: req.body },
+    { new: true }
+  ).lean();
+  if (!note) return res.status(404).json(new ApiResponse(404, null, 'Note not found'));
+  res.json(new ApiResponse(200, note, 'NDR note updated'));
+});
+
+export const deleteNdrNote = catchAsync(async (req, res) => {
+  await NdrNote.findByIdAndDelete(req.params.id);
+  res.json(new ApiResponse(200, null, 'NDR note deleted'));
+});
+
+// ── NDR Notes (DB) ────────────────────────────────────────────────────────────
 export const searchOrderByPhone = catchAsync(async (req, res) => {
   const { phone } = req.query;
   if (!phone || phone.replace(/\D/g, '').length < 5) {

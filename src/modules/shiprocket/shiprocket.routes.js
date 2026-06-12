@@ -74,6 +74,10 @@ router.get('/wallet/transactions', auth(), c.getWalletTransactions);
 // ── NDR ───────────────────────────────────────────────────────────────────────
 router.get('/ndr', auth(), c.getNDR);
 router.post('/ndr/action', auth(), c.ndrAction);
+router.get('/ndr/notes', auth(), c.getNdrNotes);
+router.post('/ndr/notes', auth(), c.createNdrNote);
+router.put('/ndr/notes/:id', auth(), c.updateNdrNote);
+router.delete('/ndr/notes/:id', auth(), c.deleteNdrNote);
 
 
 // ── Legacy aliases ────────────────────────────────────────────────────────────

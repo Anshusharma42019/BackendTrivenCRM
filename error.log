@@ -436,3 +436,2107 @@
     at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
     at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
 
+2026-06-09T06:42:50.354Z Error: body.name: Invalid input: expected string, received undefined
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/validate.js:24:17
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at router.handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:186:3)
+
+2026-06-09T06:43:13.613Z Error: body.name: Invalid input: expected string, received undefined
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/validate.js:24:17
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at router.handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:186:3)
+
+2026-06-09T06:43:15.252Z Error: body.name: Invalid input: expected string, received undefined
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/validate.js:24:17
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at router.handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:186:3)
+
+2026-06-09T06:43:49.397Z Error: Email already taken
+    at Object.register (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:52:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:9:16
+
+2026-06-09T08:05:42.843Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:05:42.855Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:06:22.741Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:06:22.746Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:06:22.809Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:06:22.817Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:46.481Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:46.487Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:46.508Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:46.515Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:57.507Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:57.522Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:57.593Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:08:57.604Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:42.070Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:42.091Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:42.135Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:42.188Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:51.766Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:51.771Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:53.441Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:53.449Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:53.466Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:53.472Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:55.317Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:55.324Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:55.343Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:55.352Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:56.174Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:56.182Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:56.193Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:56.206Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:57.414Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:57.419Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:57.435Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:520:35)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:57.447Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:58.130Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:12:58.134Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:21.334Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:21.361Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:21.366Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:21.398Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:24.033Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:24.038Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:25.555Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:15:25.561Z Error: getaddrinfo ENOTFOUND api.shipmaxx.in
+    at AxiosError.from (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/AxiosError.js:7:24)
+    at RedirectableRequest.handleRequestError (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:869:27)
+    at RedirectableRequest.emit (node:events:508:28)
+    at eventHandlers.<computed> (G:\CRM-Triven\Crm-Backend\node_modules\follow-redirects\index.js:49:24)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at TLSSocket.socketErrorListener (node:_http_client:575:5)
+    at TLSSocket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:20:23.470Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:20:23.520Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:20:23.616Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:20:23.693Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:21:54.701Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:21:54.752Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:21:56.809Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:21:56.825Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:12.504Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:12.524Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:12.690Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:12.723Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:13.624Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:13.654Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:13.824Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:13.838Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:14.274Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:14.288Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:14.455Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:14.466Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:15.005Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:15.031Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:15.188Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:22:15.217Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:23.018Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:23.026Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:47.390Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:47.452Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:47.522Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:47.602Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:49.885Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:25:50.071Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:33:19.391Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:19.606Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:19.808Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:19.981Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:20.183Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:20.903Z Error: Invalid or expired refresh token
+    at Object.refreshAuth (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:90:11)
+    at file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:28:36
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/validate.js:28:10
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+
+2026-06-09T08:33:21.208Z Error: Invalid or expired token
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:22:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T08:33:32.037Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T08:34:52.703Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T08:36:22.588Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T08:36:27.802Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T08:41:39.962Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:41:40.014Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:41:40.161Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:41:40.210Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:42:12.835Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:42:13.285Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:43:50.413Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:43:50.546Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:24:17)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:15:16
+
+2026-06-09T08:50:39.111Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T08:51:11.658Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T08:51:54.106Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T08:57:50.312Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:01:00.190Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:08:55.673Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:33:42.913Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:12:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:36:49.458Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:21:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:37:43.344Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:21:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:38:20.316Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:21:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:39:13.858Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T09:39:28.153Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:21:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:42:31.433Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:38:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:42:32.410Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:38:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:43:24.154Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:38:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:54:16.015Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T09:54:37.142Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:18:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:54:38.350Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:18:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T09:56:55.318Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:18:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T10:01:00.669Z Error: Please authenticate
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:13:11
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+
+2026-06-09T10:01:24.891Z Error: body.role: Invalid option: expected one of "admin"|"manager"|"sales"|"doctor"|"logistics"|"support"
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/validate.js:24:17
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:295:15
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at router.handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:186:3)
+
+2026-06-09T10:01:30.908Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-09T10:04:44.992Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T10:08:39.984Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T10:10:25.272Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T10:10:26.589Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T10:10:46.513Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T11:37:06.431Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:19:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T11:47:02.570Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:22:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T11:49:14.150Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:22:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T12:24:01.698Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:22:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T12:26:54.040Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T13:09:12.679Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T14:05:16.524Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-09T14:08:57.123Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:23:51.183Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:25:05.854Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:48:35.089Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:49:31.512Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:51:14.323Z AxiosError: Request failed with status code 401
+    at settle (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/settle.js:20:7)
+    at IncomingMessage.handleStreamEnd (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/adapters/http.js:847:13)
+    at IncomingMessage.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (file:///G:/CRM-Triven/Crm-Backend/node_modules/axios/lib/core/Axios.js:46:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getToken (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:27:20)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:53:19.820Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:53:21.557Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:53:56.742Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T05:53:57.663Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:29:12.859Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:41:55.443Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:36:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:46:19.873Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:28:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:46:22.475Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:28:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:47:38.398Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-10T06:48:08.344Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:28:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:49:06.207Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:28:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:50:09.155Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:30:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:41:3)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:9:17
+
+2026-06-10T06:58:36.385Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:30:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:60:16
+
+2026-06-10T06:58:36.513Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:30:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:60:16
+
+2026-06-10T08:10:08.685Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:60:16
+
+2026-06-10T08:10:09.216Z Error: Request failed with status code 401
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:39:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:60:16
+
+2026-06-10T09:20:54.253Z TypeError: smx.setBaseUrl is not a function
+    at file:///G:/CRM-Triven/Crm-Backend/src/modules/integrations/integrations.controller.js:8:9
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:31:3
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+
+2026-06-10T09:24:54.613Z TypeError: smx.setBaseUrl is not a function
+    at file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:10:21
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at file:///G:/CRM-Triven/Crm-Backend/src/middleware/auth.js:31:3
+    at file:///G:/CRM-Triven/Crm-Backend/src/utils/catchAsync.js:2:19
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\route.js:117:3)
+    at handle (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:435:11)
+
+2026-06-10T09:43:05.001Z Error: Auth Login Failed: Too Many Requests
+    at login (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:79:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:32:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T12:47:52.971Z Error: Incorrect credentials
+    at Object.loginUser (file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.service.js:70:11)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/auth/auth.controller.js:19:16
+
+2026-06-10T13:21:37.281Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:22:09.187Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:23:48.012Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:24:11.361Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:25:40.722Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:26:15.919Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:65:16
+
+2026-06-10T13:30:45.366Z Error: [object Object]
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:68:16
+
+2026-06-11T06:47:13.926Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T06:47:14.244Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T06:54:48.132Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T06:54:48.248Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T07:01:06.211Z Error: An unexpected internal server error occurred.
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:184:16
+
+2026-06-11T07:01:13.607Z Error: An unexpected internal server error occurred.
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:184:16
+
+2026-06-11T07:16:43.073Z Error: 500: 400: Order cannot be updated in current state
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:131:16
+
+2026-06-11T07:33:54.891Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T07:33:55.084Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T08:16:48.401Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T08:16:49.237Z Error: Not found
+    at file:///G:/CRM-Triven/Crm-Backend/src/app.js:83:8
+    at Layer.handleRequest (G:\CRM-Triven\Crm-Backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:342:13)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:297:9
+    at processParams (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:582:12)
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:291:5)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+    at G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:688:15
+    at next (G:\CRM-Triven\Crm-Backend\node_modules\router\index.js:276:14)
+
+2026-06-11T08:30:26.375Z Error: A lead with this phone number already exists
+    at Module.createLead (file:///G:/CRM-Triven/Crm-Backend/src/modules/lead/lead.service.js:134:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/lead/lead.controller.js:10:16
+
+2026-06-11T12:05:12.726Z Error: Not Found
+    at call (file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.service.js:56:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///G:/CRM-Triven/Crm-Backend/src/modules/shipmaxx/shipmaxx.controller.js:247:16
+

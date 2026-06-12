@@ -34,6 +34,7 @@ const orderSchema = new mongoose.Schema({
   payment_method: String,
   sub_total: Number,
   length: Number, breadth: Number, height: Number, weight: Number,
+  label_url: String,
   lead_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lead', index: true },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   verified_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
@@ -64,6 +65,7 @@ const orderSchema = new mongoose.Schema({
   source_order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ShiprocketOrder', default: null },
   reorder_commission_generated: { type: Boolean, default: false },
   delivery_attempt: { type: Number, default: 1 },
+  platform: { type: String, enum: ['shiprocket', 'shipmaxx'], default: 'shiprocket', index: true },
   raw_response: mongoose.Schema.Types.Mixed,
 }, { timestamps: true });
 
